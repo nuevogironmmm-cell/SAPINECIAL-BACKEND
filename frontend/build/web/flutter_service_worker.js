@@ -3,7 +3,8 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
-const RESOURCES = {"assets/AssetManifest.bin": "3f6cc222bc7bc65a6847d1c251ce669c",
+const RESOURCES = {".netlify/netlify.toml": "36e77ca2b51b8a97b4d5119949c4e8ab",
+"assets/AssetManifest.bin": "3f6cc222bc7bc65a6847d1c251ce669c",
 "assets/AssetManifest.bin.json": "99e8c11ba3a864b3a595c51d94b9a22a",
 "assets/assets/images/adoracion.jpg": "315fb52bed524c1ae2cb051932df3f7d",
 "assets/assets/images/corazon_poetico.jpg": "cfeed969c27ab2a1dc2e7cdad9c5a6d7",
@@ -35,14 +36,14 @@ const RESOURCES = {"assets/AssetManifest.bin": "3f6cc222bc7bc65a6847d1c251ce669c
 "canvaskit/skwasm_heavy.wasm": "b0be7910760d205ea4e011458df6ee01",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
 "flutter.js": "24bc71911b75b5f8135c949e27a2984e",
-"flutter_bootstrap.js": "e6286a5ea3a59949c4a115063737113b",
+"flutter_bootstrap.js": "8dcb69d8bb28dd059e60b6cf3ff502b9",
 "icons/Icon-192.png": "ac9a721a12bbc803b44f645561ecb1e1",
 "icons/Icon-512.png": "96e752610906ba2a93c65f8abe1645f1",
 "icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2ea3c",
 "icons/Icon-maskable-512.png": "301a7604d45b3e739efc881eb04896ea",
 "index.html": "2d2d311b6c07003510e35db589cd6fa7",
 "/": "2d2d311b6c07003510e35db589cd6fa7",
-"main.dart.js": "9f0cafe142b72639b42dc355129f565f",
+"main.dart.js": "2224ffe9649d0bdf87b4fb51063600fa",
 "manifest.json": "9b70ab0a6617874c542dba33950be1ed",
 "version.json": "312d0bcd03ae73b0b398d89e503fbf9a",
 "_redirects": "ac0b0c7b94f7249a684d9449d0832ab5"};

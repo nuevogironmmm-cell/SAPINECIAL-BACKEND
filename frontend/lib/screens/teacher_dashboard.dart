@@ -486,6 +486,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
 
     final currentBlock = session.blocks[currentBlockIndex];
     final currentSlide = currentBlock.slides[currentSlideIndex];
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
 
     return Scaffold(
       body: Container(
@@ -570,18 +572,21 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                       // CONTENIDO
                       _buildSlideContent(currentSlide),
                       
-                      // BARRA SUPERIOR DE HERRAMIENTAS
+                      // BARRA SUPERIOR DE HERRAMIENTAS - Responsive para móvil
                       Positioned(
-                        top: 20,
-                        right: 20,
+                        top: isMobile ? 10 : 20,
+                        left: isMobile ? 10 : null,
+                        right: isMobile ? 10 : 20,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 16, vertical: isMobile ? 4 : 8),
                           decoration: BoxDecoration(
                             color: Colors.black45,
-                            borderRadius: BorderRadius.circular(30),
+                            borderRadius: BorderRadius.circular(isMobile ? 15 : 30),
                             border: Border.all(color: Colors.white10),
                           ),
-                          child: Row(
+                          child: isMobile 
+                            ? _buildMobileToolbar(currentSlide, currentBlock)
+                            : Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Row(
@@ -1323,6 +1328,155 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           ),
         ),
       ),
+    );
+  }
+  
+  // ============================================================
+  // TOOLBAR PARA MÓVIL
+  // ============================================================
+  
+  Widget _buildMobileToolbar(Slide currentSlide, ContentBlock currentBlock) {
+    return Consumer<TeacherService>(
+      builder: (context, teacherService, _) {
+        final connectedCount = teacherService.connectedStudentsCount;
+        final isActivity = currentSlide.type == SlideType.activity && currentSlide.activity != null;
+        
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Navegación
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: _prevSlide,
+                  icon: const Icon(Icons.arrow_back_ios, color: Colors.white70, size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    "${currentSlideIndex + 1}/${currentBlock.slides.length}",
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                IconButton(
+                  onPressed: _nextSlide,
+                  icon: const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                ),
+              ],
+            ),
+            
+            // Controles
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Estudiantes conectados
+                Stack(
+                  children: [
+                    IconButton(
+                      onPressed: () => setState(() => _showStudentPanel = !_showStudentPanel),
+                      icon: Icon(
+                        _showStudentPanel ? Icons.people : Icons.people_outline,
+                        color: _showStudentPanel ? Colors.green : Colors.white70,
+                        size: 20,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    ),
+                    if (connectedCount > 0)
+                      Positioned(
+                        right: 2,
+                        top: 2,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: const BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            '$connectedCount',
+                            style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                // Activar actividad (si aplica)
+                if (isActivity)
+                  IconButton(
+                    onPressed: _toggleActivityForStudents,
+                    icon: Icon(
+                      _activityEnabledForStudents ? Icons.play_circle_filled : Icons.play_circle_outline,
+                      color: _activityEnabledForStudents ? Colors.green : Colors.white70,
+                      size: 20,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  ),
+                // Menú adicional
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.white70, size: 20),
+                  padding: EdgeInsets.zero,
+                  color: Colors.black.withOpacity(0.9),
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'projector':
+                        _toggleProjectorMode();
+                        break;
+                      case 'sidebar':
+                        setState(() => _showSidebar = !_showSidebar);
+                        break;
+                      case 'reveal':
+                        if (isActivity) {
+                          _revealAnswer();
+                          _revealAnswerToStudents();
+                        }
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'projector',
+                      child: Row(
+                        children: [
+                          Icon(_isProjectorMode ? Icons.fullscreen_exit : Icons.fullscreen, color: Colors.white70, size: 18),
+                          const SizedBox(width: 8),
+                          Text(_isProjectorMode ? 'Salir proyector' : 'Modo proyector', style: const TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'sidebar',
+                      child: Row(
+                        children: [
+                          Icon(_showSidebar ? Icons.menu_open : Icons.menu, color: Colors.white70, size: 18),
+                          const SizedBox(width: 8),
+                          Text(_showSidebar ? 'Ocultar menú' : 'Mostrar menú', style: const TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    if (isActivity)
+                      const PopupMenuItem(
+                        value: 'reveal',
+                        child: Row(
+                          children: [
+                            Icon(Icons.visibility, color: Colors.orange, size: 18),
+                            SizedBox(width: 8),
+                            Text('Revelar respuesta', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
   

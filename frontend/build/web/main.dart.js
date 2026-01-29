@@ -90552,7 +90552,7 @@ var $async$jj=B.K(function(a,b){if(a===1)return B.G(b,r)
 for(;;)switch(s){case 0:if(p.b){q=!0
 s=1
 break}p.y=!0
-try{o=B.hm(B.aAx()+"/ws/teacher?token=docente_sapiencial_2024",0,null)
+try{o=B.hm(B.aAx()+"/ws/teacher?token=profesor2026",0,null)
 m=B.aBS(o,null)
 p.a=m
 m=m.r.b

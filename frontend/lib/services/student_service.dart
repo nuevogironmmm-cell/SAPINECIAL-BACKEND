@@ -191,13 +191,13 @@ class StudentService extends ChangeNotifier {
       }
     });
     
-    // Esperar respuesta (con timeout)
+    // Esperar respuesta (con timeout más corto para mejor UX)
     try {
       final response = await messageStream
           .where((msg) => msg['type'] == 'REGISTRATION_SUCCESS' || 
                          msg['type'] == 'REGISTRATION_ERROR')
           .first
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 30));
       
       if (response['type'] == 'REGISTRATION_SUCCESS') {
         final data = response['data'];
