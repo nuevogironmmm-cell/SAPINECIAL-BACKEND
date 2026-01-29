@@ -1,18 +1,18 @@
-/// Modelos de datos para la secci?n de estudiantes
+﻿/// Modelos de datos para la sección de estudiantes
 /// 
-/// Sistema de identificaci?n sin cuentas, basado en sesi?n temporal
+/// Sistema de identificación sin cuentas, basado en sesión temporal
 /// Maneja actividades, respuestas, reflexiones y puntaje acumulado
 
 import 'dart:convert';
 
 // ============================================================
-// ESTADO DE CONEXI?N DEL ESTUDIANTE
+// ESTADO DE CONEXIÓN DEL ESTUDIANTE
 // ============================================================
 
 enum StudentConnectionStatus {
   connected,      // Conectado y activo
   responded,      // Ha respondido la actividad actual
-  notResponded,   // No ha respondido a?n
+  notResponded,   // No ha respondido aún
   disconnected,   // Desconectado
 }
 
@@ -21,7 +21,7 @@ enum StudentConnectionStatus {
 // ============================================================
 
 enum StudentActivityType {
-  multipleChoice,   // Opci?n m?ltiple
+  multipleChoice,   // Opción múltiple
   trueFalse,        // Verdadero / Falso
   shortAnswer,      // Respuesta corta
 }
@@ -33,11 +33,11 @@ enum StudentActivityType {
 enum ActivityState {
   locked,   // Bloqueada - estudiante no puede responder
   active,   // Activa - estudiante puede responder
-  closed,   // Cerrada - tiempo agotado o docente cerr?
+  closed,   // Cerrada - tiempo agotado o docente cerró
 }
 
 // ============================================================
-// CLASIFICACI?N POR PORCENTAJE
+// CLASIFICACIÓN POR PORCENTAJE
 // ============================================================
 
 enum StudentClassification {
@@ -49,7 +49,7 @@ enum StudentClassification {
   failed,     // <50% (solo visible para docente)
 }
 
-/// Obtiene la clasificaci?n seg?n el porcentaje
+/// Obtiene la CLASIFICACIÓN según el porcentaje
 StudentClassification getClassification(double percentage) {
   if (percentage >= 100) return StudentClassification.winner;
   if (percentage >= 90) return StudentClassification.excellent;
@@ -59,7 +59,7 @@ StudentClassification getClassification(double percentage) {
   return StudentClassification.failed;
 }
 
-/// Obtiene el texto de clasificaci?n (para docente)
+/// Obtiene el texto de CLASIFICACIÓN (para docente)
 String getClassificationText(StudentClassification classification) {
   switch (classification) {
     case StudentClassification.winner:
@@ -71,38 +71,38 @@ String getClassificationText(StudentClassification classification) {
     case StudentClassification.approved:
       return 'Aprobado';
     case StudentClassification.basic:
-      return 'B?sico';
+      return 'Básico';
     case StudentClassification.failed:
-      return 'P�rdida';
+      return 'Pérdida';
   }
 }
 
-/// Obtiene el ?cono de clasificaci?n
+/// Obtiene el ícono de CLASIFICACIÓN
 String getClassificationIcon(StudentClassification classification) {
   switch (classification) {
     case StudentClassification.winner:
-      return '??';
+      return '🏆';
     case StudentClassification.excellent:
-      return '?';
+      return '⭐';
     case StudentClassification.veryGood:
-      return '??';
+      return '👍';
     case StudentClassification.approved:
-      return '??';
+      return '✅';
     case StudentClassification.basic:
-      return '??';
+      return '📚';
     case StudentClassification.failed:
-      return '??';
+      return '💪';
   }
 }
 
 /// Obtiene mensaje motivacional para el estudiante
 String getMotivationalMessage(double percentage) {
-  if (percentage >= 100) return '?Excelente! Dominaste el tema ??';
-  if (percentage >= 90) return 'Muy buen trabajo, casi perfecto ??';
-  if (percentage >= 80) return 'Vas muy bien, sigue as? ??';
-  if (percentage >= 70) return 'Buen avance, puedes mejorar ??';
-  if (percentage >= 60) return 'Buen intento, sigue practicando ??';
-  return '?nimo, cada clase es una nueva oportunidad ??';
+  if (percentage >= 100) return '¡Excelente! Dominaste el tema 👏';
+  if (percentage >= 90) return 'Muy buen trabajo, casi perfecto 💪';
+  if (percentage >= 80) return 'Vas muy bien, sigue así 🔥';
+  if (percentage >= 70) return 'Buen avance, puedes mejorar 👍';
+  if (percentage >= 60) return 'Buen intento, sigue practicando 📘';
+  return '¡Ánimo, cada clase es una nueva oportunidad! 🌱';
 }
 
 // ============================================================
@@ -110,7 +110,7 @@ String getMotivationalMessage(double percentage) {
 // ============================================================
 
 class Student {
-  final String sessionId;       // ID temporal de sesi?n (generado)
+  final String sessionId;       // ID temporal de sesión (generado)
   final String name;            // Nombre ingresado
   StudentConnectionStatus status;
   double accumulatedPercentage; // Porcentaje acumulado (0-100)
@@ -136,7 +136,7 @@ class Student {
        responses = responses ?? {},
        reflections = reflections ?? [];
 
-  /// Clasificaci?n actual del estudiante
+  /// CLASIFICACIÓN actual del estudiante
   StudentClassification get classification => 
       getClassification(accumulatedPercentage);
   
@@ -144,11 +144,11 @@ class Student {
   String get motivationalMessage => 
       getMotivationalMessage(accumulatedPercentage);
   
-  /// ?cono de clasificaci?n
+  /// ícono de CLASIFICACIÓN
   String get classificationIcon => 
       getClassificationIcon(classification);
 
-  /// Verifica si el estudiante ya respondi? una actividad
+  /// Verifica si el estudiante ya respondió una actividad
   bool hasResponded(String activityId) => responses.containsKey(activityId);
 
   /// Agrega una respuesta y recalcula el porcentaje
@@ -165,7 +165,7 @@ class Student {
     status = StudentConnectionStatus.responded;
   }
 
-  /// Agrega una reflexi?n
+  /// Agrega una reflexión
   void addReflection(StudentReflection reflection) {
     reflections.add(reflection);
     lastActivityAt = DateTime.now();
@@ -176,7 +176,7 @@ class Student {
     status = StudentConnectionStatus.notResponded;
   }
 
-  /// Convierte a JSON para env?o por WebSocket
+  /// Convierte a JSON para envío por WebSocket
   Map<String, dynamic> toJson() => {
     'sessionId': sessionId,
     'name': name,
@@ -205,7 +205,7 @@ class Student {
         : null,
   );
 
-  /// Versi?n resumida para dashboard (sin datos sensibles)
+  /// Versión resumida para dashboard (sin datos sensibles)
   Map<String, dynamic> toSummary() => {
     'sessionId': sessionId,
     'name': name,
@@ -270,7 +270,7 @@ class StudentResponse {
 }
 
 // ============================================================
-// MODELO: REFLEXI?N DE ESTUDIANTE
+// MODELO: reflexión DE ESTUDIANTE
 // ============================================================
 
 class StudentReflection {
@@ -278,7 +278,7 @@ class StudentReflection {
   final String studentSessionId;
   final String studentName;
   final String topic;             // Tema asociado
-  final String content;           // Texto de la reflexi?n
+  final String content;           // Texto de la reflexión
   final DateTime createdAt;
 
   StudentReflection({
@@ -302,7 +302,7 @@ class StudentReflection {
   factory StudentReflection.fromJson(Map<String, dynamic> json) => StudentReflection(
     id: json['id'],
     studentSessionId: json['studentSessionId'],
-    studentName: json['studentName'] ?? 'An?nimo',
+    studentName: json['studentName'] ?? 'Anónimo',
     topic: json['topic'],
     content: json['content'],
     createdAt: json['createdAt'] != null 
@@ -322,8 +322,11 @@ class StudentActivity {
   final List<String> options;           // Opciones (MC) o ["Verdadero", "Falso"] (T/F)
   final double percentageValue;         // Valor porcentual (ej: 10%)
   ActivityState state;
-  final int? timeLimitSeconds;          // L?mite de tiempo opcional
-  final int correctOptionIndex;         // ?ndice correcto (no visible para estudiante)
+  final int? timeLimitSeconds;          // Límite de tiempo opcional
+  final int correctOptionIndex;         // Índice correcto (no visible para estudiante)
+  final String? title;                  // Título de la actividad (ej: "Actividad 3: Identifica el libro")
+  final String? slideContent;           // Contenido de la diapositiva (ej: la cita bíblica)
+  final String? biblicalReference;      // Referencia bíblica (ej: "Eclesiastés 1:2")
   
   StudentActivity({
     required this.id,
@@ -334,13 +337,16 @@ class StudentActivity {
     this.state = ActivityState.locked,
     this.timeLimitSeconds,
     required this.correctOptionIndex,
+    this.title,
+    this.slideContent,
+    this.biblicalReference,
   });
 
   bool get isLocked => state == ActivityState.locked;
   bool get isActive => state == ActivityState.active;
   bool get isClosed => state == ActivityState.closed;
 
-  /// Versi?n para estudiante (sin respuesta correcta)
+  /// Versión para estudiante (sin respuesta correcta)
   Map<String, dynamic> toStudentJson() => {
     'id': id,
     'type': type.name,
@@ -349,9 +355,12 @@ class StudentActivity {
     'percentageValue': percentageValue,
     'state': state.name,
     'timeLimitSeconds': timeLimitSeconds,
+    'title': title,
+    'slideContent': slideContent,
+    'biblicalReference': biblicalReference,
   };
 
-  /// Versi?n completa (para backend/docente)
+  /// Versión completa (para backend/docente)
   Map<String, dynamic> toJson() => {
     ...toStudentJson(),
     'correctOptionIndex': correctOptionIndex,
@@ -372,6 +381,9 @@ class StudentActivity {
     ),
     timeLimitSeconds: json['timeLimitSeconds'],
     correctOptionIndex: json['correctOptionIndex'] ?? 0,
+    title: json['title'],
+    slideContent: json['slideContent'],
+    biblicalReference: json['biblicalReference'],
   );
 }
 
@@ -432,3 +444,4 @@ class ClassDashboardSummary {
     );
   }
 }
+

@@ -156,6 +156,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             : activity.type == ActivityType.wordPuzzle 
                 ? 'wordPuzzle' 
                 : 'multipleChoice',
+        title: currentSlide.title,  // Título de la actividad
+        slideContent: currentSlide.content,  // Contenido (la cita bíblica)
+        biblicalReference: currentSlide.biblicalReference,  // Referencia bíblica
       );
       
       // Pequeño delay para asegurar registro

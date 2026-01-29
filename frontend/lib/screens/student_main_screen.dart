@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import '../services/student_service.dart';
@@ -13,12 +13,12 @@ import 'student_login_screen.dart';
 /// - Actividad activa (si hay)
 /// - Porcentaje acumulado
 /// - Mensaje motivacional
-/// - Campo de reflexi?n
+/// - Campo de reflexión
 /// 
 /// NO muestra:
 /// - Ranking de otros
-/// - Respuestas correctas (hasta revelaci?n)
-/// - Clasificaci?n negativa
+/// - Respuestas correctas (hasta revelación)
+/// - Clasificación negativa
 class StudentMainScreen extends StatefulWidget {
   const StudentMainScreen({super.key});
 
@@ -31,10 +31,17 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   final _reflectionController = TextEditingController();
   final _scrollController = ScrollController();
   
-  int? _selectedAnswer;
-  bool _isSubmitting = false;
+  // Estado para múltiples actividades
+  final Map<String, int?> _selectedAnswers = {}; // activityId -> selectedIndex
+  final Map<String, bool> _submittingActivities = {}; // activityId -> isSubmitting
+  final Map<String, DateTime> _activityStartTimes = {}; // activityId -> startTime
+  
   bool _showReflectionForm = false;
   bool _reflectionSent = false;
+  
+  // Legacy - mantener compatibilidad
+  int? _selectedAnswer;
+  bool _isSubmitting = false;
   DateTime? _activityStartTime;
   
   late AnimationController _progressController;
@@ -77,6 +84,61 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     super.dispose();
   }
   
+  /// Selecciona una respuesta para una actividad específica
+  void _selectAnswerForActivity(String activityId, int answerIndex) {
+    setState(() {
+      _selectedAnswers[activityId] = answerIndex;
+      // Registrar tiempo de inicio si no existe
+      _activityStartTimes.putIfAbsent(activityId, () => DateTime.now());
+    });
+  }
+  
+  /// Envía la respuesta para una actividad específica
+  Future<void> _submitAnswerForActivity(String activityId) async {
+    final selectedAnswer = _selectedAnswers[activityId];
+    if (selectedAnswer == null) return;
+    
+    final studentService = context.read<StudentService>();
+    
+    // Calcular tiempo de respuesta
+    int? responseTimeMs;
+    final startTime = _activityStartTimes[activityId];
+    if (startTime != null) {
+      responseTimeMs = DateTime.now().difference(startTime).inMilliseconds;
+    }
+    
+    setState(() => _submittingActivities[activityId] = true);
+    
+    final success = await studentService.submitAnswerForActivity(
+      activityId,
+      selectedAnswer,
+      responseTimeMs: responseTimeMs,
+    );
+    
+    setState(() => _submittingActivities[activityId] = false);
+    
+    if (success) {
+      // Animación de éxito
+      _progressController.reset();
+      _progressController.forward();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text('¡Respuesta enviada correctamente!'),
+            ],
+          ),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+  
+  // Legacy method - mantener compatibilidad
   Future<void> _submitAnswer() async {
     if (_selectedAnswer == null) return;
     
@@ -100,7 +162,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     setState(() => _isSubmitting = false);
     
     if (success) {
-      // Animaci?n de �xito
+      // Animación de éxito
       _progressController.reset();
       _progressController.forward();
     }
@@ -111,7 +173,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     if (content.length < 10) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('La reflexi?n debe tener al menos 10 caracteres'),
+          content: Text('La reflexión debe tener al menos 10 caracteres'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -123,7 +185,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     setState(() => _isSubmitting = true);
     
     final success = await studentService.submitReflection(
-      'Reflexi?n de clase',
+      'reflexión de clase',
       content,
     );
     
@@ -138,7 +200,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('? Reflexi?n enviada correctamente'),
+          content: Text('¡Reflexión enviada correctamente!'),
           backgroundColor: Colors.green,
         ),
       );
@@ -160,8 +222,9 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     return Consumer<StudentService>(
       builder: (context, studentService, _) {
         final student = studentService.currentStudent;
-        final activity = studentService.currentActivity;
-        final hasResponded = studentService.hasResponded;
+        final activities = studentService.activeActivities;
+        final hasAnyActivity = activities.isNotEmpty;
+        final pendingCount = studentService.pendingActivitiesCount;
         
         return Scaffold(
           body: Container(
@@ -193,24 +256,34 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                           
                           const SizedBox(height: 24),
                           
-                          // Actividad actual o mensaje de espera
-                          if (activity != null && activity.isActive)
-                            _buildActivityCard(activity, hasResponded)
-                          else if (hasResponded)
-                            _buildWaitingForResultsCard()
+                          // Contador de actividades pendientes
+                          if (hasAnyActivity)
+                            _buildActivitiesHeader(activities.length, pendingCount),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // MOSTRAR TODAS LAS ACTIVIDADES ACTIVAS
+                          if (hasAnyActivity)
+                            ...activities.map((activity) => Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: _buildActivityCard(
+                                activity, 
+                                studentService.hasRespondedActivity(activity.id),
+                              ),
+                            ))
                           else
                             _buildWaitingCard(),
                           
                           const SizedBox(height: 24),
                           
-                          // Secci?n de reflexi?n
+                          // Sección de reflexión
                           _buildReflectionSection(),
                         ],
                       ),
                     ),
                   ),
                   
-                  // Footer con conexi?n
+                  // Footer con conexión
                   _buildConnectionStatus(studentService),
                 ],
               ),
@@ -287,7 +360,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             ),
           ),
           
-          // Bot?n de salir
+          // Botón de salir
           IconButton(
             onPressed: _logout,
             icon: const Icon(Icons.logout_rounded),
@@ -303,7 +376,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     final theme = Theme.of(context);
     final percentage = student?.accumulatedPercentage ?? 0;
     final message = student?.motivationalMessage ?? '';
-    final icon = student?.classificationIcon ?? '??';
+    final icon = student?.classificationIcon ?? '📚';
     
     return FadeInSlide(
       child: Container(
@@ -372,6 +445,74 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+  
+  /// Encabezado con contador de actividades
+  Widget _buildActivitiesHeader(int totalCount, int pendingCount) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.assignment_rounded,
+            color: theme.colorScheme.primary,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Actividades Disponibles',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  pendingCount > 0
+                      ? '$pendingCount de $totalCount pendientes'
+                      : '¡Todas completadas!',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: pendingCount > 0 
+                        ? Colors.orange.shade300 
+                        : Colors.green.shade300,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Badge con contador
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: pendingCount > 0 
+                  ? Colors.orange.withOpacity(0.2)
+                  : Colors.green.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '$totalCount',
+              style: TextStyle(
+                color: pendingCount > 0 ? Colors.orange : Colors.green,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -455,6 +596,60 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             
             const SizedBox(height: 20),
             
+            // Título de la actividad (si existe)
+            if (activity.title != null && activity.title!.isNotEmpty) ...[
+              Text(
+                activity.title!,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            
+            // Cita bíblica / Contenido del slide (si existe)
+            if (activity.slideContent != null && activity.slideContent!.isNotEmpty) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.amber.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      '"${activity.slideContent!}"',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
+                      ),
+                    ),
+                    // Referencia bíblica (si existe)
+                    if (activity.biblicalReference != null && activity.biblicalReference!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        activity.biblicalReference!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.amber,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            
             // Pregunta
             Text(
               activity.question,
@@ -471,7 +666,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
               ...activity.options.asMap().entries.map((entry) {
                 final index = entry.key;
                 final option = entry.value;
-                final isSelected = _selectedAnswer == index;
+                final isSelected = _selectedAnswers[activity.id] == index;
                 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -482,7 +677,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                       text: option,
                       isSelected: isSelected,
                       onTap: () {
-                        setState(() => _selectedAnswer = index);
+                        _selectAnswerForActivity(activity.id, index);
                       },
                     ),
                   ),
@@ -512,7 +707,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '?Respuesta enviada!',
+                            '¡Respuesta enviada!',
                             style: theme.textTheme.titleMedium?.copyWith(
                               color: Colors.green,
                               fontWeight: FontWeight.bold,
@@ -531,14 +726,16 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 ),
               ),
             
-            // Bot?n de enviar
-            if (!hasResponded && _selectedAnswer != null) ...[
+            // Botón de enviar
+            if (!hasResponded && _selectedAnswers[activity.id] != null) ...[
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: AnimatedButton(
-                  onPressed: _isSubmitting ? null : _submitAnswer,
+                  onPressed: (_submittingActivities[activity.id] == true) 
+                      ? null 
+                      : () => _submitAnswerForActivity(activity.id),
                   child: Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -550,7 +747,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Center(
-                      child: _isSubmitting
+                      child: (_submittingActivities[activity.id] == true)
                           ? const SizedBox(
                               width: 24,
                               height: 24,
@@ -616,7 +813,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
           ),
           child: Row(
             children: [
-              // Letra de opci?n
+              // Letra de opción
               Container(
                 width: 40,
                 height: 40,
@@ -640,7 +837,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
               
               const SizedBox(width: 16),
               
-              // Texto de opci?n
+              // Texto de opción
               Expanded(
                 child: Text(
                   text,
@@ -651,7 +848,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 ),
               ),
               
-              // Indicador de selecci?n
+              // Indicador de selección
               if (isSelected)
                 Icon(
                   Icons.check_circle,
@@ -700,7 +897,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             const SizedBox(height: 8),
             
             Text(
-              'El docente a?n no ha habilitado\nuna actividad para responder.',
+              'El docente aún no ha habilitado\nuna actividad para responder.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: Colors.white54,
               ),
@@ -740,7 +937,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             const SizedBox(height: 24),
             
             Text(
-              '?Respuesta enviada!',
+              '¡Respuesta enviada!',
               style: theme.textTheme.titleLarge?.copyWith(
                 color: Colors.green,
                 fontWeight: FontWeight.bold,
@@ -788,7 +985,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Mi Reflexi?n',
+                  'Mi reflexión',
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -820,7 +1017,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Reflexi?n enviada al docente',
+                        'Reflexión enviada al docente',
                         style: TextStyle(color: Colors.green.shade300),
                       ),
                     ),
@@ -845,7 +1042,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 maxLines: 4,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: '?Qu� aprendiste hoy? ?Qu� te llam? la atenci?n?',
+                  hintText: '¿Qué aprendiste hoy? ¿Qué te llamó la atención?',
                   hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.05),
@@ -902,7 +1099,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             ] else ...[
               const SizedBox(height: 12),
               Text(
-                'Comparte tus pensamientos sobre la clase.\nEl docente podr? leer tu reflexi?n.',
+                'Comparte tus pensamientos sobre la clase.\nEl docente podrá leer tu reflexión.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: Colors.white54,
                 ),
@@ -951,3 +1148,4 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     );
   }
 }
+

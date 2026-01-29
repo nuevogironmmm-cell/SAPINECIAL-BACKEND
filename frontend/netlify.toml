@@ -1,0 +1,79 @@
+# ============================================
+# Configuraci?n de Netlify para Flutter Web
+# Literatura Sapiencial - App Educativa
+# ============================================
+
+[build]
+  # Directorio donde se encuentra la app Flutter
+  base = "frontend"
+  
+  # Comando de build - Netlify no tiene Flutter SDK instalado
+  # Por eso subimos directamente el build/web generado localmente
+  # Si deseas CI/CD autom?tico, ver instrucciones abajo
+  command = "echo 'Build manual - subir build/web'"
+  
+  # Directorio de publicaci?n (relativo a base)
+  publish = "build/web"
+
+# ============================================
+# Configuraci?n de Entorno
+# ============================================
+[build.environment]
+  NODE_VERSION = "18"
+
+# ============================================
+# Redirecciones SPA (Single Page Application)
+# Evita errores 404 al refrescar o navegar directo
+# ============================================
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ============================================
+# Headers de seguridad y caché
+# ============================================
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Cache para assets est?ticos
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# ============================================
+# INSTRUCCIONES DE DESPLIEGUE MANUAL
+# ============================================
+# 
+# OPCI?N 1: Netlify Drop (M?s f?cil)
+# 1. Ejecuta localmente: flutter build web --release
+# 2. Ve a https://app.netlify.com/drop
+# 3. Arrastra la carpeta frontend/build/web
+# 4. ?Listo! Obtendr?s una URL p?blica
+#
+# OPCI?N 2: Netlify CLI
+# 1. Instala: npm install -g netlify-cli
+# 2. Ejecuta: flutter build web --release
+# 3. Navega a: cd frontend/build/web
+# 4. Ejecuta: netlify deploy --prod
+#
+# OPCI?N 3: GitHub + Netlify CI/CD (Avanzado)
+# - Requiere configurar Flutter SDK en el build
+# - Ver: https://docs.netlify.com/configure-builds/
+# ============================================

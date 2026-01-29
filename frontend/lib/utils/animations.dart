@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 /// ============================================================
 /// SISTEMA DE ANIMACIONES EDUCATIVAS
 /// ============================================================
-/// Dise?ado para reforzar el aprendizaje sin distraer.
-/// Cada animaci?n tiene un prop?sito pedag?gico espec?fico.
+/// Diseñado para reforzar el aprendizaje sin distraer.
+/// Cada animación tiene un propósito pedagógico específico.
 /// ============================================================
 
 // ============================================================
-// DURACI?N DE ANIMACIONES (Consistencia UX)
+// DURACIÓN DE ANIMACIONES (Consistencia UX)
 // ============================================================
 
 class AnimationDurations {
@@ -21,7 +21,7 @@ class AnimationDurations {
 }
 
 // ============================================================
-// CURVAS PERSONALIZADAS (Sensaci?n natural)
+// CURVAS PERSONALIZADAS (Sensación natural)
 // ============================================================
 
 class AnimationCurves {
@@ -34,8 +34,8 @@ class AnimationCurves {
 
 // ============================================================
 // WIDGET: FADE IN SLIDE (Entrada suave con deslizamiento)
-// Uso pedag?gico: Introduce contenido nuevo de forma gradual,
-// permitiendo que el estudiante procese la informaci?n.
+// Uso pedagógico: Introduce contenido nuevo de forma gradual,
+// permitiendo que el estudiante procese la información.
 // ============================================================
 
 class FadeInSlide extends StatefulWidget {
@@ -106,8 +106,8 @@ class _FadeInSlideState extends State<FadeInSlide>
 
 // ============================================================
 // WIDGET: SCALE IN (Entrada con escala)
-// Uso pedag?gico: Resalta elementos importantes como t?tulos
-// o respuestas correctas, captando la atenci?n del estudiante.
+// Uso pedagógico: Resalta elementos importantes como títulos
+// o respuestas correctas, captando la atención del estudiante.
 // ============================================================
 
 class ScaleIn extends StatefulWidget {
@@ -176,8 +176,8 @@ class _ScaleInState extends State<ScaleIn> with SingleTickerProviderStateMixin {
 }
 
 // ============================================================
-// WIDGET: ANIMATED BUTTON (Bot?n con micro-interacciones)
-// Uso pedag?gico: Feedback t?ctil inmediato que confirma
+// WIDGET: ANIMATED BUTTON (Botón con micro-interacciones)
+// Uso pedagógico: Feedback táctil inmediato que confirma
 // las acciones del usuario, reduciendo incertidumbre.
 // ============================================================
 
@@ -278,8 +278,8 @@ class _AnimatedButtonState extends State<AnimatedButton>
 }
 
 // ============================================================
-// WIDGET: PULSE ANIMATION (Pulso de atenci?n)
-// Uso pedag?gico: Llama la atenci?n sobre elementos
+// WIDGET: PULSE ANIMATION (Pulso de atención)
+// Uso pedagógico: Llama la atención sobre elementos
 // importantes sin ser intrusivo. Ideal para respuestas correctas.
 // ============================================================
 
@@ -356,8 +356,8 @@ class _PulseAnimationState extends State<PulseAnimation>
 }
 
 // ============================================================
-// WIDGET: SUCCESS CELEBRATION (Celebraci?n de �xito)
-// Uso pedag?gico: Refuerzo positivo visual que motiva al
+// WIDGET: SUCCESS CELEBRATION (Celebración de �éxito)
+// Uso pedagógico: Refuerzo positivo visual que motiva al
 // estudiante y celebra sus logros de aprendizaje.
 // ============================================================
 
@@ -464,7 +464,7 @@ class _SuccessCelebrationState extends State<SuccessCelebration>
 
 // ============================================================
 // WIDGET: SHAKE ANIMATION (Sacudida para error)
-// Uso pedag?gico: Feedback negativo suave que indica error
+// Uso pedagógico: Feedback negativo suave que indica error
 // sin ser punitivo, invitando a intentar de nuevo.
 // ============================================================
 
@@ -546,7 +546,7 @@ class _ShakeAnimationState extends State<ShakeAnimation>
 
 // ============================================================
 // WIDGET: STAGGERED LIST (Lista con entrada escalonada)
-// Uso pedag?gico: Presenta opciones de forma secuencial,
+// Uso pedagógico: Presenta opciones de forma secuencial,
 // permitiendo al estudiante procesar cada una.
 // ============================================================
 
@@ -581,8 +581,8 @@ class StaggeredList extends StatelessWidget {
 
 // ============================================================
 // WIDGET: PROGRESS INDICATOR ANIMATED (Indicador de progreso)
-// Uso pedag?gico: Muestra el avance de forma visual,
-// motivando al estudiante a completar la lecci?n.
+// Uso pedagógico: Muestra el avance de forma visual,
+// motivando al estudiante a completar la lección.
 // ============================================================
 
 class AnimatedProgressBar extends StatelessWidget {
@@ -645,8 +645,8 @@ class AnimatedProgressBar extends StatelessWidget {
 }
 
 // ============================================================
-// WIDGET: SLIDE TRANSITION WRAPPER (Transici?n entre slides)
-// Uso pedag?gico: Transici?n suave entre contenidos que
+// WIDGET: SLIDE TRANSITION WRAPPER (Transición entre slides)
+// Uso pedagógico: Transición suave entre contenidos que
 // mantiene la continuidad del aprendizaje.
 // ============================================================
 
@@ -687,9 +687,9 @@ class SlideTransitionWrapper extends StatelessWidget {
 }
 
 // ============================================================
-// WIDGET: CONFETTI BURST (Explosi?n de confeti para logros)
-// Uso pedag?gico: Celebraci?n visual para logros importantes
-// que genera satisfacci?n y motivaci?n.
+// WIDGET: CONFETTI BURST (Explosión de confeti para logros)
+// Uso pedagógico: Celebración visual para logros importantes
+// que genera satisfacción y motivación.
 // ============================================================
 
 class ConfettiBurst extends StatefulWidget {
@@ -823,8 +823,8 @@ class _ConfettiPainter extends CustomPainter {
 
 // ============================================================
 // WIDGET: TYPING TEXT (Texto que aparece letra por letra)
-// Uso pedag?gico: Simula escritura en tiempo real, 
-// manteniendo la atenci?n en textos importantes.
+// Uso pedagógico: Simula escritura en tiempo real, 
+// manteniendo la atención en textos importantes.
 // ============================================================
 
 class TypingText extends StatefulWidget {
@@ -876,3 +876,4 @@ class _TypingTextState extends State<TypingText> {
     );
   }
 }
+

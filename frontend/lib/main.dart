@@ -1,16 +1,20 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'services/websocket_service.dart';
 import 'services/student_service.dart';
 import 'services/teacher_service.dart';
+// import 'services/auth_service.dart'; // Temporalmente deshabilitado para pruebas
 import 'screens/teacher_dashboard.dart';
 import 'screens/student_login_screen.dart';
+// import 'screens/auth_wrapper.dart'; // Temporalmente deshabilitado para pruebas
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(
     MultiProvider(
       providers: [
+        // ChangeNotifierProvider(create: (_) => AuthService()), // Temporalmente deshabilitado
         ChangeNotifierProvider(create: (_) => WebSocketService()),
         ChangeNotifierProvider(create: (_) => StudentService()),
         ChangeNotifierProvider(create: (_) => TeacherService()),
@@ -29,6 +33,7 @@ class SapiencialApp extends StatelessWidget {
       title: 'Literatura Sapiencial',
       debugShowCheckedModeBanner: false,
       theme: _buildTheme(),
+      // Sin AuthWrapper para pruebas directas
       home: const RoleSelectionScreen(),
     );
   }
@@ -50,7 +55,7 @@ class SapiencialApp extends StatelessWidget {
   }
 }
 
-/// Pantalla de selecci?n de rol (Docente / Estudiante)
+/// Pantalla de selección de rol (Docente / Estudiante)
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
 
@@ -206,7 +211,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                   
                   const SizedBox(height: 40),
                   
-                  // T?tulo
+                  // Título
                   FadeTransition(
                     opacity: _logoAnimation,
                     child: Column(
@@ -237,7 +242,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                   FadeTransition(
                     opacity: _cardsAnimation,
                     child: Text(
-                      '?C?mo deseas ingresar?',
+                      '¿Cómo deseas ingresar?',
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: Colors.white,
                       ),
@@ -246,7 +251,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                   
                   const SizedBox(height: 32),
                   
-                  // Tarjetas de selecci?n
+                  // Tarjetas de selección
                   ScaleTransition(
                     scale: _cardsAnimation,
                     child: ConstrainedBox(
@@ -285,7 +290,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                   
                   const SizedBox(height: 60),
                   
-                  // Versi?n
+                  // Versión
                   FadeTransition(
                     opacity: _cardsAnimation,
                     child: Text(
@@ -336,7 +341,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
           ),
           child: Column(
             children: [
-              // ?cono
+              // Ícono
               Container(
                 width: 80,
                 height: 80,
@@ -353,7 +358,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
               
               const SizedBox(height: 20),
               
-              // T?tulo
+              // Título
               Text(
                 title,
                 style: theme.textTheme.titleLarge?.copyWith(
@@ -364,7 +369,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
               
               const SizedBox(height: 8),
               
-              // Descripci?n
+              // Descripción
               Text(
                 description,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -375,7 +380,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
               
               const SizedBox(height: 20),
               
-              // Bot?n
+              // Botón
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
@@ -415,3 +420,4 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
     );
   }
 }
+

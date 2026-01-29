@@ -1,17 +1,18 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/student_model.dart';
+import '../config/app_config.dart';
 
-/// Servicio de estudiante para gesti?n de sesi?n y comunicaci?n en tiempo real
+/// Servicio de estudiante para gestión de sesión y comunicación en tiempo real
 /// 
 /// Maneja:
-/// - Registro e identificaci?n del estudiante (sin cuenta)
-/// - Conexi?n WebSocket con reconexi?n autom?tica
-/// - Env?o de respuestas y reflexiones
-/// - Sincronizaci?n de estado con el servidor
+/// - Registro e identificación del estudiante (sin cuenta)
+/// - conexión WebSocket con reconexión automática
+/// - Envío de respuestas y reflexiones
+/// - sincronización de estado con el servidor
 class StudentService extends ChangeNotifier {
   // ============================================================
   // ESTADO DEL SERVICIO
@@ -27,16 +28,20 @@ class StudentService extends ChangeNotifier {
   String? _sessionId;
   String? _studentName;
   
-  // Actividad actual
+  // Actividad actual (la más reciente desbloqueada)
   StudentActivity? _currentActivity;
   bool _hasResponded = false;
+  
+  // LISTA DE TODAS LAS ACTIVIDADES ACTIVAS
+  final List<StudentActivity> _activeActivities = [];
+  final Map<String, bool> _activityResponses = {}; // activityId -> hasResponded
   
   // Estado de la clase
   String _classState = "LOBBY";
   int _currentSlide = 0;
   int _currentBlock = 0;
   
-  // Configuraci?n de reconexi?n
+  // Configuración de reconexión
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 5;
   static const Duration _initialReconnectDelay = Duration(seconds: 1);
@@ -46,10 +51,11 @@ class StudentService extends ChangeNotifier {
   // Stream controllers
   final _messageController = StreamController<Map<String, dynamic>>.broadcast();
   final _activityController = StreamController<StudentActivity?>.broadcast();
+  final _activitiesController = StreamController<List<StudentActivity>>.broadcast();
   final _errorController = StreamController<String>.broadcast();
   
-  // URL del servidor
-  static const String _baseUrl = 'ws://localhost:8000/ws/student';
+  // URL del servidor (dinámica según entorno)
+  String get _baseUrl => AppConfig.studentWsUrl;
   
   // ============================================================
   // GETTERS
@@ -69,6 +75,33 @@ class StudentService extends ChangeNotifier {
                          _currentActivity!.isActive && 
                          !_hasResponded;
   
+  // NUEVOS GETTERS PARA MÚLTIPLES ACTIVIDADES
+  List<StudentActivity> get activeActivities => List.unmodifiable(_activeActivities);
+  int get activeActivitiesCount => _activeActivities.length;
+  int get pendingActivitiesCount => _activeActivities.where((a) => !hasRespondedActivity(a.id)).length;
+  
+  /// Verifica si ya respondió una actividad específica
+  bool hasRespondedActivity(String activityId) {
+    return _activityResponses[activityId] == true ||
+           (_currentStudent?.hasResponded(activityId) ?? false);
+  }
+  
+  /// Verifica si puede responder una actividad específica
+  bool canRespondActivity(String activityId) {
+    final activity = _activeActivities.firstWhere(
+      (a) => a.id == activityId,
+      orElse: () => StudentActivity(
+        id: '', 
+        question: '', 
+        options: [], 
+        percentageValue: 0,
+        type: StudentActivityType.multipleChoice,
+        correctOptionIndex: 0,
+      ),
+    );
+    return activity.id.isNotEmpty && activity.isActive && !hasRespondedActivity(activityId);
+  }
+  
   String get classState => _classState;
   int get currentSlide => _currentSlide;
   int get currentBlock => _currentBlock;
@@ -78,11 +111,12 @@ class StudentService extends ChangeNotifier {
   String get classificationIcon => _currentStudent?.classificationIcon ?? '';
   
   Stream<Map<String, dynamic>> get messageStream => _messageController.stream;
+  Stream<List<StudentActivity>> get activitiesStream => _activitiesController.stream;
   Stream<StudentActivity?> get activityStream => _activityController.stream;
   Stream<String> get errorStream => _errorController.stream;
   
   // ============================================================
-  // CONEXI?N Y REGISTRO
+  // conexión Y REGISTRO
   // ============================================================
   
   /// Conecta al servidor WebSocket
@@ -105,7 +139,7 @@ class StudentService extends ChangeNotifier {
           _attemptReconnect();
         },
         onDone: () {
-          debugPrint('[StudentService] Conexi?n cerrada');
+          debugPrint('[StudentService] Conexión cerrada');
           _handleDisconnect();
           _attemptReconnect();
         },
@@ -135,7 +169,7 @@ class StudentService extends ChangeNotifier {
     
     name = name.trim();
     
-    // Validaci?n local
+    // Validación local
     if (name.length < 3) {
       _errorMessage = 'El nombre debe tener al menos 3 caracteres';
       notifyListeners();
@@ -163,7 +197,7 @@ class StudentService extends ChangeNotifier {
           .where((msg) => msg['type'] == 'REGISTRATION_SUCCESS' || 
                          msg['type'] == 'REGISTRATION_ERROR')
           .first
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 15));
       
       if (response['type'] == 'REGISTRATION_SUCCESS') {
         final data = response['data'];
@@ -174,7 +208,7 @@ class StudentService extends ChangeNotifier {
         // Crear objeto Student
         _currentStudent = Student.fromJson(data);
         
-        // Guardar nombre para reconexi?n
+        // Guardar nombre para reconexión
         await _saveStudentName(name);
         
         _errorMessage = null;
@@ -205,10 +239,10 @@ class StudentService extends ChangeNotifier {
   // ACCIONES DE ESTUDIANTE
   // ============================================================
   
-  /// Env?a respuesta a una actividad
-  Future<bool> submitAnswer(int answerIndex, {int? responseTimeMs}) async {
-    if (!canRespond) {
-      _errorMessage = 'No puedes responder en este momento';
+  /// Envía respuesta a una actividad específica
+  Future<bool> submitAnswerForActivity(String activityId, int answerIndex, {int? responseTimeMs}) async {
+    if (!canRespondActivity(activityId)) {
+      _errorMessage = 'No puedes responder esta actividad';
       notifyListeners();
       return false;
     }
@@ -216,23 +250,26 @@ class StudentService extends ChangeNotifier {
     _sendMessage({
       'action': 'SUBMIT_ANSWER',
       'payload': {
-        'activityId': _currentActivity!.id,
+        'activityId': activityId,
         'answer': answerIndex,
         'responseTimeMs': responseTimeMs,
       }
     });
     
     // Marcar como respondido localmente
-    _hasResponded = true;
+    _activityResponses[activityId] = true;
+    if (_currentActivity?.id == activityId) {
+      _hasResponded = true;
+    }
     notifyListeners();
     
-    // Esperar confirmaci?n
+    // Esperar confirmación
     try {
       final response = await messageStream
           .where((msg) => msg['type'] == 'ANSWER_RECEIVED' || 
                          msg['type'] == 'ERROR')
           .first
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 15));
       
       if (response['type'] == 'ANSWER_RECEIVED') {
         final data = response['data'];
@@ -245,19 +282,45 @@ class StudentService extends ChangeNotifier {
         return true;
       } else {
         _errorMessage = response['data']?['message'] ?? 'Error al enviar respuesta';
-        _hasResponded = false; // Permitir reintentar
+        _activityResponses[activityId] = false; // Permitir reintentar
+        if (_currentActivity?.id == activityId) {
+          _hasResponded = false;
+        }
         notifyListeners();
         return false;
       }
     } catch (e) {
-      _errorMessage = 'Error de conexi?n';
-      _hasResponded = false;
+      _errorMessage = 'Error de conexión';
+      _activityResponses[activityId] = false;
+      if (_currentActivity?.id == activityId) {
+        _hasResponded = false;
+      }
       notifyListeners();
       return false;
     }
   }
   
-  /// Env?a una reflexi?n
+  /// Envía respuesta a la actividad actual (método legacy)
+  Future<bool> submitAnswer(int answerIndex, {int? responseTimeMs}) async {
+    if (!canRespond) {
+      _errorMessage = 'No puedes responder en este momento';
+      notifyListeners();
+      return false;
+    }
+    
+    return submitAnswerForActivity(_currentActivity!.id, answerIndex, responseTimeMs: responseTimeMs);
+  }
+  
+  /// Obtiene una actividad específica de la lista de activas
+  StudentActivity? getActivity(String activityId) {
+    try {
+      return _activeActivities.firstWhere((a) => a.id == activityId);
+    } catch (_) {
+      return null;
+    }
+  }
+  
+  /// Envía una reflexión
   Future<bool> submitReflection(String topic, String content) async {
     if (!_isRegistered) {
       _errorMessage = 'Debes registrarte primero';
@@ -267,7 +330,7 @@ class StudentService extends ChangeNotifier {
     
     content = content.trim();
     if (content.length < 10) {
-      _errorMessage = 'La reflexi?n debe tener al menos 10 caracteres';
+      _errorMessage = 'La reflexión debe tener al menos 10 caracteres';
       notifyListeners();
       return false;
     }
@@ -280,31 +343,31 @@ class StudentService extends ChangeNotifier {
       }
     });
     
-    // Esperar confirmaci?n
+    // Esperar confirmación
     try {
       final response = await messageStream
           .where((msg) => msg['type'] == 'REFLECTION_RECEIVED' || 
                          msg['type'] == 'ERROR')
           .first
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 15));
       
       if (response['type'] == 'REFLECTION_RECEIVED') {
         _errorMessage = null;
         notifyListeners();
         return true;
       } else {
-        _errorMessage = response['data']?['message'] ?? 'Error al enviar reflexi?n';
+        _errorMessage = response['data']?['message'] ?? 'Error al enviar reflexión';
         notifyListeners();
         return false;
       }
     } catch (e) {
-      _errorMessage = 'Error de conexi?n';
+      _errorMessage = 'Error de conexión';
       notifyListeners();
       return false;
     }
   }
   
-  /// Solicita actualizaci?n de estado
+  /// Solicita actualización de estado
   void requestStateUpdate() {
     _sendMessage({'action': 'GET_STATE', 'payload': {}});
   }
@@ -395,21 +458,52 @@ class StudentService extends ChangeNotifier {
       _currentActivity = StudentActivity.fromJson(data['currentActivity']);
       _hasResponded = _currentStudent?.hasResponded(_currentActivity!.id) ?? false;
       _activityController.add(_currentActivity);
+      
+      // También agregar a la lista de activas si no existe
+      _addActivityToActiveList(_currentActivity!);
+    }
+    
+    // Si hay lista de actividades activas, cargarlas
+    if (data['activeActivities'] != null) {
+      final List activities = data['activeActivities'];
+      for (final actData in activities) {
+        final activity = StudentActivity.fromJson(actData);
+        _addActivityToActiveList(activity);
+      }
     }
     
     notifyListeners();
   }
   
   void _handleActivityUnlocked(Map<String, dynamic> data) {
-    _currentActivity = StudentActivity.fromJson(data);
+    final newActivity = StudentActivity.fromJson(data);
+    _currentActivity = newActivity;
     _hasResponded = false; // Nueva actividad
+    
+    // AGREGAR A LA LISTA DE ACTIVIDADES ACTIVAS
+    _addActivityToActiveList(newActivity);
+    
     _activityController.add(_currentActivity);
+    _activitiesController.add(_activeActivities);
     notifyListeners();
   }
   
+  /// Agrega una actividad a la lista de activas si no existe
+  void _addActivityToActiveList(StudentActivity activity) {
+    final existingIndex = _activeActivities.indexWhere((a) => a.id == activity.id);
+    if (existingIndex == -1) {
+      _activeActivities.add(activity);
+      _activityResponses[activity.id] = false;
+      debugPrint('[StudentService] Actividad añadida: ${activity.id} - Total: ${_activeActivities.length}');
+    } else {
+      // Actualizar la existente
+      _activeActivities[existingIndex] = activity;
+    }
+  }
+  
   void _handleAnswerRevealed(Map<String, dynamic> data) {
-    // El docente revel? la respuesta correcta
-    // El estudiante ahora puede ver si acert?
+    // El docente reveló la respuesta correcta
+    // El estudiante ahora puede ver si acertó
     final correctIndex = data['correctIndex'];
     if (_currentActivity != null && _currentStudent != null) {
       final response = _currentStudent!.responses[_currentActivity!.id];
@@ -422,7 +516,7 @@ class StudentService extends ChangeNotifier {
   }
   
   // ============================================================
-  // RECONEXI?N
+  // reconexión
   // ============================================================
   
   void _handleDisconnect() {
@@ -432,7 +526,7 @@ class StudentService extends ChangeNotifier {
   
   void _attemptReconnect() {
     if (!_shouldReconnect || _reconnectAttempts >= _maxReconnectAttempts) {
-      debugPrint('[StudentService] Reconexi?n cancelada');
+      debugPrint('[StudentService] reconexión cancelada');
       return;
     }
     
@@ -515,3 +609,4 @@ class StudentService extends ChangeNotifier {
     super.dispose();
   }
 }
+

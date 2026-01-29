@@ -1,12 +1,12 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-/// Servicio de conexi?n WebSocket con autenticaci?n
+/// Servicio de conexión WebSocket con autenticación
 /// 
-/// Maneja la comunicaci?n en tiempo real entre profesor y estudiantes.
-/// Soporta reconexi?n autom?tica y modo offline.
+/// Maneja la comunicación en tiempo real entre profesor y estudiantes.
+/// Soporta reconexión automática y modo offline.
 class WebSocketService extends ChangeNotifier {
   WebSocketChannel? _channel;
   bool isConnected = false;
@@ -19,7 +19,7 @@ class WebSocketService extends ChangeNotifier {
   int currentBlock = 0;
   bool isLocked = true;
 
-  // Configuraci?n de reconexi?n
+  // Configuración de reconexión
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 5;
   static const Duration _initialReconnectDelay = Duration(seconds: 1);
@@ -30,14 +30,14 @@ class WebSocketService extends ChangeNotifier {
   final _messageController = StreamController<Map<String, dynamic>>.broadcast();
   Stream<Map<String, dynamic>> get messageStream => _messageController.stream;
 
-  // URL del servidor (cambiar seg?n entorno)
+  // URL del servidor (cambiar según entorno)
   static const String _baseUrl = 'ws://localhost:8000/ws';
-  static const String _devUrl = 'ws://localhost:8000/ws-dev'; // Sin autenticaci?n
+  static const String _devUrl = 'ws://localhost:8000/ws-dev'; // Sin autenticación
 
-  /// Conecta al WebSocket con autenticaci?n
+  /// Conecta al WebSocket con autenticación
   /// 
   /// [role] puede ser 'teacher' o 'student'
-  /// [token] es requerido para autenticaci?n (profesor: 'profesor2026')
+  /// [token] es requerido para autenticación (profesor: 'profesor2026')
   Future<bool> connect(String role, {String? token}) async {
     if (isConnected) return true;
     
@@ -63,7 +63,7 @@ class WebSocketService extends ChangeNotifier {
           _attemptReconnect();
         },
         onDone: () {
-          debugPrint('[WebSocket] Conexi?n cerrada');
+          debugPrint('[WebSocket] conexión cerrada');
           _handleDisconnect();
           _attemptReconnect();
         },
@@ -86,7 +86,7 @@ class WebSocketService extends ChangeNotifier {
   /// Intenta reconectar con backoff exponencial
   void _attemptReconnect() {
     if (!_shouldReconnect || _reconnectAttempts >= _maxReconnectAttempts) {
-      debugPrint('[WebSocket] Reconexi?n cancelada (intentos: $_reconnectAttempts)');
+      debugPrint('[WebSocket] Reconexión cancelada (intentos: $_reconnectAttempts)');
       return;
     }
 
@@ -108,16 +108,16 @@ class WebSocketService extends ChangeNotifier {
       final Map<String, dynamic> message = json.decode(rawMessage);
       debugPrint('[WebSocket] Mensaje recibido: ${message['type']}');
       
-      // Manejar error de autenticaci?n
+      // Manejar error de autenticación
       if (message['type'] == 'ERROR') {
         final code = message['data']?['code'];
         if (code == 'AUTH_FAILED') {
-          debugPrint('[WebSocket] Error de autenticaci?n');
+          debugPrint('[WebSocket] Error de autenticación');
           _shouldReconnect = false;
         }
       }
       
-      // Procesar seg?n tipo de mensaje
+      // Procesar según tipo de mensaje
       if (message['type'] == 'STATE_UPDATE') {
         final data = message['data'];
         if (data['state'] != null) currentState = data['state'];
@@ -154,7 +154,7 @@ class WebSocketService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Env?a un mensaje al servidor
+  /// Envía un mensaje al servidor
   void sendMessage(Map<String, dynamic> message) {
     if (_channel != null && isConnected) {
       _channel!.sink.add(json.encode(message));
@@ -249,3 +249,4 @@ class WebSocketService extends ChangeNotifier {
     super.dispose();
   }
 }
+

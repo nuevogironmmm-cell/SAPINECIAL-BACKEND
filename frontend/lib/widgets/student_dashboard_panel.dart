@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:async';
 import '../models/student_model.dart';
 import '../utils/animations.dart';
@@ -7,9 +7,9 @@ import '../utils/animations.dart';
 /// 
 /// Muestra en tiempo real:
 /// - Lista de estudiantes conectados
-/// - Estado de cada estudiante (conectado, respondi?, no respondi?)
+/// - Estado de cada estudiante (conectado, respondió, no respondió)
 /// - Porcentaje acumulado por estudiante
-/// - Clasificaci?n con ?cono
+/// - Clasificación con ícono
 /// - Conteo general (respondieron / faltan)
 class StudentDashboardPanel extends StatefulWidget {
   final ClassDashboardSummary? summary;
@@ -69,7 +69,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
           // Header
           _buildHeader(theme, summary),
           
-          // Estad?sticas r?pidas
+          // Estadísticas rápidas
           if (summary != null)
             _buildQuickStats(theme, summary),
           
@@ -318,7 +318,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
       case StudentConnectionStatus.responded:
         statusColor = Colors.green;
         statusIcon = Icons.check_circle;
-        statusText = 'Respondi?';
+        statusText = 'Respondió';
         break;
       case StudentConnectionStatus.notResponded:
         statusColor = Colors.orange;
@@ -359,7 +359,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              // Posici?n/Avatar
+              // Posición/Avatar
               Container(
                 width: 40,
                 height: 40,
@@ -424,7 +424,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
                 ),
               ),
               
-              // Porcentaje y clasificaci?n
+              // Porcentaje y Clasificación
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -479,7 +479,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
   }
 }
 
-/// Widget compacto para mostrar resumen de estudiantes en la barra de navegaci?n
+/// Widget compacto para mostrar resumen de estudiantes en la barra de navegación
 class StudentSummaryBadge extends StatelessWidget {
   final int connectedCount;
   final int respondedCount;
@@ -545,7 +545,7 @@ class StudentSummaryBadge extends StatelessWidget {
   }
 }
 
-/// Widget para mostrar notificaci?n de nuevo estudiante
+/// Widget para mostrar notificación de nuevo estudiante
 class StudentJoinedNotification extends StatelessWidget {
   final String studentName;
   final VoidCallback? onDismiss;
@@ -605,3 +605,4 @@ class StudentJoinedNotification extends StatelessWidget {
     );
   }
 }
+

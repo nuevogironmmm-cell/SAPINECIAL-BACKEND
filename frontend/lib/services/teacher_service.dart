@@ -1,16 +1,17 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../models/student_model.dart';
+import '../config/app_config.dart';
 
-/// Servicio del docente para gesti?n de clase y estudiantes
+/// Servicio del docente para gestión de clase y estudiantes
 /// 
 /// Maneja:
-/// - Conexi?n WebSocket con el servidor
-/// - Activaci?n/desactivaci?n de actividades para estudiantes
+/// - Conexión WebSocket con el servidor
+/// - Activación/desactivación de actividades para estudiantes
 /// - Monitoreo de estudiantes conectados y sus respuestas
-/// - Revelaci?n de respuestas correctas
+/// - Revelación de respuestas correctas
 class TeacherService extends ChangeNotifier {
   // ============================================================
   // ESTADO DEL SERVICIO
@@ -28,7 +29,7 @@ class TeacherService extends ChangeNotifier {
   String? _currentActivityId;
   bool _activityActive = false;
   
-  // Configuraci?n
+  // Configuración
   Timer? _reconnectTimer;
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 5;
@@ -39,9 +40,9 @@ class TeacherService extends ChangeNotifier {
   final _messageController = StreamController<Map<String, dynamic>>.broadcast();
   final _dashboardController = StreamController<ClassDashboardSummary?>.broadcast();
   
-  // URL del servidor
-  static const String _baseUrl = 'ws://localhost:8000/ws/teacher';
-  static const String _teacherToken = 'profesor2026';
+  // URL del servidor (dinámica según entorno)
+  String get _baseUrl => AppConfig.teacherWsUrl;
+  String get _teacherToken => AppConfig.teacherToken;
   
   // ============================================================
   // GETTERS
@@ -65,7 +66,7 @@ class TeacherService extends ChangeNotifier {
   Stream<ClassDashboardSummary?> get dashboardStream => _dashboardController.stream;
   
   // ============================================================
-  // CONEXI?N
+  // Conexión
   // ============================================================
   
   /// Conecta al servidor WebSocket como docente
@@ -87,7 +88,7 @@ class TeacherService extends ChangeNotifier {
           _attemptReconnect();
         },
         onDone: () {
-          debugPrint('[TeacherService] Conexi?n cerrada');
+          debugPrint('[TeacherService] Conexión cerrada');
           _handleDisconnect();
           _attemptReconnect();
         },
@@ -109,7 +110,7 @@ class TeacherService extends ChangeNotifier {
   }
   
   // ============================================================
-  // GESTI?N DE ACTIVIDADES
+  // gestión DE ACTIVIDADES
   // ============================================================
   
   /// Registra una nueva actividad antes de habilitarla
@@ -121,6 +122,9 @@ class TeacherService extends ChangeNotifier {
     double percentageValue = 10.0,
     String activityType = 'multipleChoice',
     int? timeLimitSeconds,
+    String? title,
+    String? slideContent,
+    String? biblicalReference,
   }) {
     _sendMessage({
       'action': 'REGISTER_ACTIVITY',
@@ -132,6 +136,9 @@ class TeacherService extends ChangeNotifier {
         'percentageValue': percentageValue,
         'activityType': activityType,
         'timeLimitSeconds': timeLimitSeconds,
+        'title': title,
+        'slideContent': slideContent,
+        'biblicalReference': biblicalReference,
       }
     });
     
@@ -170,7 +177,7 @@ class TeacherService extends ChangeNotifier {
     });
   }
   
-  /// Solicita actualizaci?n del dashboard
+  /// Solicita actualización del dashboard
   void requestDashboardUpdate() {
     _sendMessage({
       'action': 'REQUEST_DASHBOARD',
@@ -233,7 +240,7 @@ class TeacherService extends ChangeNotifier {
           break;
           
         case 'STUDENT_RESPONDED':
-          // Un estudiante respondi?
+          // Un estudiante respondió
           requestDashboardUpdate();
           break;
           
@@ -279,7 +286,7 @@ class TeacherService extends ChangeNotifier {
   }
   
   // ============================================================
-  // RECONEXI?N
+  // REConexión
   // ============================================================
   
   void _handleDisconnect() {
@@ -289,7 +296,7 @@ class TeacherService extends ChangeNotifier {
   
   void _attemptReconnect() {
     if (!_shouldReconnect || _reconnectAttempts >= _maxReconnectAttempts) {
-      debugPrint('[TeacherService] Reconexi?n cancelada');
+      debugPrint('[TeacherService] ReConexión cancelada');
       return;
     }
     
@@ -337,3 +344,4 @@ class TeacherService extends ChangeNotifier {
     super.dispose();
   }
 }
+
