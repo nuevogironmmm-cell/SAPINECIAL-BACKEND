@@ -1,0 +1,5 @@
+# Netlify SPA Redirects
+# Este archivo asegura que todas las rutas redirijan a index.html
+# Evita errores 404 al refrescar la p?gina o acceder directamente a rutas
+
+/*    /index.html   200
