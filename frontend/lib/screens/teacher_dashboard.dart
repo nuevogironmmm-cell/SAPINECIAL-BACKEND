@@ -6,9 +6,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
+import 'package:provider/provider.dart';
 import '../models/class_session_model.dart';
+import '../models/student_model.dart';
 import '../data/mock_data.dart';
 import '../utils/animations.dart';
+import '../services/teacher_service.dart';
+import '../widgets/student_dashboard_panel.dart';
 
 class TeacherDashboard extends StatefulWidget {
   const TeacherDashboard({super.key});
@@ -27,6 +31,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   // MODO PROYECTOR - Pantalla completa y letras grandes
   bool _isProjectorMode = true; // Activado por defecto
   bool _showSidebar = true;
+  bool _showStudentPanel = false; // Panel de estudiantes
 
   // ESTADO PARA WORD PUZZLE
   List<String> _puzzleAvailableWords = [];
@@ -41,6 +46,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   bool _slideTransitionActive = false;
   int _slideDirection = 1; // 1 = siguiente, -1 = anterior
   
+  // ============================================================
+  // ESTADO PARA ACTIVIDADES DE ESTUDIANTES
+  // ============================================================
+  bool _activityEnabledForStudents = false;
+  
   // Controladores de animación
   late AnimationController _slideAnimController;
   late Animation<Offset> _slideAnimation;
@@ -51,6 +61,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     super.initState();
     // Escuchar atajos de teclado
     RawKeyboard.instance.addListener(_handleKeyPress);
+    
+    // Conectar al servicio de docente
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _connectTeacherService();
+    });
     
     // Inicializar controlador de animación para transiciones de slides
     _slideAnimController = AnimationController(
@@ -71,6 +86,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     );
   }
 
+  Future<void> _connectTeacherService() async {
+    final teacherService = context.read<TeacherService>();
+    await teacherService.connect();
+  }
+
   @override
   void dispose() {
     RawKeyboard.instance.removeListener(_handleKeyPress);
@@ -89,6 +109,12 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         _toggleProjectorMode();
       } else if (event.logicalKey == LogicalKeyboardKey.keyS) {
         setState(() => _showSidebar = !_showSidebar);
+      } else if (event.logicalKey == LogicalKeyboardKey.keyE) {
+        // Mostrar/ocultar panel de estudiantes
+        setState(() => _showStudentPanel = !_showStudentPanel);
+      } else if (event.logicalKey == LogicalKeyboardKey.keyA) {
+        // Activar/desactivar actividad para estudiantes
+        _toggleActivityForStudents();
       } else if (event.logicalKey == LogicalKeyboardKey.keyR) {
         final currentBlock = session.blocks[currentBlockIndex];
         final currentSlide = currentBlock.slides[currentSlideIndex];
@@ -96,6 +122,91 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           _revealAnswer();
         }
       }
+    }
+  }
+  
+  /// Activa o desactiva la actividad actual para estudiantes
+  void _toggleActivityForStudents() {
+    final currentBlock = session.blocks[currentBlockIndex];
+    final currentSlide = currentBlock.slides[currentSlideIndex];
+    
+    if (currentSlide.type != SlideType.activity || currentSlide.activity == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No hay actividad en esta diapositiva'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    final teacherService = context.read<TeacherService>();
+    final activity = currentSlide.activity!;
+    
+    if (!_activityEnabledForStudents) {
+      // Registrar y activar
+      teacherService.registerActivity(
+        activityId: currentSlide.id,
+        question: activity.question,
+        options: activity.options,
+        correctIndex: activity.correctOptionIndex,
+        percentageValue: 10.0,
+        activityType: activity.type == ActivityType.multipleChoice 
+            ? 'multipleChoice' 
+            : activity.type == ActivityType.wordPuzzle 
+                ? 'wordPuzzle' 
+                : 'multipleChoice',
+      );
+      
+      // Pequeño delay para asegurar registro
+      Future.delayed(const Duration(milliseconds: 100), () {
+        teacherService.unlockActivity(currentSlide.id);
+      });
+      
+      setState(() => _activityEnabledForStudents = true);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 8),
+              Text('¡Actividad habilitada para ${teacherService.connectedStudentsCount} estudiantes!'),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } else {
+      // Desactivar
+      teacherService.lockActivity();
+      setState(() => _activityEnabledForStudents = false);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.lock, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Actividad bloqueada para estudiantes'),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+  
+  /// Revela la respuesta a todos los estudiantes
+  void _revealAnswerToStudents() {
+    final currentBlock = session.blocks[currentBlockIndex];
+    final currentSlide = currentBlock.slides[currentSlideIndex];
+    
+    if (currentSlide.type == SlideType.activity) {
+      final teacherService = context.read<TeacherService>();
+      teacherService.revealAnswer(currentSlide.id);
     }
   }
 
@@ -548,10 +659,31 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                                 icon: const Icon(Icons.arrow_forward_ios, color: Colors.white70),
                                 tooltip: "Siguiente",
                               ),
+                              // Separador
+                              Container(height: 20, width: 1, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 10)),
+                              // BOTONES DE CONTROL DE ESTUDIANTES
+                              _buildStudentControlButtons(currentSlide),
                             ],
                           ),
                         ),
                       ),
+                      
+                      // PANEL DE ESTUDIANTES (lado derecho)
+                      if (_showStudentPanel)
+                        Positioned(
+                          top: 80,
+                          right: 20,
+                          bottom: 20,
+                          width: 350,
+                          child: Consumer<TeacherService>(
+                            builder: (context, teacherService, _) {
+                              return StudentDashboardPanel(
+                                summary: teacherService.dashboardSummary,
+                                onClose: () => setState(() => _showStudentPanel = false),
+                              );
+                            },
+                          ),
+                        ),
                       
                       // LOGO / MARCA DE AGUA (si no está en modo proyector o si se desea branding)
                       if (!_isProjectorMode)
@@ -1188,6 +1320,147 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           ),
         ),
       ),
+    );
+  }
+  
+  // ============================================================
+  // CONTROLES DE ESTUDIANTES
+  // ============================================================
+  
+  Widget _buildStudentControlButtons(Slide currentSlide) {
+    final isActivity = currentSlide.type == SlideType.activity && currentSlide.activity != null;
+    
+    return Consumer<TeacherService>(
+      builder: (context, teacherService, _) {
+        final connectedCount = teacherService.connectedStudentsCount;
+        final respondedCount = teacherService.respondedCount;
+        
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Botón para ver panel de estudiantes
+            Stack(
+              children: [
+                IconButton(
+                  onPressed: () => setState(() => _showStudentPanel = !_showStudentPanel),
+                  icon: Icon(
+                    _showStudentPanel ? Icons.people : Icons.people_outline,
+                    color: _showStudentPanel ? Colors.green : Colors.white70,
+                    size: _isProjectorMode ? 28 : 24,
+                  ),
+                  tooltip: "Ver estudiantes (E)",
+                ),
+                if (connectedCount > 0)
+                  Positioned(
+                    right: 4,
+                    top: 4,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '$connectedCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            
+            // Botón para activar/desactivar actividad (solo si es actividad)
+            if (isActivity) ...[
+              const SizedBox(width: 4),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                decoration: BoxDecoration(
+                  color: _activityEnabledForStudents 
+                      ? Colors.green.withOpacity(0.3)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: IconButton(
+                  onPressed: _toggleActivityForStudents,
+                  icon: Icon(
+                    _activityEnabledForStudents 
+                        ? Icons.play_circle_filled 
+                        : Icons.play_circle_outline,
+                    color: _activityEnabledForStudents 
+                        ? Colors.green 
+                        : Colors.white70,
+                    size: _isProjectorMode ? 28 : 24,
+                  ),
+                  tooltip: _activityEnabledForStudents 
+                      ? "Desactivar actividad para estudiantes (A)"
+                      : "Activar actividad para estudiantes (A)",
+                ),
+              ),
+              
+              // Indicador de respuestas
+              if (_activityEnabledForStudents && connectedCount > 0) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black45,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: respondedCount == connectedCount 
+                          ? Colors.green 
+                          : Colors.orange.withOpacity(0.5),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        respondedCount == connectedCount 
+                            ? Icons.check_circle 
+                            : Icons.pending,
+                        color: respondedCount == connectedCount 
+                            ? Colors.green 
+                            : Colors.orange,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$respondedCount / $connectedCount',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: _isProjectorMode ? 14 : 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              
+              // Botón para revelar respuesta a estudiantes
+              if (_activityEnabledForStudents) ...[
+                const SizedBox(width: 4),
+                IconButton(
+                  onPressed: () {
+                    _revealAnswer();
+                    _revealAnswerToStudents();
+                  },
+                  icon: Icon(
+                    Icons.visibility,
+                    color: Colors.amber,
+                    size: _isProjectorMode ? 28 : 24,
+                  ),
+                  tooltip: "Revelar respuesta a todos (R)",
+                ),
+              ],
+            ],
+          ],
+        );
+      },
     );
   }
 }
