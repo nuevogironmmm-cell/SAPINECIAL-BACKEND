@@ -416,6 +416,11 @@ class StudentService extends ChangeNotifier {
           _activityController.add(_currentActivity);
           notifyListeners();
           break;
+        
+        case 'ALL_ACTIVITIES_LOCKED':
+          // Cerrar TODAS las actividades
+          _handleAllActivitiesLocked();
+          break;
           
         case 'ANSWER_RECEIVED':
           // Manejado en submitAnswer()
@@ -486,6 +491,25 @@ class StudentService extends ChangeNotifier {
     _activityController.add(_currentActivity);
     _activitiesController.add(_activeActivities);
     notifyListeners();
+  }
+  
+  /// Maneja cuando el docente cierra TODAS las actividades
+  void _handleAllActivitiesLocked() {
+    // Cerrar todas las actividades activas
+    for (final activity in _activeActivities) {
+      activity.state = ActivityState.closed;
+    }
+    
+    // Limpiar la lista de actividades activas
+    _activeActivities.clear();
+    _currentActivity = null;
+    _hasResponded = false;
+    
+    _activityController.add(null);
+    _activitiesController.add(_activeActivities);
+    notifyListeners();
+    
+    debugPrint('[StudentService] Todas las actividades cerradas');
   }
   
   /// Agrega una actividad a la lista de activas si no existe

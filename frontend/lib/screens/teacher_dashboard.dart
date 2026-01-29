@@ -202,6 +202,27 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     }
   }
   
+  /// Cierra TODAS las actividades activas de una vez
+  void _lockAllActivities() {
+    final teacherService = context.read<TeacherService>();
+    teacherService.lockAllActivities();
+    setState(() => _activityEnabledForStudents = false);
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.lock_outline, color: Colors.white),
+            SizedBox(width: 8),
+            Text('Todas las actividades han sido cerradas'),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+  
   /// Revela la respuesta a todos los estudiantes
   void _revealAnswerToStudents() {
     final currentBlock = session.blocks[currentBlockIndex];
@@ -1335,7 +1356,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   // TOOLBAR PARA MÓVIL
   // ============================================================
   
-  Widget _buildMobileToolbar(Slide currentSlide, ContentBlock currentBlock) {
+  Widget _buildMobileToolbar(Slide currentSlide, ClassBlock currentBlock) {
     return Consumer<TeacherService>(
       builder: (context, teacherService, _) {
         final connectedCount = teacherService.connectedStudentsCount;
@@ -1436,6 +1457,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                           _revealAnswerToStudents();
                         }
                         break;
+                      case 'lockAll':
+                        _lockAllActivities();
+                        break;
                     }
                   },
                   itemBuilder: (context) => [
@@ -1456,6 +1480,16 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                           Icon(_showSidebar ? Icons.menu_open : Icons.menu, color: Colors.white70, size: 18),
                           const SizedBox(width: 8),
                           Text(_showSidebar ? 'Ocultar menú' : 'Mostrar menú', style: const TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'lockAll',
+                      child: Row(
+                        children: [
+                          Icon(Icons.lock_outline, color: Colors.red, size: 18),
+                          SizedBox(width: 8),
+                          Text('Cerrar TODAS las actividades', style: TextStyle(color: Colors.red)),
                         ],
                       ),
                     ),

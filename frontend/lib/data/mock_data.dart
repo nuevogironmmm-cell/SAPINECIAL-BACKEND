@@ -621,7 +621,7 @@ final mockClassSession = ClassSession(
         Slide(
           id: 's8_2',
           type: SlideType.activity,
-          title: 'Actividad 1: Paralelismo sinónimo',
+          title: 'Actividad 1: Identifica el paralelismo',
           content: 'Los cielos cuentan la gloria de Dios, y el firmamento anuncia la obra de sus manos.',
           biblicalReference: 'Salmo 19:1',
           activity: ActivityData(
@@ -639,7 +639,7 @@ final mockClassSession = ClassSession(
         Slide(
           id: 's8_3',
           type: SlideType.activity,
-          title: 'Actividad 2: Paralelismo antitético',
+          title: 'Actividad 2: Identifica el paralelismo',
           content: 'El hijo sabio alegra al padre, pero el hijo necio es tristeza de su madre.',
           biblicalReference: 'Proverbios 10:1',
           activity: ActivityData(

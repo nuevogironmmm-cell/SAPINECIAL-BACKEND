@@ -169,6 +169,18 @@ class TeacherService extends ChangeNotifier {
     notifyListeners();
   }
   
+  /// Bloquea TODAS las actividades activas de una vez
+  void lockAllActivities() {
+    _sendMessage({
+      'action': 'LOCK_ALL_ACTIVITIES',
+      'payload': {}
+    });
+    
+    _currentActivityId = null;
+    _activityActive = false;
+    notifyListeners();
+  }
+  
   /// Revela la respuesta correcta a todos
   void revealAnswer(String activityId) {
     _sendMessage({

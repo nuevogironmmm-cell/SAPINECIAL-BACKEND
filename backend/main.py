@@ -2,9 +2,10 @@
 """
 Backend para Literatura Sapiencial
 Servidor WebSocket con sistema completo de estudiantes
-Versión 2.0 - Sección de estudiantes implementada
+Versión 2.1 - Con persistencia de progreso y soporte para 50+ usuarios
 """
 import os
+import asyncio
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict, Optional, Any
@@ -13,6 +14,9 @@ from enum import Enum
 import json
 import hashlib
 import uuid
+
+# Archivo para persistencia de progreso
+PROGRESS_FILE = "student_progress.json"
 
 app = FastAPI(title="Sapiencial App Backend")
 
@@ -127,21 +131,58 @@ def generate_session_id() -> str:
     return str(uuid.uuid4())[:8]
 
 # ============================================================
+# PERSISTENCIA DE PROGRESO
+# ============================================================
+
+def load_progress() -> Dict:
+    """Carga el progreso guardado de estudiantes"""
+    try:
+        if os.path.exists(PROGRESS_FILE):
+            with open(PROGRESS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"[WARN] Error cargando progreso: {e}")
+    return {"students": {}, "last_updated": None}
+
+def save_progress(students_data: Dict):
+    """Guarda el progreso de estudiantes"""
+    try:
+        data = {
+            "students": students_data,
+            "last_updated": datetime.now().isoformat()
+        }
+        with open(PROGRESS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print(f"[INFO] Progreso guardado: {len(students_data)} estudiantes")
+    except Exception as e:
+        print(f"[ERROR] Error guardando progreso: {e}")
+
+# Variable global para progreso persistente
+_saved_progress = load_progress()
+
+# ============================================================
 # MODELOS DE DATOS - ESTUDIANTE
 # ============================================================
 
 class StudentData:
     """Datos del estudiante"""
-    def __init__(self, session_id: str, name: str):
+    def __init__(self, session_id: str, name: str, from_saved: Dict = None):
         self.session_id = session_id
         self.name = name
         self.status = StudentConnectionStatus.CONNECTED
-        self.accumulated_percentage = 0.0
         self.connected_at = datetime.now()
         self.last_activity_at: Optional[datetime] = None
-        self.responses: Dict[str, Dict] = {}  # activity_id -> response
-        self.reflections: List[Dict] = []
         self.websocket: Optional[WebSocket] = None
+        
+        # Cargar datos guardados si existen
+        if from_saved:
+            self.accumulated_percentage = from_saved.get('accumulated_percentage', 0.0)
+            self.responses = from_saved.get('responses', {})
+            self.reflections = from_saved.get('reflections', [])
+        else:
+            self.accumulated_percentage = 0.0
+            self.responses: Dict[str, Dict] = {}  # activity_id -> response
+            self.reflections: List[Dict] = []
     
     @property
     def classification(self) -> StudentClassification:
@@ -177,6 +218,15 @@ class StudentData:
                 self.accumulated_percentage = 100
         
         self.status = StudentConnectionStatus.RESPONDED
+    
+    def to_saveable(self) -> Dict:
+        """Convierte a diccionario para guardar en archivo"""
+        return {
+            "name": self.name,
+            "accumulated_percentage": self.accumulated_percentage,
+            "responses": self.responses,
+            "reflections": self.reflections,
+        }
     
     def add_reflection(self, topic: str, content: str):
         """Agrega reflexión"""
@@ -272,11 +322,38 @@ class ActivityData:
 # ============================================================
 
 class StudentManager:
-    """Gestiona estudiantes conectados"""
+    """Gestiona estudiantes conectados - Soporta hasta 100 conexiones simultáneas"""
     def __init__(self):
         self.students: Dict[str, StudentData] = {}  # session_id -> StudentData
         self.names_in_use: set = set()  # Nombres activos (evita duplicados)
         self.websocket_to_student: Dict[WebSocket, str] = {}  # websocket -> session_id
+        self._load_saved_students()
+    
+    def _load_saved_students(self):
+        """Carga estudiantes con progreso guardado (sin WebSocket activo)"""
+        global _saved_progress
+        saved_students = _saved_progress.get("students", {})
+        for name, data in saved_students.items():
+            # No crear conexión, solo guardar datos para reconexión
+            print(f"[INFO] Progreso cargado: {name} - {data.get('accumulated_percentage', 0)}%")
+    
+    def _get_saved_data(self, name: str) -> Optional[Dict]:
+        """Obtiene datos guardados de un estudiante por nombre"""
+        global _saved_progress
+        name_lower = name.lower()
+        for saved_name, data in _saved_progress.get("students", {}).items():
+            if saved_name.lower() == name_lower:
+                return data
+        return None
+    
+    def _save_all_progress(self):
+        """Guarda el progreso de todos los estudiantes"""
+        global _saved_progress
+        students_data = {}
+        for student in self.students.values():
+            students_data[student.name] = student.to_saveable()
+        save_progress(students_data)
+        _saved_progress = load_progress()
     
     def _find_student_by_name(self, name: str) -> Optional[StudentData]:
         """Busca estudiante por nombre (ignorando mayúsculas)"""
@@ -306,6 +383,10 @@ class StudentManager:
             if existing.status != StudentConnectionStatus.DISCONNECTED:
                 return False, "Este nombre ya está en uso en la clase"
         
+        # Verificar si hay datos guardados (estudiante anterior que se reconecta)
+        if self._get_saved_data(name):
+            return True, "RESTORE"
+        
         return True, "OK"
     
     def register_student(self, name: str, websocket: WebSocket) -> tuple[Optional[StudentData], str]:
@@ -324,8 +405,11 @@ class StudentManager:
         # Generar ID de sesión
         session_id = generate_session_id()
         
-        # Crear estudiante
-        student = StudentData(session_id, name)
+        # Verificar si hay datos guardados para restaurar
+        saved_data = self._get_saved_data(name)
+        
+        # Crear estudiante (con datos guardados si existen)
+        student = StudentData(session_id, name, from_saved=saved_data)
         student.websocket = websocket
         
         # Registrar
@@ -351,13 +435,15 @@ class StudentManager:
         return None, "No se encontró sesión previa"
     
     def disconnect_student(self, websocket: WebSocket):
-        """Desconecta un estudiante"""
+        """Desconecta un estudiante y guarda su progreso"""
         session_id = self.websocket_to_student.pop(websocket, None)
         if session_id and session_id in self.students:
             student = self.students[session_id]
             student.status = StudentConnectionStatus.DISCONNECTED
             student.websocket = None
             print(f"[INFO] Estudiante desconectado: {student.name}")
+            # Guardar progreso al desconectar
+            self._save_all_progress()
     
     def get_student_by_websocket(self, websocket: WebSocket) -> Optional[StudentData]:
         """Obtiene estudiante por websocket"""
@@ -675,6 +761,32 @@ async def handle_teacher_action(websocket: WebSocket, message: Dict):
             "data": student_manager.get_dashboard_summary()
         })
     
+    elif action == "LOCK_ALL_ACTIVITIES":
+        # Cerrar TODAS las actividades activas de una vez
+        closed_count = 0
+        for activity in state.activities.values():
+            if activity.state == ActivityState.ACTIVE:
+                activity.state = ActivityState.CLOSED
+                closed_count += 1
+        
+        state.current_activity = None
+        
+        # Notificar a todos los estudiantes
+        await student_manager.broadcast_to_students({
+            "type": "ALL_ACTIVITIES_LOCKED",
+            "data": {"closedCount": closed_count}
+        })
+        
+        # Actualizar dashboard
+        await teacher_manager.broadcast_to_teachers({
+            "type": "DASHBOARD_UPDATE",
+            "data": student_manager.get_dashboard_summary()
+        })
+        
+        print(f"[INFO] {closed_count} actividades cerradas")
+            "data": student_manager.get_dashboard_summary()
+        })
+    
     elif action == "REVEAL_ANSWER":
         activity_id = payload.get("activityId")
         activity = state.get_activity(activity_id)
@@ -796,6 +908,14 @@ async def student_websocket(websocket: WebSocket):
                     "data": state.to_dict()
                 }))
                 
+                # IMPORTANTE: Si hay actividad activa, enviarla explícitamente
+                if state.current_activity and state.current_activity.state == ActivityState.ACTIVE:
+                    await websocket.send_text(json.dumps({
+                        "type": "ACTIVITY_UNLOCKED",
+                        "data": state.current_activity.to_student_dict()
+                    }))
+                    print(f"[INFO] Actividad activa enviada a {student.name}: {state.current_activity.id}")
+                
                 # Notificar al docente
                 await teacher_manager.broadcast_to_teachers({
                     "type": "STUDENT_JOINED",
@@ -884,6 +1004,9 @@ async def student_websocket(websocket: WebSocket):
                     "type": "DASHBOARD_UPDATE",
                     "data": student_manager.get_dashboard_summary(activity_id)
                 })
+                
+                # Guardar progreso después de cada respuesta
+                student_manager._save_all_progress()
             
             # ---- ENVIAR reflexión ----
             elif action == "SUBMIT_REFLECTION":

@@ -323,7 +323,7 @@ class StudentActivity {
   final double percentageValue;         // Valor porcentual (ej: 10%)
   ActivityState state;
   final int? timeLimitSeconds;          // Límite de tiempo opcional
-  final int correctOptionIndex;         // Índice correcto (no visible para estudiante)
+  final int correctOptionIndex;         // Índice correcto (NO visible para estudiante, -1 si no se conoce)
   final String? title;                  // Título de la actividad (ej: "Actividad 3: Identifica el libro")
   final String? slideContent;           // Contenido de la diapositiva (ej: la cita bíblica)
   final String? biblicalReference;      // Referencia bíblica (ej: "Eclesiastés 1:2")
@@ -336,7 +336,7 @@ class StudentActivity {
     required this.percentageValue,
     this.state = ActivityState.locked,
     this.timeLimitSeconds,
-    required this.correctOptionIndex,
+    this.correctOptionIndex = -1,  // -1 significa "no revelado"
     this.title,
     this.slideContent,
     this.biblicalReference,
@@ -380,7 +380,7 @@ class StudentActivity {
       orElse: () => ActivityState.locked,
     ),
     timeLimitSeconds: json['timeLimitSeconds'],
-    correctOptionIndex: json['correctOptionIndex'] ?? 0,
+    correctOptionIndex: json['correctOptionIndex'] ?? json['correctIndex'] ?? -1,  // -1 si no viene del servidor
     title: json['title'],
     slideContent: json['slideContent'],
     biblicalReference: json['biblicalReference'],
