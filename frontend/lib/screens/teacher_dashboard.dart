@@ -144,6 +144,13 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     final activity = currentSlide.activity!;
     
     if (!_activityEnabledForStudents) {
+      // Extraer solo "Actividad N" del título para no revelar la respuesta
+      String safeTitle = currentSlide.title;
+      final activityMatch = RegExp(r'^(Actividad\s*\d+)').firstMatch(currentSlide.title);
+      if (activityMatch != null) {
+        safeTitle = activityMatch.group(1)!;  // Solo "Actividad 1", "Actividad 2", etc.
+      }
+      
       // Registrar y activar
       teacherService.registerActivity(
         activityId: currentSlide.id,
@@ -156,7 +163,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             : activity.type == ActivityType.wordPuzzle 
                 ? 'wordPuzzle' 
                 : 'multipleChoice',
-        title: currentSlide.title,  // Título de la actividad
+        title: safeTitle,  // Título sin revelar respuesta
         slideContent: currentSlide.content,  // Contenido (la cita bíblica)
         biblicalReference: currentSlide.biblicalReference,  // Referencia bíblica
       );
