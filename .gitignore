@@ -22,3 +22,6 @@ backend/venv/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local Netlify folder
+.netlify

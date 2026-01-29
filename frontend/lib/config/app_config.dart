@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 /// Configuraci?n de la aplicaci?n
 class AppConfig {
   // Detectar si estamos en modo producci?n (web release)
-  static bool get isProduction => kReleaseMode;
+  static bool get isProduction => kReleaseMode || kIsWeb;
   
   // URLs del backend
   // IMPORTANTE: Cambiar esta URL cuando despliegues el backend en Render/Railway
@@ -12,7 +12,12 @@ class AppConfig {
   
   /// URL base del WebSocket
   static String get wsBaseUrl {
-    if (kIsWeb && isProduction) {
+    // En web SIEMPRE usar producci?n (Netlify se conecta a Render)
+    if (kIsWeb) {
+      return _productionBackendUrl;
+    }
+    // En desktop/m?vil, depende del modo
+    if (isProduction) {
       return _productionBackendUrl;
     }
     return _developmentBackendUrl;
@@ -24,6 +29,6 @@ class AppConfig {
   /// URL del WebSocket para docentes
   static String get teacherWsUrl => '$wsBaseUrl/ws/teacher';
   
-  /// Token del docente (en producci?n deber?a ser m?s seguro)
-  static const String teacherToken = 'docente_sapiencial_2024';
+  /// Token del docente (debe coincidir con el backend)
+  static const String teacherToken = 'profesor2026';
 }

@@ -278,7 +278,15 @@ class StudentManager:
         self.names_in_use: set = set()  # Nombres activos (evita duplicados)
         self.websocket_to_student: Dict[WebSocket, str] = {}  # websocket -> session_id
     
-    def validate_name(self, name: str) -> tuple[bool, str]:
+    def _find_student_by_name(self, name: str) -> Optional[StudentData]:
+        """Busca estudiante por nombre (ignorando mayúsculas)"""
+        name_lower = name.strip().lower()
+        for student in self.students.values():
+            if student.name.lower() == name_lower:
+                return student
+        return None
+    
+    def validate_name(self, name: str, allow_reconnect: bool = True) -> tuple[bool, str]:
         """Valida nombre de estudiante"""
         name = name.strip()
         
@@ -288,21 +296,30 @@ class StudentManager:
         if len(name) > 50:
             return False, "El nombre no puede exceder 50 caracteres"
         
-        # Verificar duplicados (ignorando mayúsculas/minúsculas)
-        name_lower = name.lower()
-        if name_lower in [n.lower() for n in self.names_in_use]:
-            return False, "Este nombre ya est? en uso en la clase"
+        # Verificar si existe un estudiante con este nombre
+        existing = self._find_student_by_name(name)
+        if existing:
+            # Si está desconectado, permitir reconexión
+            if allow_reconnect and existing.status == StudentConnectionStatus.DISCONNECTED:
+                return True, "RECONNECT"
+            # Si está conectado, rechazar
+            if existing.status != StudentConnectionStatus.DISCONNECTED:
+                return False, "Este nombre ya está en uso en la clase"
         
         return True, "OK"
     
     def register_student(self, name: str, websocket: WebSocket) -> tuple[Optional[StudentData], str]:
-        """Registra un nuevo estudiante"""
+        """Registra un nuevo estudiante o reconecta uno existente"""
         name = name.strip()
         
         # Validar nombre
         is_valid, message = self.validate_name(name)
         if not is_valid:
             return None, message
+        
+        # Si el mensaje es RECONNECT, reconectar al estudiante existente
+        if message == "RECONNECT":
+            return self.reconnect_student(name, websocket)
         
         # Generar ID de sesión
         session_id = generate_session_id()
@@ -321,16 +338,15 @@ class StudentManager:
     
     def reconnect_student(self, name: str, websocket: WebSocket) -> tuple[Optional[StudentData], str]:
         """Intenta reconectar un estudiante existente"""
-        name = name.strip().lower()
+        student = self._find_student_by_name(name)
         
-        for student in self.students.values():
-            if student.name.lower() == name:
-                # Estudiante encontrado, reconectar
-                student.websocket = websocket
-                student.status = StudentConnectionStatus.CONNECTED
-                self.websocket_to_student[websocket] = student.session_id
-                print(f"[INFO] Estudiante reconectado: {student.name}")
-                return student, "Reconectado exitosamente"
+        if student:
+            # Estudiante encontrado, reconectar
+            student.websocket = websocket
+            student.status = StudentConnectionStatus.CONNECTED
+            self.websocket_to_student[websocket] = student.session_id
+            print(f"[INFO] Estudiante reconectado: {student.name}")
+            return student, "Reconectado exitosamente"
         
         return None, "No se encontró sesión previa"
     
