@@ -12,6 +12,7 @@ import '../models/student_model.dart';
 import '../data/mock_data.dart';
 import '../utils/animations.dart';
 import '../services/teacher_service.dart';
+import '../services/export_service.dart';
 import '../widgets/student_dashboard_panel.dart';
 
 class TeacherDashboard extends StatefulWidget {
@@ -228,6 +229,95 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         duration: Duration(seconds: 2),
       ),
     );
+  }
+  
+  /// Exporta los resultados a Excel
+  Future<void> _exportToExcel() async {
+    final teacherService = context.read<TeacherService>();
+    final students = teacherService.connectedStudents;
+    
+    if (students.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.warning_amber, color: Colors.white),
+              SizedBox(width: 8),
+              Text('No hay estudiantes para exportar'),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    // Mostrar indicador de carga
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Generando Excel...'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    
+    // Convertir estudiantes a formato exportable
+    final exportData = students.map((s) => {
+      'name': s.name,
+      'percentage': s.accumulatedPercentage,
+      'status': s.status.name,
+      'responses': s.responses,
+      'lastActivity': s.lastActivityAt?.toString() ?? '-',
+    }).toList();
+    
+    final success = await ExportService.exportStudentResults(
+      students: exportData,
+      sessionTitle: session.title,
+      context: context,
+    );
+    
+    // Cerrar diálogo de carga
+    if (mounted) Navigator.of(context).pop();
+    
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 8),
+              Text('¡Excel exportado exitosamente!'),
+            ],
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Error al exportar Excel'),
+            ],
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
   
   /// Revela la respuesta a todos los estudiantes
@@ -1467,6 +1557,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                       case 'lockAll':
                         _lockAllActivities();
                         break;
+                      case 'exportExcel':
+                        _exportToExcel();
+                        break;
                     }
                   },
                   itemBuilder: (context) => [
@@ -1487,6 +1580,16 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                           Icon(_showSidebar ? Icons.menu_open : Icons.menu, color: Colors.white70, size: 18),
                           const SizedBox(width: 8),
                           Text(_showSidebar ? 'Ocultar menú' : 'Mostrar menú', style: const TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'exportExcel',
+                      child: Row(
+                        children: [
+                          Icon(Icons.table_chart, color: Colors.green, size: 18),
+                          SizedBox(width: 8),
+                          Text('Exportar a Excel', style: TextStyle(color: Colors.green)),
                         ],
                       ),
                     ),

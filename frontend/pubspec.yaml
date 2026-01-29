@@ -23,12 +23,21 @@ dependencies:
   google_fonts: ^6.1.0
   cupertino_icons: ^1.0.2
   
+  # Utilidades
+  intl: ^0.19.0
+  
   # Almacenamiento local
   shared_preferences: ^2.2.0
 
   # PDF e impresion
   printing: ^5.11.0
   pdf: ^3.10.7
+  
+  # Exportar a Excel
+  excel: ^4.0.3
+  
+  # Guardar archivos (web y desktop)
+  file_saver: ^0.2.13
 
 dev_dependencies:
   flutter_test:

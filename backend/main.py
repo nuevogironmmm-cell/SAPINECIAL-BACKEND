@@ -784,8 +784,6 @@ async def handle_teacher_action(websocket: WebSocket, message: Dict):
         })
         
         print(f"[INFO] {closed_count} actividades cerradas")
-            "data": student_manager.get_dashboard_summary()
-        })
     
     elif action == "REVEAL_ANSWER":
         activity_id = payload.get("activityId")

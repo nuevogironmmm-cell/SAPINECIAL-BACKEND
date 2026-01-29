@@ -54,6 +54,9 @@ class TeacherService extends ChangeNotifier {
   ClassDashboardSummary? get dashboardSummary => _dashboardSummary;
   List<StudentReflection> get reflections => _reflections;
   
+  /// Lista de estudiantes conectados
+  List<Student> get connectedStudents => _dashboardSummary?.connectedStudents ?? [];
+  
   int get connectedStudentsCount => _dashboardSummary?.totalStudents ?? 0;
   int get respondedCount => _dashboardSummary?.respondedCount ?? 0;
   int get pendingCount => _dashboardSummary?.pendingCount ?? 0;
