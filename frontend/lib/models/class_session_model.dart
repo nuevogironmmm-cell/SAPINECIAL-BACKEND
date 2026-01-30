@@ -37,6 +37,7 @@ class Slide {
 
 enum ActivityType {
   multipleChoice,
+  trueFalse,
   wordPuzzle,
 }
 
@@ -44,7 +45,7 @@ class ActivityData {
   final String question;
   final List<String> options; // En wordPuzzle, estas son las palabras desordenadas
   final int correctOptionIndex; // No se usa en wordPuzzle (o se puede ignorar)
-  final String explanation;
+  final String? explanation; // Opcional - solo se revela si est? presente
   final ActivityType type;
   final List<String>? correctWordOrder; // Solo para wordPuzzle
   bool isRevealed;
@@ -53,9 +54,10 @@ class ActivityData {
     required this.question,
     required this.options,
     required this.correctOptionIndex,
-    required this.explanation,
+    this.explanation, // Ahora es opcional
     this.type = ActivityType.multipleChoice,
     this.correctWordOrder,
     this.isRevealed = false,
   });
 }
+

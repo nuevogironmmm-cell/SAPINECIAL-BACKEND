@@ -728,13 +728,7 @@ final mockClassSession = ClassSession(
             explanation: 'Respuesta correcta: POESÍA DE AMOR. Cantares es un poema de amor que celebra la relación entre el esposo y la esposa.',
           ),
         ),
-        Slide(
-          id: 's8_7',
-          type: SlideType.content,
-          title: 'Lamentaciones',
-          content: 'Jeremías llora sobre las ruinas. Un ejemplo supremo de elegía. También David llorando a Saúl y Jonatán.',
-          biblicalReference: 'Lamentaciones, 2 Samuel 1:19',
-        ),
+
         Slide(
           id: 's8_8',
           type: SlideType.activity,
@@ -769,8 +763,7 @@ final mockClassSession = ClassSession(
             correctWordOrder: [
               'El', 'principio', 'de', 'la', 'sabiduría', 'es', 'el', 'temor', 'de', 'Jehová'
             ],
-            correctOptionIndex: 0, 
-            explanation: '¡Correcto! "El principio de la sabiduría es el temor de Jehová". Este es el lema de toda la literatura sapiencial.',
+            correctOptionIndex: 0,
           ),
         ),
         Slide(
@@ -789,7 +782,6 @@ final mockClassSession = ClassSession(
               'Yo', 'sé', 'que', 'mi', 'Redentor', 'vive', 'Y', 'al', 'fin', 'se', 'levantará', 'sobre', 'el', 'polvo'
             ],
             correctOptionIndex: 0,
-            explanation: '¡Muy bien! "Yo sé que mi Redentor vive...". Una de las expresiones de fe más potentes del Antiguo Testamento.',
           ),
         ),
         Slide(
@@ -841,6 +833,74 @@ final mockClassSession = ClassSession(
           title: 'Actividades',
           content: 'Evalúa y refuerza lo aprendido sobre poesía y sabiduría hebreas.',
           imageUrl: 'assets/images/adoracion.jpg',
+        ),
+        Slide(
+          id: 's9_2',
+          type: SlideType.activity,
+          title: 'Quiz - Pregunta 1',
+          content: 'Verdadero o Falso',
+          activity: ActivityData(
+            question: 'El libro de Job es considerado el más antiguo de la Biblia.',
+            type: ActivityType.trueFalse,
+            options: [
+              'Verdadero',
+              'Falso',
+            ],
+            correctOptionIndex: 0,
+            explanation: '¡Correcto! Job es considerado el libro más antiguo de la Biblia, posiblemente escrito en la era patriarcal.',
+          ),
+        ),
+        Slide(
+          id: 's9_3',
+          type: SlideType.activity,
+          title: 'Quiz - Pregunta 2',
+          content: 'Selecciona la opción correcta',
+          activity: ActivityData(
+            question: '¿Cuáles son los cinco libros poéticos del Antiguo Testamento?',
+            type: ActivityType.multipleChoice,
+            options: [
+              'Job, Salmos, Proverbios, Eclesiastés, Cantares',
+              'Génesis, Éxodo, Levítico, Números, Deuteronomio',
+              'Mateo, Marcos, Lucas, Juan, Hechos',
+              'Isaías, Jeremías, Ezequiel, Daniel, Oseas',
+            ],
+            correctOptionIndex: 0,
+            explanation: '¡Excelente! Los cinco libros poéticos son: Job, Salmos, Proverbios, Eclesiastés y Cantares.',
+          ),
+        ),
+        Slide(
+          id: 's9_4',
+          type: SlideType.activity,
+          title: 'Quiz - Pregunta 3',
+          content: 'Verdadero o Falso',
+          activity: ActivityData(
+            question: 'El paralelismo es la característica principal de la poesía hebrea, no la rima ni el metro.',
+            type: ActivityType.trueFalse,
+            options: [
+              'Verdadero',
+              'Falso',
+            ],
+            correctOptionIndex: 0,
+            explanation: '¡Muy bien! A diferencia de otras lenguas, la poesía hebrea usa paralelismo (repetición de ideas) en lugar de rima o metro.',
+          ),
+        ),
+        Slide(
+          id: 's9_5',
+          type: SlideType.activity,
+          title: 'Quiz - Pregunta 4',
+          content: 'Selecciona la opción correcta',
+          activity: ActivityData(
+            question: '¿Cuál es el versículo clave de la literatura sapiencial?',
+            type: ActivityType.multipleChoice,
+            options: [
+              'El principio de la sabiduría es el temor de Jehová',
+              'Amarás a tu prójimo como a ti mismo',
+              'Yo soy el camino, la verdad y la vida',
+              'Pedid y se os dará',
+            ],
+            correctOptionIndex: 0,
+            explanation: '¡Perfecto! "El principio de la sabiduría es el temor de Jehová" (Proverbios 1:7) es el lema central de la literatura sapiencial.',
+          ),
         ),
       ],
     ),
