@@ -465,6 +465,16 @@ class StudentManager:
         responded = [s for s in connected if s.status == StudentConnectionStatus.RESPONDED]
         not_responded = [s for s in connected if s.status == StudentConnectionStatus.NOT_RESPONDED]
         
+        # Conteo de votos por opción para la actividad actual
+        vote_counts = {}
+        if current_activity_id:
+            for student in connected:
+                if student.has_responded(current_activity_id):
+                    response = student.responses.get(current_activity_id, {})
+                    answer = response.get('answer')
+                    if answer is not None:
+                        vote_counts[str(answer)] = vote_counts.get(str(answer), 0) + 1
+        
         return {
             "students": [s.to_summary() for s in connected],
             "totalStudents": len(connected),
@@ -472,6 +482,7 @@ class StudentManager:
             "notRespondedCount": len(not_responded),
             "currentActivityId": current_activity_id,
             "responseRate": (len(responded) / len(connected) * 100) if connected else 0,
+            "voteCounts": vote_counts,  # Nuevo: conteo de votos por opción
         }
     
     def reset_all_for_new_activity(self):
@@ -965,6 +976,9 @@ async def student_websocket(websocket: WebSocket):
                 # Evaluar respuesta
                 is_correct = (answer == activity.correct_index)
                 
+                # Calcular puntos ganados
+                points_earned = activity.percentage_value if is_correct else 0
+                
                 # Registrar respuesta
                 student.add_response(
                     activity_id=activity_id,
@@ -974,11 +988,13 @@ async def student_websocket(websocket: WebSocket):
                     response_time_ms=response_time_ms
                 )
                 
-                # Confirmar al estudiante (sin revelar si es correcta)
+                # Confirmar al estudiante CON resultado
                 await websocket.send_text(json.dumps({
                     "type": "ANSWER_RECEIVED",
                     "data": {
                         "activityId": activity_id,
+                        "isCorrect": is_correct,
+                        "pointsEarned": points_earned,
                         "accumulatedPercentage": student.accumulated_percentage,
                         "motivationalMessage": student.motivational_message,
                     }

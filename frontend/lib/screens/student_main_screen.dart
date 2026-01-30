@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import '../services/student_service.dart';
@@ -48,6 +49,9 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   late Animation<double> _progressAnimation;
   
   StreamSubscription? _activitySubscription;
+  StreamSubscription? _newActivitySubscription;
+  StreamSubscription? _answerResultSubscription;
+  StreamSubscription? _answerRevealSubscription;
   
   @override
   void initState() {
@@ -72,6 +76,15 @@ class _StudentMainScreenState extends State<StudentMainScreen>
       }
     });
     
+    // Escuchar nuevas actividades (para notificaciones)
+    _newActivitySubscription = studentService.newActivityStream.listen(_onNewActivity);
+    
+    // Escuchar resultados de respuestas (feedback inmediato)
+    _answerResultSubscription = studentService.answerResultStream.listen(_onAnswerResult);
+    
+    // Escuchar revelación de respuestas
+    _answerRevealSubscription = studentService.answerRevealedStream.listen(_onAnswerRevealed);
+    
     _progressController.forward();
   }
   
@@ -81,7 +94,127 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     _scrollController.dispose();
     _progressController.dispose();
     _activitySubscription?.cancel();
+    _newActivitySubscription?.cancel();
+    _answerResultSubscription?.cancel();
+    _answerRevealSubscription?.cancel();
     super.dispose();
+  }
+  
+  /// Cuando llega una nueva actividad
+  void _onNewActivity(StudentActivity activity) {
+    // Vibración para notificar
+    HapticFeedback.mediumImpact();
+    
+    // Mostrar notificación
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.assignment_turned_in, color: Colors.white, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '📢 ¡Nueva actividad!',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(
+                    activity.title ?? activity.question,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.blue.shade700,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+  
+  /// Cuando se recibe resultado inmediato de la respuesta
+  void _onAnswerResult(AnswerResult result) {
+    // Vibración de feedback
+    if (result.isCorrect) {
+      HapticFeedback.lightImpact();
+    } else {
+      HapticFeedback.heavyImpact();
+    }
+    setState(() {});
+  }
+  
+  /// Cuando el docente revela la respuesta correcta
+  void _onAnswerRevealed(AnswerRevealEvent event) {
+    // Vibración de notificación
+    HapticFeedback.mediumImpact();
+    
+    // Mostrar notificación con resultado
+    final wasCorrect = event.wasCorrect;
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              wasCorrect == true
+                  ? Icons.check_circle
+                  : (wasCorrect == false ? Icons.cancel : Icons.info),
+              color: Colors.white,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    wasCorrect == true
+                        ? '🎉 ¡Respuesta correcta!'
+                        : (wasCorrect == false
+                            ? '❌ Respuesta incorrecta'
+                            : '📝 Respuesta revelada'),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(
+                    wasCorrect == true
+                        ? '¡Excelente trabajo!'
+                        : (wasCorrect == false
+                            ? 'La respuesta correcta era la opción ${_getLetterForIndex(event.correctIndex)}'
+                            : 'No enviaste respuesta'),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: wasCorrect == true
+            ? Colors.green.shade700
+            : (wasCorrect == false ? Colors.red.shade700 : Colors.orange.shade700),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 5),
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+    
+    setState(() {});
+  }
+  
+  /// Obtiene la letra correspondiente a un índice de opción
+  String _getLetterForIndex(int index) {
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+    return index < letters.length ? letters[index] : '${index + 1}';
   }
   
   /// Selecciona una respuesta para una actividad específica
@@ -126,13 +259,73 @@ class _StudentMainScreenState extends State<StudentMainScreen>
         SnackBar(
           content: const Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.white),
+              Icon(Icons.check_circle, color: Colors.white, size: 28),
               SizedBox(width: 12),
-              Text('¡Respuesta enviada correctamente!'),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '✅ ¡Respuesta enviada!',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      'Tu respuesta ha sido registrada correctamente',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
           backgroundColor: Colors.green.shade700,
           behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '❌ Error al enviar',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      studentService.errorMessage ?? 'Intenta de nuevo',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }
@@ -165,6 +358,61 @@ class _StudentMainScreenState extends State<StudentMainScreen>
       // Animación de éxito
       _progressController.reset();
       _progressController.forward();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white, size: 28),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '✅ ¡Respuesta enviada!',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      'Tu respuesta ha sido registrada',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white, size: 28),
+              SizedBox(width: 12),
+              Text('❌ Error al enviar respuesta'),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
     }
   }
   
@@ -377,6 +625,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     final percentage = student?.accumulatedPercentage ?? 0;
     final message = student?.motivationalMessage ?? '';
     final icon = student?.classificationIcon ?? '📚';
+    final medals = student?.medals ?? [];
     
     return FadeInSlide(
       child: Container(
@@ -443,10 +692,139 @@ class _StudentMainScreenState extends State<StudentMainScreen>
               ),
               textAlign: TextAlign.center,
             ),
+            
+            // SECCIÓN DE MEDALLAS
+            if (medals.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              const Divider(color: Colors.white24),
+              const SizedBox(height: 12),
+              _buildMedalsDisplay(medals),
+            ],
           ],
         ),
       ),
     );
+  }
+  
+  /// Widget que muestra las medallas del estudiante
+  Widget _buildMedalsDisplay(List<Medal> medals) {
+    final theme = Theme.of(context);
+    
+    return Column(
+      children: [
+        // Título
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.emoji_events_rounded, 
+              color: Colors.amber, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'Mis Logros',
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: Colors.amber.shade300,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${medals.length}',
+                style: TextStyle(
+                  color: Colors.amber.shade300,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        
+        // Grid de medallas
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
+          children: medals.map((medal) => _buildMedalBadge(medal)).toList(),
+        ),
+      ],
+    );
+  }
+  
+  /// Widget de insignia de medalla individual
+  Widget _buildMedalBadge(Medal medal) {
+    return Tooltip(
+      message: '${medal.name}\n${medal.description}',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: _getMedalColors(medal.type),
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: _getMedalColors(medal.type).first.withOpacity(0.4),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              medal.emoji,
+              style: const TextStyle(fontSize: 20),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              medal.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// Obtiene los colores de gradiente según el tipo de medalla
+  List<Color> _getMedalColors(MedalType type) {
+    switch (type) {
+      case MedalType.gold:
+      case MedalType.champion:
+      case MedalType.crown:
+        return [const Color(0xFFFFD700), const Color(0xFFFFA500)];
+      case MedalType.silver:
+        return [const Color(0xFFC0C0C0), const Color(0xFF808080)];
+      case MedalType.bronze:
+        return [const Color(0xFFCD7F32), const Color(0xFF8B4513)];
+      case MedalType.perfectScore:
+        return [Colors.purple.shade400, Colors.purple.shade700];
+      case MedalType.speedster:
+      case MedalType.earlyBird:
+        return [Colors.blue.shade400, Colors.blue.shade700];
+      case MedalType.consistent:
+      case MedalType.scholar:
+        return [Colors.green.shade400, Colors.green.shade700];
+      case MedalType.fire:
+        return [Colors.orange.shade400, Colors.red.shade600];
+      case MedalType.star:
+      case MedalType.improver:
+        return [Colors.amber.shade400, Colors.amber.shade700];
+    }
   }
   
   /// Encabezado con contador de actividades
@@ -684,47 +1062,8 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 );
               })
             else
-              // Mensaje de respuesta enviada
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.green.withOpacity(0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.check_circle,
-                      color: Colors.green,
-                      size: 32,
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '¡Respuesta enviada!',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Espera a que el docente revele la respuesta correcta.',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.white54,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // NUEVO: Feedback detallado de la respuesta
+              _buildAnswerFeedback(context, activity),
             
             // Botón de enviar
             if (!hasResponded && _selectedAnswers[activity.id] != null) ...[
@@ -857,6 +1196,208 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             ],
           ),
         ),
+      ),
+    );
+  }
+  
+  /// Construye el feedback visual de la respuesta enviada
+  Widget _buildAnswerFeedback(BuildContext context, StudentActivity activity) {
+    final theme = Theme.of(context);
+    final studentService = context.read<StudentService>();
+    final answerResult = studentService.getAnswerResult(activity.id);
+    
+    // Si aún no hay resultado (esperando confirmación del servidor)
+    if (answerResult == null) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                'Procesando respuesta...',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    // Si la respuesta ya fue revelada por el docente
+    if (answerResult.isRevealed) {
+      final isCorrect = answerResult.isCorrect;
+      final correctIndex = answerResult.correctIndex ?? 0;
+      final selectedIndex = answerResult.selectedIndex;
+      
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isCorrect
+                ? [Colors.green.withOpacity(0.2), Colors.green.withOpacity(0.1)]
+                : [Colors.red.withOpacity(0.2), Colors.red.withOpacity(0.1)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isCorrect ? Colors.green : Colors.red,
+            width: 2,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Encabezado con resultado
+            Row(
+              children: [
+                Icon(
+                  isCorrect ? Icons.check_circle : Icons.cancel,
+                  color: isCorrect ? Colors.green : Colors.red,
+                  size: 36,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isCorrect ? '🎉 ¡Correcto!' : '❌ Incorrecto',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: isCorrect ? Colors.green : Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        isCorrect 
+                            ? '¡Excelente trabajo! +${answerResult.pointsEarned.toStringAsFixed(0)}%'
+                            : 'La respuesta correcta era la opción ${_getLetterForIndex(correctIndex)}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 16),
+            const Divider(color: Colors.white24),
+            const SizedBox(height: 12),
+            
+            // Mostrar opciones con indicadores
+            ...activity.options.asMap().entries.map((entry) {
+              final index = entry.key;
+              final option = entry.value;
+              final isCorrectOption = index == correctIndex;
+              final wasSelected = index == selectedIndex;
+              
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    // Indicador de correcto/incorrecto
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: isCorrectOption
+                            ? Colors.green.withOpacity(0.3)
+                            : (wasSelected ? Colors.red.withOpacity(0.3) : Colors.white.withOpacity(0.1)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          isCorrectOption
+                              ? Icons.check
+                              : (wasSelected ? Icons.close : null),
+                          color: isCorrectOption ? Colors.green : Colors.red,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Texto de la opción
+                    Expanded(
+                      child: Text(
+                        '${_getLetterForIndex(index)}. $option',
+                        style: TextStyle(
+                          color: isCorrectOption
+                              ? Colors.green
+                              : (wasSelected ? Colors.red.shade300 : Colors.white54),
+                          fontWeight: isCorrectOption ? FontWeight.bold : FontWeight.normal,
+                          decoration: wasSelected && !isCorrectOption
+                              ? TextDecoration.lineThrough
+                              : null,
+                        ),
+                      ),
+                    ),
+                    // Badge de selección
+                    if (wasSelected)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: (wasSelected && isCorrectOption)
+                              ? Colors.green.withOpacity(0.3)
+                              : Colors.red.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Tu respuesta',
+                          style: TextStyle(fontSize: 10, color: Colors.white),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      );
+    }
+    
+    // Si envió respuesta pero aún NO se reveló (estado intermedio)
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.amber.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.amber.withOpacity(0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.hourglass_top_rounded, color: Colors.amber, size: 32),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '✅ ¡Respuesta enviada!',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: Colors.amber,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Seleccionaste opción ${_getLetterForIndex(answerResult.selectedIndex)}. '
+                  'Espera a que el docente revele la respuesta correcta.',
+                  style: theme.textTheme.bodySmall?.copyWith(color: Colors.white54),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

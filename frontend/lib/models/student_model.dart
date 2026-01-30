@@ -1,7 +1,7 @@
 ﻿/// Modelos de datos para la sección de estudiantes
 /// 
 /// Sistema de identificación sin cuentas, basado en sesión temporal
-/// Maneja actividades, respuestas, reflexiones y puntaje acumulado
+/// Maneja actividades, respuestas, reflexiones, puntaje y MEDALLAS
 
 import 'dart:convert';
 
@@ -47,6 +47,243 @@ enum StudentClassification {
   approved,   // 70%+
   basic,      // 60%+
   failed,     // <50% (solo visible para docente)
+}
+
+// ============================================================
+// RESULTADO DE RESPUESTA (para feedback al estudiante)
+// ============================================================
+
+/// Resultado de una respuesta enviada por el estudiante
+class AnswerResult {
+  final String activityId;
+  final int selectedIndex;
+  final bool isCorrect;
+  final double pointsEarned;
+  final int? responseTimeMs;
+  final DateTime answeredAt;
+  final int? correctIndex;    // Se llena cuando el docente revela
+  final bool isRevealed;      // Si ya se reveló la respuesta correcta
+
+  AnswerResult({
+    required this.activityId,
+    required this.selectedIndex,
+    required this.isCorrect,
+    required this.pointsEarned,
+    this.responseTimeMs,
+    required this.answeredAt,
+    this.correctIndex,
+    this.isRevealed = false,
+  });
+
+  AnswerResult copyWith({
+    String? activityId,
+    int? selectedIndex,
+    bool? isCorrect,
+    double? pointsEarned,
+    int? responseTimeMs,
+    DateTime? answeredAt,
+    int? correctIndex,
+    bool? isRevealed,
+  }) {
+    return AnswerResult(
+      activityId: activityId ?? this.activityId,
+      selectedIndex: selectedIndex ?? this.selectedIndex,
+      isCorrect: isCorrect ?? this.isCorrect,
+      pointsEarned: pointsEarned ?? this.pointsEarned,
+      responseTimeMs: responseTimeMs ?? this.responseTimeMs,
+      answeredAt: answeredAt ?? this.answeredAt,
+      correctIndex: correctIndex ?? this.correctIndex,
+      isRevealed: isRevealed ?? this.isRevealed,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'activityId': activityId,
+    'selectedIndex': selectedIndex,
+    'isCorrect': isCorrect,
+    'pointsEarned': pointsEarned,
+    'responseTimeMs': responseTimeMs,
+    'answeredAt': answeredAt.toIso8601String(),
+    'correctIndex': correctIndex,
+    'isRevealed': isRevealed,
+  };
+}
+
+/// Evento cuando el docente revela la respuesta correcta
+class AnswerRevealEvent {
+  final String activityId;
+  final int correctIndex;
+  final int? studentAnswer;   // La respuesta que dio el estudiante (si respondió)
+  final bool? wasCorrect;     // Si acertó o no (null si no respondió)
+
+  AnswerRevealEvent({
+    required this.activityId,
+    required this.correctIndex,
+    this.studentAnswer,
+    this.wasCorrect,
+  });
+}
+
+// ============================================================
+// SISTEMA DE MEDALLAS
+// ============================================================
+
+enum MedalType {
+  // Medallas de rendimiento
+  gold,           // 🥇 Oro - Mejor puntaje
+  silver,         // 🥈 Plata - 2do lugar
+  bronze,         // 🥉 Bronce - 3er lugar
+  
+  // Medallas de logros
+  perfectScore,   // 💯 Puntaje perfecto en actividad
+  speedster,      // ⚡ Respuesta más rápida
+  consistent,     // 🎯 3 respuestas correctas seguidas
+  scholar,        // 📚 Respondió todas las actividades
+  earlyBird,      // 🐦 Primero en responder
+  improver,       // 📈 Mayor mejora entre actividades
+  
+  // Medallas especiales
+  champion,       // 🏆 Campeón de la sesión
+  star,           // ⭐ Excelencia (>90%)
+  fire,           // 🔥 En racha (5 correctas)
+  crown,          // 👑 Líder actual
+}
+
+/// Información de una medalla
+class Medal {
+  final MedalType type;
+  final String name;
+  final String description;
+  final String emoji;
+  final DateTime earnedAt;
+  final String? activityId;  // Actividad donde se ganó (si aplica)
+
+  Medal({
+    required this.type,
+    required this.name,
+    required this.description,
+    required this.emoji,
+    DateTime? earnedAt,
+    this.activityId,
+  }) : earnedAt = earnedAt ?? DateTime.now();
+
+  Map<String, dynamic> toJson() => {
+    'type': type.name,
+    'name': name,
+    'description': description,
+    'emoji': emoji,
+    'earnedAt': earnedAt.toIso8601String(),
+    'activityId': activityId,
+  };
+
+  factory Medal.fromJson(Map<String, dynamic> json) => Medal(
+    type: MedalType.values.firstWhere(
+      (e) => e.name == json['type'],
+      orElse: () => MedalType.star,
+    ),
+    name: json['name'],
+    description: json['description'],
+    emoji: json['emoji'],
+    earnedAt: json['earnedAt'] != null ? DateTime.parse(json['earnedAt']) : null,
+    activityId: json['activityId'],
+  );
+}
+
+/// Factory para crear medallas predefinidas
+class MedalFactory {
+  static Medal gold() => Medal(
+    type: MedalType.gold,
+    name: 'Oro',
+    description: '¡Primer lugar en la clase!',
+    emoji: '🥇',
+  );
+
+  static Medal silver() => Medal(
+    type: MedalType.silver,
+    name: 'Plata',
+    description: '¡Segundo lugar - Excelente!',
+    emoji: '🥈',
+  );
+
+  static Medal bronze() => Medal(
+    type: MedalType.bronze,
+    name: 'Bronce',
+    description: '¡Tercer lugar - Muy bien!',
+    emoji: '🥉',
+  );
+
+  static Medal perfectScore({String? activityId}) => Medal(
+    type: MedalType.perfectScore,
+    name: 'Perfecto',
+    description: '¡Respuesta perfecta!',
+    emoji: '💯',
+    activityId: activityId,
+  );
+
+  static Medal speedster({String? activityId}) => Medal(
+    type: MedalType.speedster,
+    name: 'Veloz',
+    description: '¡Respuesta más rápida!',
+    emoji: '⚡',
+    activityId: activityId,
+  );
+
+  static Medal consistent() => Medal(
+    type: MedalType.consistent,
+    name: 'Consistente',
+    description: '3 respuestas correctas seguidas',
+    emoji: '🎯',
+  );
+
+  static Medal scholar() => Medal(
+    type: MedalType.scholar,
+    name: 'Estudioso',
+    description: 'Respondió todas las actividades',
+    emoji: '📚',
+  );
+
+  static Medal earlyBird({String? activityId}) => Medal(
+    type: MedalType.earlyBird,
+    name: 'Madrugador',
+    description: '¡Primero en responder!',
+    emoji: '🐦',
+    activityId: activityId,
+  );
+
+  static Medal improver() => Medal(
+    type: MedalType.improver,
+    name: 'Mejorando',
+    description: '¡Gran mejora desde la última actividad!',
+    emoji: '📈',
+  );
+
+  static Medal champion() => Medal(
+    type: MedalType.champion,
+    name: 'Campeón',
+    description: '¡Campeón de la sesión!',
+    emoji: '🏆',
+  );
+
+  static Medal star() => Medal(
+    type: MedalType.star,
+    name: 'Estrella',
+    description: '¡Rendimiento excelente!',
+    emoji: '⭐',
+  );
+
+  static Medal fire() => Medal(
+    type: MedalType.fire,
+    name: 'En Racha',
+    description: '¡5 respuestas correctas seguidas!',
+    emoji: '🔥',
+  );
+
+  static Medal crown() => Medal(
+    type: MedalType.crown,
+    name: 'Líder',
+    description: '¡Eres el líder de la clase!',
+    emoji: '👑',
+  );
 }
 
 /// Obtiene la CLASIFICACIÓN según el porcentaje
@@ -122,6 +359,11 @@ class Student {
   
   // Reflexiones del estudiante
   final List<StudentReflection> reflections;
+  
+  // SISTEMA DE MEDALLAS
+  final List<Medal> medals;
+  int consecutiveCorrect;  // Respuestas correctas consecutivas
+  int totalActivitiesAnswered;
 
   Student({
     required this.sessionId,
@@ -132,9 +374,13 @@ class Student {
     this.lastActivityAt,
     Map<String, StudentResponse>? responses,
     List<StudentReflection>? reflections,
+    List<Medal>? medals,
+    this.consecutiveCorrect = 0,
+    this.totalActivitiesAnswered = 0,
   }) : connectedAt = connectedAt ?? DateTime.now(),
        responses = responses ?? {},
-       reflections = reflections ?? [];
+       reflections = reflections ?? [],
+       medals = medals ?? [];
 
   /// CLASIFICACIÓN actual del estudiante
   StudentClassification get classification => 
@@ -147,6 +393,19 @@ class Student {
   /// ícono de CLASIFICACIÓN
   String get classificationIcon => 
       getClassificationIcon(classification);
+  
+  /// Cantidad total de medallas
+  int get medalCount => medals.length;
+  
+  /// Verifica si tiene una medalla específica
+  bool hasMedal(MedalType type) => medals.any((m) => m.type == type);
+  
+  /// Obtiene las medallas más recientes (hasta 5)
+  List<Medal> get recentMedals => 
+      medals.length <= 5 ? medals : medals.sublist(medals.length - 5);
+  
+  /// String con emojis de las medallas recientes
+  String get medalsDisplay => medals.map((m) => m.emoji).join(' ');
 
   /// Verifica si el estudiante ya respondió una actividad
   bool hasResponded(String activityId) => responses.containsKey(activityId);
@@ -176,6 +435,35 @@ class Student {
     status = StudentConnectionStatus.notResponded;
   }
 
+  /// Agrega una medalla al estudiante
+  void addMedal(Medal medal) {
+    // Evitar duplicados del mismo tipo
+    if (!hasMedal(medal.type)) {
+      medals.add(medal);
+    }
+  }
+  
+  /// Actualiza rachas de respuestas correctas
+  void updateStreak(bool isCorrect, {String? activityId}) {
+    totalActivitiesAnswered++;
+    
+    if (isCorrect) {
+      consecutiveCorrect++;
+      
+      // Medalla por 3 correctas seguidas
+      if (consecutiveCorrect == 3 && !hasMedal(MedalType.consistent)) {
+        addMedal(MedalFactory.consistent());
+      }
+      
+      // Medalla por 5 correctas seguidas (racha de fuego)
+      if (consecutiveCorrect == 5 && !hasMedal(MedalType.fire)) {
+        addMedal(MedalFactory.fire());
+      }
+    } else {
+      consecutiveCorrect = 0;  // Resetea la racha
+    }
+  }
+
   /// Convierte a JSON para envío por WebSocket
   Map<String, dynamic> toJson() => {
     'sessionId': sessionId,
@@ -186,6 +474,11 @@ class Student {
     'lastActivityAt': lastActivityAt?.toIso8601String(),
     'classification': classification.name,
     'classificationIcon': classificationIcon,
+    'medals': medals.map((m) => m.toJson()).toList(),
+    'medalsDisplay': medalsDisplay,
+    'medalCount': medalCount,
+    'consecutiveCorrect': consecutiveCorrect,
+    'totalActivitiesAnswered': totalActivitiesAnswered,
   };
 
   /// Crea estudiante desde JSON
@@ -203,9 +496,14 @@ class Student {
     lastActivityAt: json['lastActivityAt'] != null 
         ? DateTime.parse(json['lastActivityAt']) 
         : null,
+    medals: json['medals'] != null
+        ? (json['medals'] as List).map((m) => Medal.fromJson(m)).toList()
+        : null,
+    consecutiveCorrect: json['consecutiveCorrect'] ?? 0,
+    totalActivitiesAnswered: json['totalActivitiesAnswered'] ?? 0,
   );
 
-  /// Versión resumida para dashboard (sin datos sensibles)
+  /// Versión resumida para dashboard (con medallas)
   Map<String, dynamic> toSummary() => {
     'sessionId': sessionId,
     'name': name,
@@ -213,6 +511,9 @@ class Student {
     'accumulatedPercentage': accumulatedPercentage,
     'classification': classification.name,
     'classificationIcon': classificationIcon,
+    'medalsDisplay': medalsDisplay,
+    'medalCount': medalCount,
+    'consecutiveCorrect': consecutiveCorrect,
   };
 }
 
@@ -398,6 +699,7 @@ class ClassDashboardSummary {
   final int notRespondedCount;
   final String? currentActivityId;
   final ActivityState? currentActivityState;
+  final Map<String, int> voteCounts; // Nuevo: conteo de votos por opción
 
   ClassDashboardSummary({
     required this.connectedStudents,
@@ -406,6 +708,7 @@ class ClassDashboardSummary {
     required this.notRespondedCount,
     this.currentActivityId,
     this.currentActivityState,
+    this.voteCounts = const {},
   });
 
   int get pendingCount => totalStudents - respondedCount;
@@ -413,6 +716,12 @@ class ClassDashboardSummary {
   double get responseRate => totalStudents > 0 
       ? (respondedCount / totalStudents) * 100 
       : 0;
+  
+  /// Obtiene el conteo de votos para una opción específica
+  int getVoteCount(int optionIndex) => voteCounts[optionIndex.toString()] ?? 0;
+  
+  /// Obtiene el total de votos
+  int get totalVotes => voteCounts.values.fold(0, (sum, count) => sum + count);
 
   Map<String, dynamic> toJson() => {
     'students': connectedStudents.map((s) => s.toSummary()).toList(),
@@ -422,12 +731,17 @@ class ClassDashboardSummary {
     'currentActivityId': currentActivityId,
     'currentActivityState': currentActivityState?.name,
     'responseRate': responseRate,
+    'voteCounts': voteCounts,
   };
 
   factory ClassDashboardSummary.fromJson(Map<String, dynamic> json) {
     final studentsList = (json['students'] as List?)
         ?.map((s) => Student.fromJson(s))
         .toList() ?? [];
+    
+    // Parsear voteCounts
+    final voteCountsRaw = json['voteCounts'] as Map<String, dynamic>? ?? {};
+    final voteCounts = voteCountsRaw.map((key, value) => MapEntry(key, value as int));
     
     return ClassDashboardSummary(
       connectedStudents: studentsList,
@@ -441,6 +755,7 @@ class ClassDashboardSummary {
               orElse: () => ActivityState.locked,
             )
           : null,
+      voteCounts: voteCounts,
     );
   }
 }

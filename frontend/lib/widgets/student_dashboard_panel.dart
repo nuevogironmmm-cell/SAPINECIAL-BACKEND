@@ -17,6 +17,7 @@ class StudentDashboardPanel extends StatefulWidget {
   final VoidCallback? onRefresh;
   final VoidCallback? onClose;
   final Function(String studentId)? onStudentTap;
+  final bool isEmbedded; // Para cuando está dentro de un modal
   
   const StudentDashboardPanel({
     super.key,
@@ -25,6 +26,7 @@ class StudentDashboardPanel extends StatefulWidget {
     this.onRefresh,
     this.onClose,
     this.onStudentTap,
+    this.isEmbedded = false,
   });
 
   @override
@@ -55,6 +57,33 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
     final theme = Theme.of(context);
     final summary = widget.summary;
     
+    // Contenido principal
+    Widget content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Header (solo si no está embebido)
+        if (!widget.isEmbedded)
+          _buildHeader(theme, summary),
+        
+        // Estadísticas rápidas
+        if (summary != null)
+          _buildQuickStats(theme, summary),
+        
+        // Lista de estudiantes
+        Expanded(
+          child: summary == null || summary.connectedStudents.isEmpty
+              ? _buildEmptyState(theme)
+              : _buildStudentList(theme, summary),
+        ),
+      ],
+    );
+    
+    // Si está embebido, solo devolver el contenido
+    if (widget.isEmbedded) {
+      return content;
+    }
+    
+    // Si no, envolverlo en el contenedor decorado
     return Container(
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.3),
@@ -63,24 +92,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
           color: theme.colorScheme.primary.withOpacity(0.2),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Header
-          _buildHeader(theme, summary),
-          
-          // Estadísticas rápidas
-          if (summary != null)
-            _buildQuickStats(theme, summary),
-          
-          // Lista de estudiantes
-          Expanded(
-            child: summary == null || summary.connectedStudents.isEmpty
-                ? _buildEmptyState(theme)
-                : _buildStudentList(theme, summary),
-          ),
-        ],
-      ),
+      child: content,
     );
   }
   
@@ -393,14 +405,28 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      student.name,
-                      style: TextStyle(
-                        color: isDisconnected ? Colors.grey : Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            student.name,
+                            style: TextStyle(
+                              color: isDisconnected ? Colors.grey : Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // Mostrar medallas si tiene
+                        if (student.medals.isNotEmpty) ...[
+                          const SizedBox(width: 4),
+                          Text(
+                            student.medalsDisplay,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Row(
@@ -418,6 +444,24 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
                             fontSize: 11,
                           ),
                         ),
+                        // Mostrar racha si tiene
+                        if (student.consecutiveCorrect > 0) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '🔥 ${student.consecutiveCorrect}',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ],

@@ -104,28 +104,139 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
   }
   
   void _navigateToTeacher() {
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => 
-            const TeacherDashboard(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0.1, 0),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              )),
-              child: child,
+    // Mostrar diálogo de contraseña antes de entrar como docente
+    _showTeacherPasswordDialog();
+  }
+  
+  void _showTeacherPasswordDialog() {
+    final passwordController = TextEditingController();
+    bool obscurePassword = true;
+    String? errorMessage;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF1a1a2e),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
             ),
+            title: Row(
+              children: [
+                Icon(Icons.lock_outline, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 12),
+                const Text('Acceso Docente', style: TextStyle(color: Colors.white)),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Ingresa la contraseña para acceder al panel del docente',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: passwordController,
+                  obscureText: obscurePassword,
+                  autofocus: true,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Contraseña',
+                    labelStyle: const TextStyle(color: Colors.white54),
+                    prefixIcon: const Icon(Icons.key, color: Colors.white54),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.white54,
+                      ),
+                      onPressed: () => setDialogState(() => obscurePassword = !obscurePassword),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.05),
+                  ),
+                  onSubmitted: (_) => _verifyPassword(passwordController.text, context, setDialogState, (msg) => errorMessage = msg),
+                ),
+                if (errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    errorMessage!,
+                    style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar', style: TextStyle(color: Colors.white54)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () {
+                  _verifyPassword(passwordController.text, context, setDialogState, (msg) {
+                    setDialogState(() => errorMessage = msg);
+                  });
+                },
+                child: const Text('Ingresar'),
+              ),
+            ],
           );
         },
-        transitionDuration: const Duration(milliseconds: 400),
       ),
     );
+  }
+  
+  void _verifyPassword(String password, BuildContext dialogContext, StateSetter setDialogState, Function(String?) setError) {
+    // Contraseña del docente (puedes cambiarla)
+    const teacherPassword = 'sapiencial2026';
+    
+    if (password == teacherPassword) {
+      Navigator.pop(dialogContext); // Cerrar diálogo
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => 
+              const TeacherDashboard(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.1, 0),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                )),
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
+      );
+    } else {
+      setError('Contraseña incorrecta');
+    }
   }
   
   void _navigateToStudent() {

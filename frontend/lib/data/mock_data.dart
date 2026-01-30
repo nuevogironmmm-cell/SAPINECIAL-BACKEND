@@ -1,5 +1,22 @@
 ﻿import '../models/class_session_model.dart';
 
+// URLs de imágenes públicas para fallback
+const _imgBiblia = 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=800';
+const _imgLibrosAntiguos = 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800';
+const _imgSalomon = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800';
+const _imgMarRojo = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800';
+const _imgDavidGoliat = 'https://images.unsplash.com/photo-1569003339405-ea396a5a8a90?w=800';
+const _imgJacob = 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=800';
+const _imgCorazon = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800';
+const _imgAdoracion = 'https://images.unsplash.com/photo-1445445290350-18a3b86e0b5a?w=800';
+const _imgInvitacion = 'https://images.unsplash.com/photo-1473172707857-f9e276582ab6?w=800';
+const _imgJob = 'https://images.unsplash.com/photo-1500099817043-86d46000d58f?w=800';
+const _imgSalmos = 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=800';
+const _imgProverbios = 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800';
+const _imgEclesiastes = 'https://images.unsplash.com/photo-1485841890310-6a055c88698a?w=800';
+const _imgCantares = 'https://images.unsplash.com/photo-1518621736915-f3b1c41bfd00?w=800';
+const _imgParalelismo = 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800';
+
 final mockClassSession = ClassSession(
   id: 'session_1',
   title: 'Introducción',
@@ -12,21 +29,20 @@ final mockClassSession = ClassSession(
           type: SlideType.title,
           title: 'Introducción',
           content: 'Literatura sapiencial del Antiguo Testamento',
-          imageUrl: 'assets/images/intro_biblia.jpg',
+          imageUrl: _imgBiblia,
         ),
         Slide(
           id: 's1_2',
           type: SlideType.content,
           title: 'Un Legado Universal',
           content: 'La poesía del Antiguo Testamento es la contribución del pueblo hebreo a la literatura universal.',
-          imageUrl: 'assets/images/libros_antiguos.jpg',
+          imageUrl: _imgLibrosAntiguos,
         ),
         Slide(
           id: 's1_3',
           type: SlideType.content,
           title: 'Literatura antigua',
           content: 'Como otros pueblos, la literatura más antigua de Israel fue poética. Pero... ¿cuál es el libro más antiguo de la Biblia?',
-          imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_(large).gif',
         ),
         Slide(
           id: 's1_3_activity',
@@ -52,6 +68,7 @@ final mockClassSession = ClassSession(
           title: 'El Libro de Job',
           content: 'Job es considerado el libro más antiguo de la Biblia. Un libro poético que explora el sufrimiento humano y la soberanía de Dios.',
           biblicalReference: 'Job 1:1',
+          imageUrl: _imgJob,
         ),
         Slide(
           id: 's1_4',
@@ -71,7 +88,7 @@ final mockClassSession = ClassSession(
           title: 'Ejemplo: Salomón',
           content: 'Salomón compuso 3,000 proverbios y 1,005 cantares. Solo una parte está en el canon.',
           biblicalReference: '1 Reyes 4:32',
-          imageUrl: 'assets/images/salomon.jpg',
+          imageUrl: _imgSalomon,
         ),
         Slide(
           id: 's1_6_reflexion',
@@ -96,7 +113,7 @@ final mockClassSession = ClassSession(
           type: SlideType.content,
           title: 'Danza y ritmo',
           content: 'En algunas ocasiones se acompañaba de danza, dándole ritmo.',
-          imageUrl: 'assets/images/jacob.jpg',
+          imageUrl: _imgAdoracion,
         ),
         Slide(
           id: 's2_3',
@@ -116,7 +133,7 @@ final mockClassSession = ClassSession(
           title: 'Ejemplo 1: El Mar Rojo',
           content: 'Cuando el pueblo pasó el mar Rojo y fueron destruidos los egipcios...',
           biblicalReference: 'Éxodo 15:20-21',
-          imageUrl: 'assets/images/mar_rojo.jpg',
+          imageUrl: _imgMarRojo,
         ),
         Slide(
           id: 's2_6',
@@ -131,7 +148,7 @@ final mockClassSession = ClassSession(
           title: 'Ejemplo 2: David y Goliat',
           content: 'Cuando David venció a Goliat...',
           biblicalReference: '1 Samuel 18:7',
-          imageUrl: 'assets/images/david_goliat.jpg',
+          imageUrl: _imgDavidGoliat,
         ),
         Slide(
           id: 's2_8',
@@ -146,7 +163,7 @@ final mockClassSession = ClassSession(
           title: 'Ejemplo 3: Jacob',
           content: 'Jacob, antes de morir, reúne a sus doce hijos...',
           biblicalReference: 'Génesis 49',
-          imageUrl: 'assets/images/jacob.jpg',
+          imageUrl: _imgJacob,
         ),
         Slide(
           id: 's2_10',
@@ -160,7 +177,7 @@ final mockClassSession = ClassSession(
           type: SlideType.title,
           title: 'El corazón poético',
           content: 'Los cinco libros poéticos de la Palabra de Dios.',
-          imageUrl: 'assets/images/corazon_poetico.jpg',
+          imageUrl: _imgCorazon,
         ),
         Slide(
           id: 's3_2',
@@ -173,7 +190,7 @@ final mockClassSession = ClassSession(
           type: SlideType.content,
           title: 'Adoración genuina',
           content: '...así como alabanzas y adoración.',
-          imageUrl: 'assets/images/adoracion.jpg',
+          imageUrl: _imgAdoracion,
         ),
         Slide(
           id: 's3_4',
@@ -192,7 +209,7 @@ final mockClassSession = ClassSession(
           type: SlideType.reflection,
           title: 'Invitación',
           content: 'Quiero despertar en ustedes un interés muy especial por el estudio de estos libros. Sé que Dios les ministrará de una forma muy especial.',
-          imageUrl: 'assets/images/invitacion.jpg',
+          imageUrl: _imgInvitacion,
         ),
       ],
     ),

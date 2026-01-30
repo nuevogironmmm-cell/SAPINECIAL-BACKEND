@@ -36,6 +36,9 @@ class StudentService extends ChangeNotifier {
   final List<StudentActivity> _activeActivities = [];
   final Map<String, bool> _activityResponses = {}; // activityId -> hasResponded
   
+  // RESULTADO DE RESPUESTAS (para mostrar feedback)
+  final Map<String, AnswerResult> _answerResults = {}; // activityId -> result
+  
   // Estado de la clase
   String _classState = "LOBBY";
   int _currentSlide = 0;
@@ -53,6 +56,11 @@ class StudentService extends ChangeNotifier {
   final _activityController = StreamController<StudentActivity?>.broadcast();
   final _activitiesController = StreamController<List<StudentActivity>>.broadcast();
   final _errorController = StreamController<String>.broadcast();
+  
+  // NUEVOS STREAMS para notificaciones
+  final _newActivityController = StreamController<StudentActivity>.broadcast();
+  final _answerRevealedController = StreamController<AnswerRevealEvent>.broadcast();
+  final _answerResultController = StreamController<AnswerResult>.broadcast();
   
   // URL del servidor (dinámica según entorno)
   String get _baseUrl => AppConfig.studentWsUrl;
@@ -114,6 +122,21 @@ class StudentService extends ChangeNotifier {
   Stream<List<StudentActivity>> get activitiesStream => _activitiesController.stream;
   Stream<StudentActivity?> get activityStream => _activityController.stream;
   Stream<String> get errorStream => _errorController.stream;
+  
+  // NUEVOS STREAMS para notificaciones de eventos
+  Stream<StudentActivity> get newActivityStream => _newActivityController.stream;
+  Stream<AnswerRevealEvent> get answerRevealedStream => _answerRevealedController.stream;
+  Stream<AnswerResult> get answerResultStream => _answerResultController.stream;
+  
+  // GETTER para resultados de respuestas
+  AnswerResult? getAnswerResult(String activityId) => _answerResults[activityId];
+  bool hasAnswerResult(String activityId) => _answerResults.containsKey(activityId);
+  
+  // GETTERS DE MEDALLAS
+  List<Medal> get medals => _currentStudent?.medals ?? [];
+  int get medalCount => _currentStudent?.medalCount ?? 0;
+  String get medalsDisplay => _currentStudent?.medalsDisplay ?? '';
+  int get consecutiveCorrect => _currentStudent?.consecutiveCorrect ?? 0;
   
   // ============================================================
   // conexión Y REGISTRO
@@ -273,10 +296,27 @@ class StudentService extends ChangeNotifier {
       
       if (response['type'] == 'ANSWER_RECEIVED') {
         final data = response['data'];
+        final isCorrect = data['isCorrect'] as bool? ?? false;
+        final pointsEarned = (data['pointsEarned'] ?? 0).toDouble();
+        
+        // Guardar resultado de la respuesta
+        final result = AnswerResult(
+          activityId: activityId,
+          selectedIndex: answerIndex,
+          isCorrect: isCorrect,
+          pointsEarned: pointsEarned,
+          responseTimeMs: responseTimeMs,
+          answeredAt: DateTime.now(),
+        );
+        _answerResults[activityId] = result;
+        
+        // Emitir evento de resultado (para feedback inmediato)
+        _answerResultController.add(result);
+        
         // Actualizar porcentaje acumulado
         if (_currentStudent != null) {
           _currentStudent!.accumulatedPercentage = 
-              (data['accumulatedPercentage'] ?? 0).toDouble();
+              (data['accumulatedPercentage'] ?? _currentStudent!.accumulatedPercentage).toDouble();
         }
         notifyListeners();
         return true;
@@ -490,6 +530,10 @@ class StudentService extends ChangeNotifier {
     
     _activityController.add(_currentActivity);
     _activitiesController.add(_activeActivities);
+    
+    // EMITIR EVENTO DE NUEVA ACTIVIDAD (para sonidos/notificaciones)
+    _newActivityController.add(newActivity);
+    
     notifyListeners();
   }
   
@@ -527,15 +571,34 @@ class StudentService extends ChangeNotifier {
   
   void _handleAnswerRevealed(Map<String, dynamic> data) {
     // El docente reveló la respuesta correcta
-    // El estudiante ahora puede ver si acertó
-    final correctIndex = data['correctIndex'];
-    if (_currentActivity != null && _currentStudent != null) {
-      final response = _currentStudent!.responses[_currentActivity!.id];
-      if (response != null) {
-        // Marcar si fue correcta
-        response.isCorrect;
+    final activityId = data['activityId'] as String?;
+    final correctIndex = data['correctIndex'] as int?;
+    
+    if (activityId != null && correctIndex != null) {
+      // Buscar la respuesta del estudiante para esta actividad
+      final myAnswer = _answerResults[activityId]?.selectedIndex;
+      final wasCorrect = myAnswer == correctIndex;
+      
+      // Crear evento de revelación
+      final revealEvent = AnswerRevealEvent(
+        activityId: activityId,
+        correctIndex: correctIndex,
+        studentAnswer: myAnswer,
+        wasCorrect: myAnswer != null ? wasCorrect : null,
+      );
+      
+      // Actualizar el resultado si existe
+      if (_answerResults.containsKey(activityId)) {
+        _answerResults[activityId] = _answerResults[activityId]!.copyWith(
+          correctIndex: correctIndex,
+          isRevealed: true,
+        );
       }
+      
+      // Emitir evento (para sonidos/UI)
+      _answerRevealedController.add(revealEvent);
     }
+    
     notifyListeners();
   }
   

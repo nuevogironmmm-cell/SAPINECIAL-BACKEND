@@ -278,8 +278,13 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       'name': s.name,
       'percentage': s.accumulatedPercentage,
       'status': s.status.name,
-      'responses': s.responses,
+      'responses': s.responses.map((key, value) => MapEntry(key, value.toJson())),
       'lastActivity': s.lastActivityAt?.toString() ?? '-',
+      'medals': s.medals.map((m) => m.toJson()).toList(),
+      'consecutiveCorrect': s.consecutiveCorrect,
+      'totalActivitiesAnswered': s.totalActivitiesAnswered,
+      'classification': s.classification.name,
+      'classificationIcon': s.classificationIcon,
     }).toList();
     
     final success = await ExportService.exportStudentResults(
@@ -624,8 +629,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           children: [
             Row(
               children: [
-                // BARRA LATERAL (oculta en modo proyector)
-                if (_showSidebar)
+                // BARRA LATERAL (solo en desktop, oculta en modo proyector)
+                if (_showSidebar && !isMobile)
                   Container(
                     width: 280,
                     decoration: BoxDecoration(
@@ -794,8 +799,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                         ),
                       ),
                       
-                      // PANEL DE ESTUDIANTES (lado derecho)
-                      if (_showStudentPanel)
+                      // PANEL DE ESTUDIANTES (lado derecho - solo desktop)
+                      if (_showStudentPanel && !isMobile)
                         Positioned(
                           top: 80,
                           right: 20,
@@ -1006,15 +1011,21 @@ class _TeacherDashboardState extends State<TeacherDashboard>
 
                   // RENDERIZADO SEGUN TIPO DE ACTIVIDAD con entrada escalonada
                   if (slide.activity!.type == ActivityType.multipleChoice) ...[
-                    // Opciones de respuesta con animación escalonada
-                    ...List.generate(slide.activity!.options.length, (index) {
-                      return FadeInSlide(
-                        duration: const Duration(milliseconds: 350),
-                        delay: Duration(milliseconds: 400 + (index * 80)),
-                        beginOffset: const Offset(0.1, 0),
-                        child: _buildMultipleChoiceOption(slide, index),
-                      );
-                    }),
+                    // Opciones de respuesta con Consumer para votos en vivo
+                    Consumer<TeacherService>(
+                      builder: (context, teacherService, _) {
+                        return Column(
+                          children: List.generate(slide.activity!.options.length, (index) {
+                            return FadeInSlide(
+                              duration: const Duration(milliseconds: 350),
+                              delay: Duration(milliseconds: 400 + (index * 80)),
+                              beginOffset: const Offset(0.1, 0),
+                              child: _buildMultipleChoiceOption(slide, index),
+                            );
+                          }),
+                        );
+                      },
+                    ),
                   ] else if (slide.activity!.type == ActivityType.wordPuzzle) ...[
                     FadeInSlide(
                       duration: const Duration(milliseconds: 400),
@@ -1043,6 +1054,16 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     final isCorrect = slide.activity!.isRevealed && index == slide.activity!.correctOptionIndex;
     final isWrong = slide.activity!.isRevealed && index != slide.activity!.correctOptionIndex && studentsForThisOption.isNotEmpty;
     
+    // Obtener votos en vivo del servidor
+    final teacherService = context.read<TeacherService>();
+    final dashboard = teacherService.dashboardSummary;
+    final voteCount = dashboard?.getVoteCount(index) ?? 0;
+    final totalVotes = dashboard?.totalVotes ?? 0;
+    final totalStudents = dashboard?.totalStudents ?? 0;
+    
+    // Calcular porcentaje de votos
+    final votePercentage = totalVotes > 0 ? (voteCount / totalVotes * 100) : 0.0;
+    
     // Widget base de la opción
     Widget optionWidget = Padding(
       padding: EdgeInsets.symmetric(vertical: _isProjectorMode ? 10.0 : 8.0),
@@ -1069,73 +1090,161 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               width: 1.5
             ),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: _isProjectorMode ? 50 : 40,
-                height: _isProjectorMode ? 50 : 40,
-                decoration: BoxDecoration(
-                  color: isCorrect ? Colors.green : Colors.white10,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  String.fromCharCode(65 + index), // A, B, C...
-                  style: GoogleFonts.oswald(
-                    fontSize: _isProjectorMode ? 24 : 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white
+              Row(
+                children: [
+                  Container(
+                    width: _isProjectorMode ? 50 : 40,
+                    height: _isProjectorMode ? 50 : 40,
+                    decoration: BoxDecoration(
+                      color: isCorrect ? Colors.green : Colors.white10,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      String.fromCharCode(65 + index), // A, B, C...
+                      style: GoogleFonts.oswald(
+                        fontSize: _isProjectorMode ? 24 : 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              SizedBox(width: _isProjectorMode ? 24 : 16),
-              Expanded(
-                child: Text(
-                  slide.activity!.options[index],
-                  style: GoogleFonts.merriweather(
-                    fontSize: _optionFontSize,
-                    color: Colors.white
+                  SizedBox(width: _isProjectorMode ? 24 : 16),
+                  Expanded(
+                    child: Text(
+                      slide.activity!.options[index],
+                      style: GoogleFonts.merriweather(
+                        fontSize: _optionFontSize,
+                        color: Colors.white
+                      ),
+                    ),
                   ),
-                ),
-              ),
-               // Indicadores de estudiantes con animación de entrada
-              if (studentsForThisOption.isNotEmpty)
-                Row(
-                  children: studentsForThisOption.map((studentNum) {
-                    return ScaleIn(
+                  // NUEVO: Badge de votos en vivo
+                  if (_activityEnabledForStudents && voteCount > 0) ...[
+                    ScaleIn(
                       duration: const Duration(milliseconds: 300),
                       beginScale: 0.5,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 8.0),
-                        child: Container(
-                          width: _isProjectorMode ? 48 : 40,
-                          height: _isProjectorMode ? 48 : 40,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFC5A065),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                blurRadius: 4,
-                                spreadRadius: 1
-                              )
-                            ]
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: _isProjectorMode ? 16 : 12,
+                          vertical: _isProjectorMode ? 8 : 6,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: isCorrect && slide.activity!.isRevealed
+                                ? [Colors.green.shade600, Colors.green.shade800]
+                                : [const Color(0xFFC5A065), const Color(0xFF8B7355)],
                           ),
-                          child: Center(
-                            child: Text(
-                              '$studentNum',
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (isCorrect && slide.activity!.isRevealed 
+                                  ? Colors.green 
+                                  : const Color(0xFFC5A065)).withOpacity(0.4),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.how_to_vote_rounded,
+                              color: Colors.white,
+                              size: _isProjectorMode ? 20 : 16,
+                            ),
+                            SizedBox(width: _isProjectorMode ? 8 : 6),
+                            Text(
+                              '$voteCount',
                               style: GoogleFonts.oswald(
-                                fontSize: _isProjectorMode ? 24 : 20,
+                                fontSize: _isProjectorMode ? 22 : 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black
+                                color: Colors.white,
+                              ),
+                            ),
+                            if (totalVotes > 0) ...[
+                              SizedBox(width: _isProjectorMode ? 6 : 4),
+                              Text(
+                                '(${votePercentage.toStringAsFixed(0)}%)',
+                                style: GoogleFonts.oswald(
+                                  fontSize: _isProjectorMode ? 16 : 12,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                  // Indicadores de estudiantes con animación de entrada (modo local)
+                  if (studentsForThisOption.isNotEmpty)
+                    Row(
+                      children: studentsForThisOption.map((studentNum) {
+                        return ScaleIn(
+                          duration: const Duration(milliseconds: 300),
+                          beginScale: 0.5,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Container(
+                              width: _isProjectorMode ? 48 : 40,
+                              height: _isProjectorMode ? 48 : 40,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFC5A065),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    blurRadius: 4,
+                                    spreadRadius: 1
+                                  )
+                                ]
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '$studentNum',
+                                  style: GoogleFonts.oswald(
+                                    fontSize: _isProjectorMode ? 24 : 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black
+                                  ),
+                                ),
                               ),
                             ),
                           ),
+                        );
+                      }).toList(),
+                    ),
+                ],
+              ),
+              // NUEVO: Barra de progreso de votos
+              if (_activityEnabledForStudents && totalStudents > 0 && voteCount > 0) ...[
+                SizedBox(height: _isProjectorMode ? 12 : 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: votePercentage / 100),
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) {
+                      return LinearProgressIndicator(
+                        value: value,
+                        minHeight: _isProjectorMode ? 8 : 6,
+                        backgroundColor: Colors.white12,
+                        valueColor: AlwaysStoppedAnimation(
+                          isCorrect && slide.activity!.isRevealed
+                              ? Colors.green
+                              : const Color(0xFFC5A065),
                         ),
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    },
+                  ),
                 ),
+              ],
             ],
           ),
         ),
@@ -1459,166 +1568,460 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         final connectedCount = teacherService.connectedStudentsCount;
         final isActivity = currentSlide.type == SlideType.activity && currentSlide.activity != null;
         
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Navegación
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  onPressed: _prevSlide,
-                  icon: const Icon(Icons.arrow_back_ios, color: Colors.white70, size: 20),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Botón Menú de Bloques (NAVEGACIÓN)
+              IconButton(
+                onPressed: () => _showBlocksModal(),
+                icon: const Icon(
+                  Icons.menu_book,
+                  color: Color(0xFFC5A065),
+                  size: 20,
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    "${currentSlideIndex + 1}/${currentBlock.slides.length}",
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                tooltip: 'Bloques',
+              ),
+              
+              // Separador
+              Container(height: 16, width: 1, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 4)),
+              
+              // Navegación de slides
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: _prevSlide,
+                    icon: const Icon(Icons.arrow_back_ios, color: Colors.white70, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                   ),
-                ),
-                IconButton(
-                  onPressed: _nextSlide,
-                  icon: const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 20),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                ),
-              ],
-            ),
-            
-            // Controles
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Estudiantes conectados
-                Stack(
-                  children: [
+                  GestureDetector(
+                    onTap: () => _showSlideSelector(currentBlock),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white10,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        "${currentSlideIndex + 1}/${currentBlock.slides.length}",
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _nextSlide,
+                    icon: const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  ),
+                ],
+              ),
+              
+              // Separador
+              Container(height: 16, width: 1, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 4)),
+              
+              // Controles principales
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Estudiantes conectados
+                  Stack(
+                    children: [
+                      IconButton(
+                        onPressed: () => _showStudentsModal(context),
+                        icon: Icon(
+                          Icons.people_outline,
+                          color: Colors.white70,
+                          size: 20,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      ),
+                      if (connectedCount > 0)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: const BoxDecoration(
+                              color: Colors.green,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              '$connectedCount',
+                              style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  
+                  // BOTÓN EXCEL VISIBLE DIRECTAMENTE
+                  IconButton(
+                    onPressed: _exportToExcel,
+                    icon: const Icon(Icons.table_chart, color: Colors.green, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    tooltip: 'Exportar Excel',
+                  ),
+                  
+                  // Activar actividad (si aplica)
+                  if (isActivity)
                     IconButton(
-                      onPressed: () => setState(() => _showStudentPanel = !_showStudentPanel),
+                      onPressed: _toggleActivityForStudents,
                       icon: Icon(
-                        _showStudentPanel ? Icons.people : Icons.people_outline,
-                        color: _showStudentPanel ? Colors.green : Colors.white70,
+                        _activityEnabledForStudents ? Icons.play_circle_filled : Icons.play_circle_outline,
+                        color: _activityEnabledForStudents ? Colors.green : Colors.white70,
                         size: 20,
                       ),
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      tooltip: 'Activar actividad',
                     ),
-                    if (connectedCount > 0)
-                      Positioned(
-                        right: 2,
-                        top: 2,
-                        child: Container(
-                          padding: const EdgeInsets.all(3),
-                          decoration: const BoxDecoration(
-                            color: Colors.green,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Text(
-                            '$connectedCount',
-                            style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                // Activar actividad (si aplica)
-                if (isActivity)
-                  IconButton(
-                    onPressed: _toggleActivityForStudents,
-                    icon: Icon(
-                      _activityEnabledForStudents ? Icons.play_circle_filled : Icons.play_circle_outline,
-                      color: _activityEnabledForStudents ? Colors.green : Colors.white70,
-                      size: 20,
+                    
+                  // Revelar respuesta (si es actividad y está habilitada)
+                  if (isActivity && _activityEnabledForStudents)
+                    IconButton(
+                      onPressed: () {
+                        _revealAnswer();
+                        _revealAnswerToStudents();
+                      },
+                      icon: const Icon(Icons.visibility, color: Colors.amber, size: 20),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      tooltip: 'Revelar respuesta',
                     ),
+                  
+                  // Menú adicional (opciones menos usadas)
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: Colors.white70, size: 20),
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                  ),
-                // Menú adicional
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Colors.white70, size: 20),
-                  padding: EdgeInsets.zero,
-                  color: Colors.black.withOpacity(0.9),
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'projector':
-                        _toggleProjectorMode();
-                        break;
-                      case 'sidebar':
-                        setState(() => _showSidebar = !_showSidebar);
-                        break;
-                      case 'reveal':
-                        if (isActivity) {
-                          _revealAnswer();
-                          _revealAnswerToStudents();
-                        }
-                        break;
-                      case 'lockAll':
-                        _lockAllActivities();
-                        break;
-                      case 'exportExcel':
-                        _exportToExcel();
-                        break;
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'projector',
-                      child: Row(
-                        children: [
-                          Icon(_isProjectorMode ? Icons.fullscreen_exit : Icons.fullscreen, color: Colors.white70, size: 18),
-                          const SizedBox(width: 8),
-                          Text(_isProjectorMode ? 'Salir proyector' : 'Modo proyector', style: const TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'sidebar',
-                      child: Row(
-                        children: [
-                          Icon(_showSidebar ? Icons.menu_open : Icons.menu, color: Colors.white70, size: 18),
-                          const SizedBox(width: 8),
-                          Text(_showSidebar ? 'Ocultar menú' : 'Mostrar menú', style: const TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'exportExcel',
-                      child: Row(
-                        children: [
-                          Icon(Icons.table_chart, color: Colors.green, size: 18),
-                          SizedBox(width: 8),
-                          Text('Exportar a Excel', style: TextStyle(color: Colors.green)),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'lockAll',
-                      child: Row(
-                        children: [
-                          Icon(Icons.lock_outline, color: Colors.red, size: 18),
-                          SizedBox(width: 8),
-                          Text('Cerrar TODAS las actividades', style: TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                    if (isActivity)
-                      const PopupMenuItem(
-                        value: 'reveal',
+                    color: Colors.black.withOpacity(0.9),
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'projector':
+                          _toggleProjectorMode();
+                          break;
+                        case 'print':
+                          _printCurrentSlide();
+                          break;
+                        case 'lockAll':
+                          _lockAllActivities();
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'projector',
                         child: Row(
                           children: [
-                            Icon(Icons.visibility, color: Colors.orange, size: 18),
-                            SizedBox(width: 8),
-                            Text('Revelar respuesta', style: TextStyle(color: Colors.white)),
+                            Icon(_isProjectorMode ? Icons.fullscreen_exit : Icons.fullscreen, color: Colors.white70, size: 18),
+                            const SizedBox(width: 8),
+                            Text(_isProjectorMode ? 'Salir proyector' : 'Modo proyector', style: const TextStyle(color: Colors.white)),
                           ],
                         ),
                       ),
-                  ],
+                      const PopupMenuItem(
+                        value: 'print',
+                        child: Row(
+                          children: [
+                            Icon(Icons.print, color: Colors.white70, size: 18),
+                            SizedBox(width: 8),
+                            Text('Imprimir PDF', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'lockAll',
+                        child: Row(
+                          children: [
+                            Icon(Icons.lock_outline, color: Colors.red, size: 18),
+                            SizedBox(width: 8),
+                            Text('Cerrar TODAS las actividades', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  
+  /// Muestra el selector de bloques en móvil
+  void _showBlocksModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black.withOpacity(0.95),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.menu_book, color: Color(0xFFC5A065)),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Bloques del Curso',
+                    style: GoogleFonts.cinzel(
+                      color: const Color(0xFFC5A065),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: session.blocks.length,
+                  itemBuilder: (context, idx) {
+                    final block = session.blocks[idx];
+                    final isSelected = idx == currentBlockIndex;
+                    final slideCount = block.slides.length;
+                    final activityCount = block.slides.where((s) => s.type == SlideType.activity).length;
+                    
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xFFC5A065).withOpacity(0.2) : Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected ? const Color(0xFFC5A065) : Colors.white10,
+                          width: isSelected ? 2 : 1,
+                        ),
+                      ),
+                      child: ListTile(
+                        leading: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: isSelected ? const Color(0xFFC5A065) : Colors.white10,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${idx + 1}',
+                              style: TextStyle(
+                                color: isSelected ? Colors.black : Colors.white70,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          block.title,
+                          style: TextStyle(
+                            color: isSelected ? const Color(0xFFC5A065) : Colors.white,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                        subtitle: Text(
+                          '$slideCount slides • $activityCount actividades',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 12,
+                          ),
+                        ),
+                        trailing: isSelected 
+                            ? const Icon(Icons.check_circle, color: Color(0xFFC5A065))
+                            : const Icon(Icons.chevron_right, color: Colors.white24),
+                        onTap: () {
+                          Navigator.pop(context);
+                          setState(() {
+                            currentBlockIndex = idx;
+                            currentSlideIndex = 0;
+                          });
+                        },
+                      ),
+                    );
+                  },
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  
+  /// Muestra un selector de slides en móvil
+  void _showSlideSelector(ClassBlock currentBlock) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black.withOpacity(0.95),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Ir a diapositiva',
+                style: GoogleFonts.cinzel(
+                  color: const Color(0xFFC5A065),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: currentBlock.slides.length,
+                  itemBuilder: (context, index) {
+                    final isCurrent = index == currentSlideIndex;
+                    return ListTile(
+                      leading: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: isCurrent ? const Color(0xFFC5A065) : Colors.white10,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${index + 1}',
+                            style: TextStyle(
+                              color: isCurrent ? Colors.black : Colors.white70,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        currentBlock.slides[index].title,
+                        style: TextStyle(
+                          color: isCurrent ? const Color(0xFFC5A065) : Colors.white,
+                          fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: currentBlock.slides[index].type == SlideType.activity
+                          ? const Icon(Icons.quiz, color: Colors.orange, size: 18)
+                          : null,
+                      onTap: () {
+                        Navigator.pop(context);
+                        _jumpToSlide(index);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  
+  /// Muestra el panel de estudiantes como modal en móvil
+  void _showStudentsModal(BuildContext context) {
+    final teacherService = context.read<TeacherService>();
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.95),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                border: Border.all(color: Colors.white10),
+              ),
+              child: Column(
+                children: [
+                  // Handle de arrastre
+                  Container(
+                    margin: const EdgeInsets.only(top: 12),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white30,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.people, color: Color(0xFFC5A065), size: 24),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Estudiantes',
+                              style: GoogleFonts.cinzel(
+                                color: const Color(0xFFC5A065),
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            // Botón Excel
+                            IconButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _exportToExcel();
+                              },
+                              icon: const Icon(Icons.table_chart, color: Colors.green, size: 22),
+                              tooltip: 'Exportar Excel',
+                            ),
+                            IconButton(
+                              onPressed: () => Navigator.pop(context),
+                              icon: const Icon(Icons.close, color: Colors.white54),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(color: Colors.white10),
+                  // Contenido - Panel de estudiantes
+                  Expanded(
+                    child: StudentDashboardPanel(
+                      summary: teacherService.dashboardSummary,
+                      onClose: () => Navigator.pop(context),
+                      isEmbedded: true,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
@@ -1672,6 +2075,17 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     ),
                   ),
               ],
+            ),
+            
+            // BOTÓN EXPORTAR EXCEL - Siempre visible
+            IconButton(
+              onPressed: _exportToExcel,
+              icon: Icon(
+                Icons.table_chart,
+                color: Colors.green,
+                size: _isProjectorMode ? 28 : 24,
+              ),
+              tooltip: "Exportar a Excel",
             ),
             
             // Botón para activar/desactivar actividad (solo si es actividad)
