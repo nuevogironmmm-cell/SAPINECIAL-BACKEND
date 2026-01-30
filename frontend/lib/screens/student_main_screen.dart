@@ -102,6 +102,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   
   /// Cuando llega una nueva actividad
   void _onNewActivity(StudentActivity activity) {
+    if (!mounted) return;
     // Vibración para notificar
     HapticFeedback.mediumImpact();
     
@@ -143,6 +144,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   
   /// Cuando se recibe resultado inmediato de la respuesta
   void _onAnswerResult(AnswerResult result) {
+    if (!mounted) return;
     // Vibración de feedback
     if (result.isCorrect) {
       HapticFeedback.lightImpact();
@@ -154,6 +156,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   
   /// Cuando el docente revela la respuesta correcta
   void _onAnswerRevealed(AnswerRevealEvent event) {
+    if (!mounted) return;
     // Vibración de notificación
     HapticFeedback.mediumImpact();
     
@@ -248,6 +251,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
       responseTimeMs: responseTimeMs,
     );
     
+    if (!mounted) return;
     setState(() => _submittingActivities[activityId] = false);
     
     if (success) {
@@ -504,21 +508,20 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                           
                           const SizedBox(height: 24),
                           
+                          // 🏆 RANKING EN TIEMPO REAL
+                          _buildRankingWidget(studentService),
+                          
+                          const SizedBox(height: 24),
+                          
                           // Contador de actividades pendientes
                           if (hasAnyActivity)
                             _buildActivitiesHeader(activities.length, pendingCount),
                           
                           const SizedBox(height: 16),
                           
-                          // MOSTRAR TODAS LAS ACTIVIDADES ACTIVAS
+                          // MOSTRAR SOLO LA ACTIVIDAD ACTUAL (una a la vez)
                           if (hasAnyActivity)
-                            ...activities.map((activity) => Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: _buildActivityCard(
-                                activity, 
-                                studentService.hasRespondedActivity(activity.id),
-                              ),
-                            ))
+                            _buildCurrentActivitySection(studentService, activities)
                           else
                             _buildWaitingCard(),
                           
@@ -895,6 +898,473 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     );
   }
   
+  /// Muestra la actividad actual o el resumen de resultados
+  /// 
+  /// REGLAS DE VISUALIZACIÓN SECUENCIAL:
+  /// - Solo se muestra UNA lección activa a la vez
+  /// - La siguiente lección se habilita solo al completar la actual correctamente
+  /// - Las lecciones completadas se muestran como cerradas
+  Widget _buildCurrentActivitySection(StudentService studentService, List<StudentActivity> activities) {
+    final theme = Theme.of(context);
+    
+    // Separar actividades pendientes y completadas
+    final pendingActivities = activities.where((a) => !studentService.hasRespondedActivity(a.id)).toList();
+    final completedActivities = activities.where((a) => studentService.hasRespondedActivity(a.id)).toList();
+    
+    // Calcular cuántas correctas hubo para desbloqueo secuencial
+    int correctCount = 0;
+    for (final activity in completedActivities) {
+      final result = studentService.getAnswerResult(activity.id);
+      if (result != null && result.isCorrect) {
+        correctCount++;
+      }
+    }
+    
+    // Si todas las actividades están completadas, mostrar mensaje de logro final
+    if (pendingActivities.isEmpty && completedActivities.isNotEmpty) {
+      return _buildFinalAchievement(studentService, completedActivities);
+    }
+    
+    // FLUJO SECUENCIAL: Solo mostrar la primera actividad pendiente
+    // El estudiante debe completarla antes de ver la siguiente
+    if (pendingActivities.isNotEmpty) {
+      final currentActivity = pendingActivities.first;
+      final activityNumber = activities.indexOf(currentActivity) + 1;
+      final totalActivities = activities.length;
+      
+      return Column(
+        children: [
+          // Indicador de progreso de lecciones (flujo secuencial)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary.withOpacity(0.15),
+                  theme.colorScheme.primary.withOpacity(0.05),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.colorScheme.primary.withOpacity(0.3),
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.school_rounded, color: theme.colorScheme.primary, size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Lección $activityNumber de $totalActivities',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // Barra de progreso visual con pasos
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(totalActivities, (index) {
+                    final isCompleted = index < completedActivities.length;
+                    final isCurrent = index == completedActivities.length;
+                    final isLocked = index > completedActivities.length;
+                    
+                    return Row(
+                      children: [
+                        // Círculo de paso
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: isCompleted 
+                                ? Colors.green
+                                : (isCurrent ? theme.colorScheme.primary : Colors.white12),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isCurrent ? theme.colorScheme.primary : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          child: Center(
+                            child: isCompleted
+                                ? const Icon(Icons.check, color: Colors.white, size: 16)
+                                : (isLocked 
+                                    ? const Icon(Icons.lock, color: Colors.white38, size: 14)
+                                    : Text(
+                                        '${index + 1}',
+                                        style: TextStyle(
+                                          color: isCurrent ? Colors.white : Colors.white54,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      )),
+                          ),
+                        ),
+                        // Línea conectora (excepto último)
+                        if (index < totalActivities - 1)
+                          Container(
+                            width: 20,
+                            height: 2,
+                            color: isCompleted ? Colors.green : Colors.white12,
+                          ),
+                      ],
+                    );
+                  }),
+                ),
+                const SizedBox(height: 8),
+                // Mensaje de progreso
+                Text(
+                  completedActivities.isEmpty
+                      ? '¡Comienza tu primera lección!'
+                      : '${completedActivities.length} completadas • ${pendingActivities.length} pendientes',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.white54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Tarjeta de la actividad actual (SOLO UNA)
+          _buildActivityCard(currentActivity, false),
+          
+          // Mostrar resumen de lecciones completadas (colapsadas)
+          if (completedActivities.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildCompletedLessonsPreview(studentService, completedActivities),
+          ],
+        ],
+      );
+    }
+    
+    return _buildWaitingCard();
+  }
+  
+  /// Widget que muestra las lecciones completadas de forma colapsada
+  Widget _buildCompletedLessonsPreview(StudentService studentService, List<StudentActivity> completedActivities) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Lecciones completadas (${completedActivities.length})',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Lista compacta de lecciones completadas
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: completedActivities.asMap().entries.map((entry) {
+              final index = entry.key;
+              final activity = entry.value;
+              final result = studentService.getAnswerResult(activity.id);
+              final isCorrect = result?.isCorrect ?? false;
+              
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: (isCorrect ? Colors.green : Colors.orange).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isCorrect ? Icons.check : Icons.close,
+                      color: isCorrect ? Colors.green : Colors.orange,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Lección ${index + 1}',
+                      style: TextStyle(
+                        color: isCorrect ? Colors.green.shade300 : Colors.orange.shade300,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// Widget de logro final cuando el estudiante completa TODAS las lecciones
+  Widget _buildFinalAchievement(StudentService studentService, List<StudentActivity> completedActivities) {
+    final theme = Theme.of(context);
+    
+    // Calcular estadísticas finales
+    int correctCount = 0;
+    double totalPoints = 0;
+    
+    for (final activity in completedActivities) {
+      final result = studentService.getAnswerResult(activity.id);
+      if (result != null) {
+        if (result.isCorrect) {
+          correctCount++;
+          totalPoints += result.pointsEarned;
+        }
+      }
+    }
+    
+    final percentage = completedActivities.isNotEmpty 
+        ? (correctCount / completedActivities.length * 100) 
+        : 0.0;
+    
+    // Determinar nivel de logro
+    String achievementEmoji;
+    String achievementTitle;
+    String achievementMessage;
+    Color accentColor;
+    
+    if (percentage >= 100) {
+      achievementEmoji = '🏆';
+      achievementTitle = '¡PERFECCIÓN ABSOLUTA!';
+      achievementMessage = 'Has completado todas las lecciones sin errores. ¡Eres un maestro!';
+      accentColor = Colors.amber;
+    } else if (percentage >= 80) {
+      achievementEmoji = '🌟';
+      achievementTitle = '¡LOGRO EXCELENTE!';
+      achievementMessage = 'Has demostrado un dominio excepcional del tema.';
+      accentColor = Colors.green;
+    } else if (percentage >= 60) {
+      achievementEmoji = '🎉';
+      achievementTitle = '¡FELICITACIONES!';
+      achievementMessage = 'Has completado todas las lecciones con buen desempeño.';
+      accentColor = Colors.blue;
+    } else {
+      achievementEmoji = '💪';
+      achievementTitle = '¡LECCIONES COMPLETADAS!';
+      achievementMessage = 'Sigue practicando para mejorar tu puntaje.';
+      accentColor = Colors.purple;
+    }
+    
+    return Stack(
+      children: [
+        // 🎊 CONFETI DE CELEBRACIÓN (si logro alto)
+        FullScreenConfetti(
+          trigger: percentage >= 60, // Solo si aprobó
+          particleCount: percentage >= 100 ? 150 : (percentage >= 80 ? 100 : 50),
+          duration: const Duration(seconds: 4),
+        ),
+        
+        FadeInSlide(
+          child: Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  accentColor.withOpacity(0.3),
+                  accentColor.withOpacity(0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: accentColor, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: accentColor.withOpacity(0.3),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Emoji animado de logro
+                SuccessCelebration(
+                  celebrate: true,
+                  child: Text(
+                    achievementEmoji,
+                    style: const TextStyle(fontSize: 80),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                
+                // Título del logro
+                Text(
+                  achievementTitle,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: accentColor,
+                    letterSpacing: 2,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                
+                // Mensaje personalizado
+                Text(
+                  achievementMessage,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+            
+            // Estadísticas finales
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                children: [
+                  // Porcentaje grande
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${percentage.toStringAsFixed(0)}',
+                        style: theme.textTheme.displayLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: accentColor,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          '%',
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            color: accentColor.withOpacity(0.7),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Precisión Final',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Detalles
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildAchievementStat(
+                        icon: Icons.check_circle,
+                        color: Colors.green,
+                        value: correctCount.toString(),
+                        label: 'Correctas',
+                      ),
+                      Container(width: 1, height: 50, color: Colors.white24),
+                      _buildAchievementStat(
+                        icon: Icons.school,
+                        color: Colors.blue,
+                        value: completedActivities.length.toString(),
+                        label: 'Lecciones',
+                      ),
+                      Container(width: 1, height: 50, color: Colors.white24),
+                      _buildAchievementStat(
+                        icon: Icons.star,
+                        color: Colors.amber,
+                        value: '+${totalPoints.toStringAsFixed(0)}%',
+                        label: 'Puntos',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // Mensaje de cierre
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: accentColor.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.emoji_events, color: accentColor, size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    '¡Logro registrado en tu perfil!',
+                    style: TextStyle(
+                      color: accentColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+        ), // Cierra FadeInSlide
+      ], // Cierra Stack children
+    ); // Cierra Stack
+  }
+  
+  /// Widget para estadísticas del logro final
+  Widget _buildAchievementStat({
+    required IconData icon,
+    required Color color,
+    required String value,
+    required String label,
+  }) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 28),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+  
   Widget _buildActivityCard(StudentActivity activity, bool hasResponded) {
     final theme = Theme.of(context);
     
@@ -915,6 +1385,10 @@ class _StudentMainScreenState extends State<StudentMainScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ⏱️ TEMPORIZADOR DE BONUS (solo si no ha respondido)
+            if (!hasResponded)
+              _buildBonusTimer(activity),
+            
             // Header de actividad
             Row(
               children: [
@@ -1682,6 +2156,283 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             style: TextStyle(
               color: Colors.white.withOpacity(0.5),
               fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// ⏱️ Temporizador de bonus para respuestas rápidas
+  Widget _buildBonusTimer(StudentActivity activity) {
+    final theme = Theme.of(context);
+    final startTime = _activityStartTimes[activity.id];
+    
+    // Si aún no hay tiempo de inicio, iniciarlo
+    if (startTime == null) {
+      _activityStartTimes[activity.id] = DateTime.now();
+    }
+    
+    // Tiempo límite para bonus: 30 segundos
+    const bonusTimeLimit = 30;
+    
+    // Calcular tiempo restante basado en startTime
+    final elapsedSeconds = startTime != null 
+        ? DateTime.now().difference(startTime).inSeconds 
+        : 0;
+    final remainingSeconds = (bonusTimeLimit - elapsedSeconds).clamp(0, bonusTimeLimit);
+    final hasBonus = remainingSeconds > 0;
+    
+    // Calcular multiplicador de bonus
+    String bonusText = '';
+    Color bonusColor = Colors.grey;
+    
+    if (remainingSeconds > 20) {
+      bonusText = '🔥 ¡BONUS x2!';
+      bonusColor = Colors.orange;
+    } else if (remainingSeconds > 10) {
+      bonusText = '⚡ Bonus x1.5';
+      bonusColor = Colors.amber;
+    } else if (remainingSeconds > 0) {
+      bonusText = '⏰ Bonus x1.2';
+      bonusColor = Colors.yellow;
+    } else {
+      bonusText = '⌛ Sin bonus';
+      bonusColor = Colors.grey;
+    }
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: hasBonus
+              ? [bonusColor.withOpacity(0.3), bonusColor.withOpacity(0.1)]
+              : [Colors.grey.withOpacity(0.2), Colors.grey.withOpacity(0.1)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: bonusColor.withOpacity(0.5),
+          width: hasBonus ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          // Icono animado
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: Icon(
+              hasBonus ? Icons.timer : Icons.timer_off,
+              key: ValueKey(hasBonus),
+              color: bonusColor,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 12),
+          
+          // Texto de bonus
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  bonusText,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: bonusColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (hasBonus)
+                  Text(
+                    '¡Responde rápido para puntos extra!',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.white54,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          
+          // Contador de tiempo
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: hasBonus ? bonusColor.withOpacity(0.3) : Colors.grey.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              hasBonus ? '${remainingSeconds}s' : '--',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: bonusColor,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// Widget de ranking en tiempo real 🏆
+  Widget _buildRankingWidget(StudentService studentService) {
+    final theme = Theme.of(context);
+    final ranking = studentService.ranking;
+    
+    // Si no hay ranking, no mostrar nada
+    if (ranking.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
+    return FadeInSlide(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.amber.withOpacity(0.15),
+              Colors.orange.withOpacity(0.1),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.amber.withOpacity(0.4),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Header del ranking
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('🏆', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 8),
+                Text(
+                  'TOP 5 EN TIEMPO REAL',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: Colors.amber,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            
+            // Lista del ranking
+            ...ranking.asMap().entries.map((entry) {
+              final position = entry.key + 1;
+              final data = entry.value;
+              final isCurrentUser = data['name'] == studentService.studentName;
+              
+              final rawPercentage = data['percentage'];
+              final percentage = (rawPercentage is num)
+                  ? rawPercentage.toDouble()
+                  : double.tryParse(rawPercentage?.toString() ?? '') ?? 0.0;
+
+              return _buildRankingItem(
+                position: position,
+                name: data['name'] ?? 'Anónimo',
+                percentage: percentage,
+                icon: data['icon'] ?? '📚',
+                isCurrentUser: isCurrentUser,
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// Item individual del ranking
+  Widget _buildRankingItem({
+    required int position,
+    required String name,
+    required double percentage,
+    required String icon,
+    required bool isCurrentUser,
+  }) {
+    final theme = Theme.of(context);
+    
+    // Colores según posición
+    Color positionColor;
+    String medal;
+    switch (position) {
+      case 1:
+        positionColor = const Color(0xFFFFD700); // Oro
+        medal = '🥇';
+        break;
+      case 2:
+        positionColor = const Color(0xFFC0C0C0); // Plata
+        medal = '🥈';
+        break;
+      case 3:
+        positionColor = const Color(0xFFCD7F32); // Bronce
+        medal = '🥉';
+        break;
+      default:
+        positionColor = Colors.white54;
+        medal = '🏅';
+    }
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isCurrentUser 
+            ? theme.colorScheme.primary.withOpacity(0.3)
+            : Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: isCurrentUser 
+            ? Border.all(color: theme.colorScheme.primary, width: 2)
+            : null,
+      ),
+      child: Row(
+        children: [
+          // Posición con medalla
+          SizedBox(
+            width: 40,
+            child: Text(
+              medal,
+              style: const TextStyle(fontSize: 22),
+            ),
+          ),
+          
+          // Icono del estudiante
+          Text(
+            icon,
+            style: const TextStyle(fontSize: 20),
+          ),
+          const SizedBox(width: 10),
+          
+          // Nombre
+          Expanded(
+            child: Text(
+              isCurrentUser ? '¡TÚ!' : name,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isCurrentUser ? theme.colorScheme.primary : Colors.white,
+                fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          
+          // Porcentaje
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: positionColor.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '${percentage.toStringAsFixed(0)}%',
+              style: TextStyle(
+                color: positionColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
           ),
         ],

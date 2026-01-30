@@ -172,6 +172,19 @@ class TeacherService extends ChangeNotifier {
     notifyListeners();
   }
   
+  /// Bloquea una actividad específica por su ID
+  void lockSpecificActivity(String activityId) {
+    _sendMessage({
+      'action': 'LOCK_ACTIVITY',
+      'payload': {'activityId': activityId}
+    });
+    
+    if (_currentActivityId == activityId) {
+      _activityActive = false;
+    }
+    notifyListeners();
+  }
+  
   /// Bloquea TODAS las actividades activas de una vez
   void lockAllActivities() {
     _sendMessage({
@@ -179,6 +192,19 @@ class TeacherService extends ChangeNotifier {
       'payload': {}
     });
     
+    _currentActivityId = null;
+    _activityActive = false;
+    notifyListeners();
+  }
+  
+  /// Reinicia el progreso de TODOS los estudiantes (función de administrador)
+  void resetAllStudentsProgress() {
+    _sendMessage({
+      'action': 'RESET_ALL_STUDENTS_PROGRESS',
+      'payload': {}
+    });
+    
+    // Limpiar estado local
     _currentActivityId = null;
     _activityActive = false;
     notifyListeners();
@@ -265,6 +291,12 @@ class TeacherService extends ChangeNotifier {
           
         case 'NEW_REFLECTION':
           _handleNewReflection(data);
+          break;
+        
+        case 'STUDENTS_RESET_COMPLETE':
+          // Progreso de estudiantes reiniciado
+          debugPrint('[TeacherService] Progreso reiniciado: ${data['message']}');
+          requestDashboardUpdate();
           break;
           
         case 'ERROR':

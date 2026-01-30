@@ -246,6 +246,26 @@ class StudentData:
         """Resetea estado para nueva actividad"""
         self.status = StudentConnectionStatus.NOT_RESPONDED
     
+    def reset_all_progress(self):
+        """Reinicia TODO el progreso del estudiante (usado por admin)"""
+        self.accumulated_percentage = 0.0
+        self.responses = {}
+        self.reflections = []
+        self.status = StudentConnectionStatus.NOT_RESPONDED
+        self.last_activity_at = None
+    
+    def get_current_lesson_index(self) -> int:
+        """Obtiene el índice de la lección actual (basado en respuestas completadas)"""
+        return len(self.responses)
+    
+    def get_completed_lessons(self) -> List[str]:
+        """Obtiene lista de IDs de lecciones completadas"""
+        return list(self.responses.keys())
+    
+    def has_completed_all(self, total_lessons: int) -> bool:
+        """Verifica si completó todas las lecciones"""
+        return len(self.responses) >= total_lessons
+    
     def to_dict(self) -> Dict:
         """Convierte a diccionario para JSON"""
         return {
@@ -269,6 +289,14 @@ class StudentData:
             "accumulatedPercentage": self.accumulated_percentage,
             "classification": self.classification.value,
             "classificationIcon": self.classification_icon,
+        }
+    
+    def to_ranking_entry(self) -> Dict:
+        """Versión para ranking/leaderboard"""
+        return {
+            "name": self.name,
+            "percentage": self.accumulated_percentage,
+            "icon": self.classification_icon,
         }
 
 # ============================================================
@@ -485,10 +513,44 @@ class StudentManager:
             "voteCounts": vote_counts,  # Nuevo: conteo de votos por opción
         }
     
+    def get_ranking(self, limit: int = 5) -> List[Dict]:
+        """Obtiene ranking de los mejores estudiantes"""
+        connected = self.get_connected_students()
+        # Ordenar por porcentaje descendente
+        sorted_students = sorted(
+            connected, 
+            key=lambda s: s.accumulated_percentage, 
+            reverse=True
+        )
+        # Tomar solo los primeros N
+        top_students = sorted_students[:limit]
+        return [s.to_ranking_entry() for s in top_students]
+    
     def reset_all_for_new_activity(self):
         """Resetea todos los estudiantes para nueva actividad"""
         for student in self.get_connected_students():
             student.reset_for_new_activity()
+    
+    def reset_all_students_progress(self):
+        """Reinicia TODO el progreso de TODOS los estudiantes (función de admin)"""
+        reset_count = 0
+        for session_id, student in self.students.items():
+            student.reset_all_progress()
+            reset_count += 1
+        # También limpiar el archivo de persistencia
+        self._clear_saved_progress()
+        return reset_count
+    
+    def _clear_saved_progress(self):
+        """Limpia el archivo de progreso guardado"""
+        try:
+            import os
+            if os.path.exists(PROGRESS_FILE):
+                with open(PROGRESS_FILE, 'w', encoding='utf-8') as f:
+                    json.dump({}, f)
+                print(f"[INFO] Archivo de progreso limpiado: {PROGRESS_FILE}")
+        except Exception as e:
+            print(f"[ERROR] Error limpiando archivo de progreso: {e}")
     
     async def broadcast_to_students(self, message: Dict):
         """Envía mensaje a todos los estudiantes conectados"""
@@ -635,7 +697,7 @@ async def get_students():
 
 @app.post("/validate-name")
 async def validate_student_name(name: str = Query(...)):
-    """Valida si un nombre est? disponible"""
+    """Valida si un nombre está disponible"""
     is_valid, message = student_manager.validate_name(name)
     return {"valid": is_valid, "message": message}
 
@@ -759,12 +821,25 @@ async def handle_teacher_action(websocket: WebSocket, message: Dict):
             })
     
     elif action == "LOCK_ACTIVITY":
-        if state.current_activity:
-            state.current_activity.state = ActivityState.CLOSED
+        activity_id = payload.get("activityId")
+        
+        # Si se especifica un activityId, bloquear esa actividad específica
+        if activity_id:
+            activity = state.get_activity(activity_id)
+            if activity:
+                activity.state = ActivityState.CLOSED
+                # Solo limpiar current_activity si coincide
+                if state.current_activity and state.current_activity.id == activity_id:
+                    state.current_activity = None
+        else:
+            # Comportamiento original: bloquear la actividad actual
+            if state.current_activity:
+                state.current_activity.state = ActivityState.CLOSED
+                state.current_activity = None
         
         await student_manager.broadcast_to_students({
             "type": "ACTIVITY_LOCKED",
-            "data": {}
+            "data": {"activityId": activity_id} if activity_id else {}
         })
         
         await teacher_manager.broadcast_to_teachers({
@@ -828,6 +903,42 @@ async def handle_teacher_action(websocket: WebSocket, message: Dict):
                 state.current_activity.id if state.current_activity else None
             )
         }))
+    
+    elif action == "RESET_ALL_STUDENTS_PROGRESS":
+        # Reinicio GLOBAL de progreso de todos los estudiantes (función admin)
+        reset_count = student_manager.reset_all_students_progress()
+        
+        # Cerrar todas las actividades
+        for activity in state.activities.values():
+            activity.state = ActivityState.CLOSED
+        state.current_activity = None
+        state.activities = {}
+        
+        # Notificar a todos los estudiantes que su progreso fue reiniciado
+        await student_manager.broadcast_to_students({
+            "type": "PROGRESS_RESET",
+            "data": {
+                "message": "El administrador ha reiniciado el progreso de todos los estudiantes",
+                "resetAt": datetime.now().isoformat()
+            }
+        })
+        
+        # Confirmar al docente
+        await teacher_manager.broadcast_to_teachers({
+            "type": "STUDENTS_RESET_COMPLETE",
+            "data": {
+                "resetCount": reset_count,
+                "message": f"Se reinició el progreso de {reset_count} estudiante(s)"
+            }
+        })
+        
+        # Actualizar dashboard
+        await teacher_manager.broadcast_to_teachers({
+            "type": "DASHBOARD_UPDATE",
+            "data": student_manager.get_dashboard_summary()
+        })
+        
+        print(f"[INFO] Progreso reiniciado para {reset_count} estudiantes")
 
 async def broadcast_all(message: Dict):
     """Envía mensaje a docentes y estudiantes"""
@@ -962,7 +1073,7 @@ async def student_websocket(websocket: WebSocket):
                 if activity.state != ActivityState.ACTIVE:
                     await websocket.send_text(json.dumps({
                         "type": "ERROR",
-                        "data": {"message": "La actividad no est? activa"}
+                        "data": {"message": "La actividad no está activa. Pide al profesor que la habilite."}
                     }))
                     continue
                 
@@ -1017,6 +1128,14 @@ async def student_websocket(websocket: WebSocket):
                 await teacher_manager.broadcast_to_teachers({
                     "type": "DASHBOARD_UPDATE",
                     "data": student_manager.get_dashboard_summary(activity_id)
+                })
+                
+                # Enviar ranking actualizado a TODOS los estudiantes
+                await student_manager.broadcast_to_students({
+                    "type": "RANKING_UPDATE",
+                    "data": {
+                        "ranking": student_manager.get_ranking(5)
+                    }
                 })
                 
                 # Guardar progreso después de cada respuesta

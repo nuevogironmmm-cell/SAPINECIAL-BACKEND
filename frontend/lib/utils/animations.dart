@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'dart:async';
 
 /// ============================================================
 /// SISTEMA DE ANIMACIONES EDUCATIVAS
@@ -873,6 +874,676 @@ class _TypingTextState extends State<TypingText> {
     return Text(
       _displayedText,
       style: widget.style,
+    );
+  }
+}
+
+// ============================================================
+// WIDGET: CONFETI DE PANTALLA COMPLETA (Celebración épica)
+// Uso pedagógico: Celebración máxima al completar todas las
+// lecciones o lograr puntaje perfecto.
+// ============================================================
+
+class FullScreenConfetti extends StatefulWidget {
+  final bool trigger;
+  final Duration duration;
+  final int particleCount;
+  final VoidCallback? onComplete;
+
+  const FullScreenConfetti({
+    super.key,
+    required this.trigger,
+    this.duration = const Duration(seconds: 3),
+    this.particleCount = 100,
+    this.onComplete,
+  });
+
+  @override
+  State<FullScreenConfetti> createState() => _FullScreenConfettiState();
+}
+
+class _FullScreenConfettiState extends State<FullScreenConfetti>
+    with TickerProviderStateMixin {
+  late AnimationController _controller;
+  final List<_FullConfettiParticle> _particles = [];
+  bool _isAnimating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: widget.duration,
+      vsync: this,
+    );
+    
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        if (!mounted) return;
+        setState(() => _isAnimating = false);
+        widget.onComplete?.call();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(FullScreenConfetti oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.trigger && !oldWidget.trigger && !_isAnimating) {
+      _startConfetti();
+    }
+  }
+
+  void _startConfetti() {
+    final random = math.Random();
+    _particles.clear();
+    
+    final colors = [
+      Colors.red,
+      Colors.green,
+      Colors.blue,
+      Colors.yellow,
+      Colors.purple,
+      Colors.orange,
+      Colors.pink,
+      Colors.cyan,
+      Colors.amber,
+      Colors.teal,
+    ];
+    
+    for (int i = 0; i < widget.particleCount; i++) {
+      _particles.add(_FullConfettiParticle(
+        x: random.nextDouble(),
+        y: -0.1 - random.nextDouble() * 0.3,
+        color: colors[random.nextInt(colors.length)],
+        size: 8 + random.nextDouble() * 8,
+        speedY: 0.3 + random.nextDouble() * 0.4,
+        speedX: (random.nextDouble() - 0.5) * 0.2,
+        rotation: random.nextDouble() * math.pi * 2,
+        rotationSpeed: (random.nextDouble() - 0.5) * 0.3,
+        shape: random.nextInt(3), // 0: circle, 1: square, 2: star
+      ));
+    }
+    
+    setState(() => _isAnimating = true);
+    _controller.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isAnimating) return const SizedBox.shrink();
+    
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            return CustomPaint(
+              painter: _FullConfettiPainter(
+                particles: _particles,
+                progress: _controller.value,
+              ),
+              size: Size.infinite,
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _FullConfettiParticle {
+  double x;
+  double y;
+  final Color color;
+  final double size;
+  final double speedY;
+  final double speedX;
+  double rotation;
+  final double rotationSpeed;
+  final int shape;
+
+  _FullConfettiParticle({
+    required this.x,
+    required this.y,
+    required this.color,
+    required this.size,
+    required this.speedY,
+    required this.speedX,
+    required this.rotation,
+    required this.rotationSpeed,
+    required this.shape,
+  });
+}
+
+class _FullConfettiPainter extends CustomPainter {
+  final List<_FullConfettiParticle> particles;
+  final double progress;
+
+  _FullConfettiPainter({required this.particles, required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final particle in particles) {
+      final currentY = particle.y + particle.speedY * progress * 2;
+      final currentX = particle.x + particle.speedX * progress + 
+                       math.sin(progress * math.pi * 4) * 0.02;
+      final currentRotation = particle.rotation + particle.rotationSpeed * progress * 10;
+      
+      if (currentY > 1.2) continue;
+      
+      final x = currentX * size.width;
+      final y = currentY * size.height;
+      
+      final paint = Paint()
+        ..color = particle.color.withOpacity(math.max(0, 1 - progress * 0.5))
+        ..style = PaintingStyle.fill;
+      
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(currentRotation);
+      
+      switch (particle.shape) {
+        case 0: // Circle
+          canvas.drawCircle(Offset.zero, particle.size / 2, paint);
+          break;
+        case 1: // Square
+          canvas.drawRect(
+            Rect.fromCenter(center: Offset.zero, width: particle.size, height: particle.size),
+            paint,
+          );
+          break;
+        case 2: // Star
+          _drawStar(canvas, particle.size / 2, paint);
+          break;
+      }
+      
+      canvas.restore();
+    }
+  }
+  
+  void _drawStar(Canvas canvas, double radius, Paint paint) {
+    final path = Path();
+    for (int i = 0; i < 5; i++) {
+      final angle = (i * 4 * math.pi / 5) - math.pi / 2;
+      final point = Offset(
+        math.cos(angle) * radius,
+        math.sin(angle) * radius,
+      );
+      if (i == 0) {
+        path.moveTo(point.dx, point.dy);
+      } else {
+        path.lineTo(point.dx, point.dy);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_FullConfettiPainter oldDelegate) => 
+      oldDelegate.progress != progress;
+}
+
+// ============================================================
+// WIDGET: COUNTDOWN TIMER (Temporizador con cuenta regresiva)
+// Uso pedagógico: Añade urgencia a las actividades y
+// otorga bonus por responder rápidamente.
+// ============================================================
+
+class CountdownTimer extends StatefulWidget {
+  final int totalSeconds;
+  final VoidCallback? onComplete;
+  final Function(int remainingSeconds)? onTick;
+  final bool autoStart;
+  final Color? backgroundColor;
+  final Color? progressColor;
+  final Color? textColor;
+  final double size;
+
+  const CountdownTimer({
+    super.key,
+    required this.totalSeconds,
+    this.onComplete,
+    this.onTick,
+    this.autoStart = true,
+    this.backgroundColor,
+    this.progressColor,
+    this.textColor,
+    this.size = 80,
+  });
+
+  @override
+  State<CountdownTimer> createState() => CountdownTimerState();
+}
+
+class CountdownTimerState extends State<CountdownTimer>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  int _remainingSeconds = 0;
+  Timer? _timer;
+  bool _isRunning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _remainingSeconds = widget.totalSeconds;
+    _controller = AnimationController(
+      duration: Duration(seconds: widget.totalSeconds),
+      vsync: this,
+    );
+    
+    if (widget.autoStart) {
+      start();
+    }
+  }
+
+  void start() {
+    if (_isRunning) return;
+    _isRunning = true;
+    _controller.forward();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _remainingSeconds--;
+        widget.onTick?.call(_remainingSeconds);
+      });
+      
+      if (_remainingSeconds <= 0) {
+        timer.cancel();
+        _isRunning = false;
+        widget.onComplete?.call();
+      }
+    });
+  }
+
+  void pause() {
+    _timer?.cancel();
+    _controller.stop();
+    _isRunning = false;
+  }
+
+  void reset() {
+    _timer?.cancel();
+    _controller.reset();
+    setState(() {
+      _remainingSeconds = widget.totalSeconds;
+      _isRunning = false;
+    });
+  }
+
+  void stop() {
+    _timer?.cancel();
+    _controller.stop();
+    _isRunning = false;
+  }
+  
+  int get remainingSeconds => _remainingSeconds;
+  bool get isRunning => _isRunning;
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final progress = _remainingSeconds / widget.totalSeconds;
+    final isUrgent = _remainingSeconds <= 10;
+    final isCritical = _remainingSeconds <= 5;
+    
+    final bgColor = widget.backgroundColor ?? Colors.white.withOpacity(0.1);
+    final progressColor = widget.progressColor ?? 
+        (isCritical ? Colors.red : (isUrgent ? Colors.orange : theme.colorScheme.primary));
+    final txtColor = widget.textColor ?? 
+        (isCritical ? Colors.red : (isUrgent ? Colors.orange : Colors.white));
+    
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 1.0, end: isCritical ? 1.1 : 1.0),
+      duration: const Duration(milliseconds: 300),
+      builder: (context, scale, child) {
+        return Transform.scale(
+          scale: isCritical ? (1.0 + math.sin(DateTime.now().millisecondsSinceEpoch / 100) * 0.05) : scale,
+          child: Container(
+            width: widget.size,
+            height: widget.size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: bgColor,
+              border: Border.all(
+                color: progressColor.withOpacity(0.3),
+                width: 2,
+              ),
+              boxShadow: isUrgent ? [
+                BoxShadow(
+                  color: progressColor.withOpacity(0.4),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                ),
+              ] : null,
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Progress circle
+                SizedBox(
+                  width: widget.size - 8,
+                  height: widget.size - 8,
+                  child: CircularProgressIndicator(
+                    value: progress,
+                    strokeWidth: 4,
+                    backgroundColor: Colors.white.withOpacity(0.1),
+                    valueColor: AlwaysStoppedAnimation(progressColor),
+                  ),
+                ),
+                // Time text
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$_remainingSeconds',
+                      style: TextStyle(
+                        color: txtColor,
+                        fontSize: widget.size * 0.35,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'seg',
+                      style: TextStyle(
+                        color: txtColor.withOpacity(0.7),
+                        fontSize: widget.size * 0.15,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ============================================================
+// WIDGET: RANKING LEADERBOARD (Tabla de posiciones)
+// Uso pedagógico: Gamificación que motiva a los estudiantes
+// mostrando su posición relativa en tiempo real.
+// ============================================================
+
+class RankingEntry {
+  final String name;
+  final double percentage;
+  final String icon;
+  final bool isCurrentUser;
+  final int position;
+
+  RankingEntry({
+    required this.name,
+    required this.percentage,
+    required this.icon,
+    this.isCurrentUser = false,
+    this.position = 0,
+  });
+}
+
+class LeaderboardWidget extends StatelessWidget {
+  final List<RankingEntry> entries;
+  final int maxVisible;
+  final String? currentUserName;
+
+  const LeaderboardWidget({
+    super.key,
+    required this.entries,
+    this.maxVisible = 5,
+    this.currentUserName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    // Ordenar por porcentaje descendente
+    final sortedEntries = List<RankingEntry>.from(entries)
+      ..sort((a, b) => b.percentage.compareTo(a.percentage));
+    
+    // Asignar posiciones
+    final rankedEntries = sortedEntries.asMap().entries.map((e) {
+      return RankingEntry(
+        name: e.value.name,
+        percentage: e.value.percentage,
+        icon: e.value.icon,
+        isCurrentUser: e.value.name == currentUserName,
+        position: e.key + 1,
+      );
+    }).take(maxVisible).toList();
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.amber.withOpacity(0.15),
+            Colors.orange.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.amber.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.emoji_events, color: Colors.amber, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'Top ${rankedEntries.length}',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: Colors.amber,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          
+          // Rankings
+          ...rankedEntries.map((entry) => _buildRankingRow(context, entry)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRankingRow(BuildContext context, RankingEntry entry) {
+    final positionColors = {
+      1: Colors.amber,
+      2: Colors.grey.shade400,
+      3: Colors.orange.shade700,
+    };
+    
+    final positionEmojis = {
+      1: '🥇',
+      2: '🥈',
+      3: '🥉',
+    };
+    
+    final color = positionColors[entry.position] ?? Colors.white54;
+    final emoji = positionEmojis[entry.position];
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: entry.isCurrentUser 
+            ? Colors.amber.withOpacity(0.2)
+            : Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: entry.isCurrentUser 
+            ? Border.all(color: Colors.amber, width: 2)
+            : null,
+      ),
+      child: Row(
+        children: [
+          // Position
+          SizedBox(
+            width: 32,
+            child: emoji != null
+                ? Text(emoji, style: const TextStyle(fontSize: 20))
+                : Text(
+                    '${entry.position}',
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+          ),
+          
+          // Icon
+          Text(entry.icon, style: const TextStyle(fontSize: 18)),
+          const SizedBox(width: 8),
+          
+          // Name
+          Expanded(
+            child: Text(
+              entry.isCurrentUser ? '${entry.name} (Tú)' : entry.name,
+              style: TextStyle(
+                color: entry.isCurrentUser ? Colors.amber : Colors.white,
+                fontWeight: entry.isCurrentUser ? FontWeight.bold : FontWeight.normal,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          
+          // Percentage
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '${entry.percentage.toStringAsFixed(0)}%',
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// WIDGET: BONUS INDICATOR (Indicador de bonus por velocidad)
+// Uso pedagógico: Muestra el bonus que el estudiante puede
+// ganar si responde rápido.
+// ============================================================
+
+class SpeedBonusIndicator extends StatelessWidget {
+  final int remainingSeconds;
+  final int totalSeconds;
+  final double basePoints;
+
+  const SpeedBonusIndicator({
+    super.key,
+    required this.remainingSeconds,
+    required this.totalSeconds,
+    required this.basePoints,
+  });
+
+  double get bonusMultiplier {
+    if (remainingSeconds <= 0) return 1.0;
+    final ratio = remainingSeconds / totalSeconds;
+    if (ratio >= 0.8) return 1.5;
+    if (ratio >= 0.6) return 1.3;
+    if (ratio >= 0.4) return 1.2;
+    if (ratio >= 0.2) return 1.1;
+    return 1.0;
+  }
+  
+  double get totalPoints => basePoints * bonusMultiplier;
+  
+  String get bonusLabel {
+    if (bonusMultiplier >= 1.5) return '🔥 ¡SÚPER RÁPIDO!';
+    if (bonusMultiplier >= 1.3) return '⚡ ¡Muy rápido!';
+    if (bonusMultiplier >= 1.2) return '✨ ¡Rápido!';
+    if (bonusMultiplier >= 1.1) return '👍 Buen tiempo';
+    return '';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (bonusMultiplier <= 1.0) return const SizedBox.shrink();
+    
+    final color = bonusMultiplier >= 1.5 
+        ? Colors.orange 
+        : (bonusMultiplier >= 1.3 ? Colors.amber : Colors.green);
+    
+    return FadeInSlide(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.3), color.withOpacity(0.1)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withOpacity(0.5)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              bonusLabel,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '+${((bonusMultiplier - 1) * 100).toStringAsFixed(0)}%',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

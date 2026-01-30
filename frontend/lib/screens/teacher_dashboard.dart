@@ -52,6 +52,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   // ============================================================
   bool _activityEnabledForStudents = false;
   
+  // Mapa de actividades habilitadas por ID de slide
+  final Map<String, bool> _enabledActivities = {};
+  
   // Controladores de animación
   late AnimationController _slideAnimController;
   late Animation<Offset> _slideAnimation;
@@ -126,6 +129,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     }
   }
   
+  /// Verifica si una actividad específica está habilitada
+  bool _isActivityEnabled(String slideId) {
+    return _enabledActivities[slideId] ?? false;
+  }
+  
   /// Activa o desactiva la actividad actual para estudiantes
   void _toggleActivityForStudents() {
     final currentBlock = session.blocks[currentBlockIndex];
@@ -141,20 +149,29 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       return;
     }
     
-    final teacherService = context.read<TeacherService>();
-    final activity = currentSlide.activity!;
+    _toggleActivityForSlide(currentSlide);
+  }
+  
+  /// Activa o desactiva una actividad específica por su slide
+  void _toggleActivityForSlide(Slide slide) {
+    if (slide.type != SlideType.activity || slide.activity == null) return;
     
-    if (!_activityEnabledForStudents) {
+    final teacherService = context.read<TeacherService>();
+    final activity = slide.activity!;
+    final slideId = slide.id;
+    final isCurrentlyEnabled = _enabledActivities[slideId] ?? false;
+    
+    if (!isCurrentlyEnabled) {
       // Extraer solo "Actividad N" del título para no revelar la respuesta
-      String safeTitle = currentSlide.title;
-      final activityMatch = RegExp(r'^(Actividad\s*\d+)').firstMatch(currentSlide.title);
+      String safeTitle = slide.title;
+      final activityMatch = RegExp(r'^(Actividad\s*\d+)').firstMatch(slide.title);
       if (activityMatch != null) {
         safeTitle = activityMatch.group(1)!;  // Solo "Actividad 1", "Actividad 2", etc.
       }
       
       // Registrar y activar
       teacherService.registerActivity(
-        activityId: currentSlide.id,
+        activityId: slideId,
         question: activity.question,
         options: activity.options,
         correctIndex: activity.correctOptionIndex,
@@ -165,16 +182,19 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 ? 'wordPuzzle' 
                 : 'multipleChoice',
         title: safeTitle,  // Título sin revelar respuesta
-        slideContent: currentSlide.content,  // Contenido (la cita bíblica)
-        biblicalReference: currentSlide.biblicalReference,  // Referencia bíblica
+        slideContent: slide.content,  // Contenido (la cita bíblica)
+        biblicalReference: slide.biblicalReference,  // Referencia bíblica
       );
       
       // Pequeño delay para asegurar registro
       Future.delayed(const Duration(milliseconds: 100), () {
-        teacherService.unlockActivity(currentSlide.id);
+        teacherService.unlockActivity(slideId);
       });
       
-      setState(() => _activityEnabledForStudents = true);
+      setState(() {
+        _enabledActivities[slideId] = true;
+        _activityEnabledForStudents = true;  // Mantener compatibilidad
+      });
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -182,7 +202,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             children: [
               const Icon(Icons.check_circle, color: Colors.white),
               const SizedBox(width: 8),
-              Text('¡Actividad habilitada para ${teacherService.connectedStudentsCount} estudiantes!'),
+              Text('¡$safeTitle habilitada para ${teacherService.connectedStudentsCount} estudiantes!'),
             ],
           ),
           backgroundColor: Colors.green,
@@ -190,9 +210,13 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         ),
       );
     } else {
-      // Desactivar
-      teacherService.lockActivity();
-      setState(() => _activityEnabledForStudents = false);
+      // Desactivar esta actividad específica
+      teacherService.lockSpecificActivity(slideId);
+      setState(() {
+        _enabledActivities[slideId] = false;
+        // Verificar si hay alguna actividad habilitada
+        _activityEnabledForStudents = _enabledActivities.values.any((enabled) => enabled);
+      });
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -227,6 +251,91 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         ),
         backgroundColor: Colors.red,
         duration: Duration(seconds: 2),
+      ),
+    );
+  }
+  
+  /// Reinicia el progreso de TODOS los estudiantes (función de administrador)
+  void _resetAllStudentsProgress() {
+    // Mostrar diálogo de confirmación
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+              SizedBox(width: 12),
+              Text(
+                '⚠️ Reiniciar Progreso',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Esta acción eliminará:',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              SizedBox(height: 12),
+              Text('• Todas las respuestas de estudiantes', style: TextStyle(color: Colors.red)),
+              Text('• Todo el progreso acumulado', style: TextStyle(color: Colors.red)),
+              Text('• Todas las lecciones completadas', style: TextStyle(color: Colors.red)),
+              Text('• Todos los logros obtenidos', style: TextStyle(color: Colors.red)),
+              SizedBox(height: 16),
+              Text(
+                '¿Estás seguro de continuar?',
+                style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('CANCELAR', style: TextStyle(color: Colors.white70)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _executeResetAllStudents();
+              },
+              child: const Text('SÍ, REINICIAR TODO', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+  /// Ejecuta el reinicio de progreso de estudiantes
+  void _executeResetAllStudents() {
+    final teacherService = context.read<TeacherService>();
+    teacherService.resetAllStudentsProgress();
+    
+    // Limpiar estado local también
+    setState(() {
+      _activityEnabledForStudents = false;
+      _enabledActivities.clear();
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.restart_alt, color: Colors.white),
+            SizedBox(width: 8),
+            Text('✅ Progreso de todos los estudiantes reiniciado'),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 3),
       ),
     );
   }
@@ -526,6 +635,10 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       _puzzleIsCorrect = null;
       _showCelebration = false;
       _showShake = false;
+      // Resetear también el estado de revelación para poder intentar de nuevo
+      if (currentSlide.activity != null) {
+        currentSlide.activity!.isRevealed = false;
+      }
     });
   }
 
@@ -1567,6 +1680,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       builder: (context, teacherService, _) {
         final connectedCount = teacherService.connectedStudentsCount;
         final isActivity = currentSlide.type == SlideType.activity && currentSlide.activity != null;
+        final isThisActivityEnabled = _isActivityEnabled(currentSlide.id);
         
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -1675,8 +1789,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     IconButton(
                       onPressed: _toggleActivityForStudents,
                       icon: Icon(
-                        _activityEnabledForStudents ? Icons.play_circle_filled : Icons.play_circle_outline,
-                        color: _activityEnabledForStudents ? Colors.green : Colors.white70,
+                        isThisActivityEnabled ? Icons.play_circle_filled : Icons.play_circle_outline,
+                        color: isThisActivityEnabled ? Colors.green : Colors.white70,
                         size: 20,
                       ),
                       padding: EdgeInsets.zero,
@@ -1685,7 +1799,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     ),
                     
                   // Revelar respuesta (si es actividad y está habilitada)
-                  if (isActivity && _activityEnabledForStudents)
+                  if (isActivity && isThisActivityEnabled)
                     IconButton(
                       onPressed: () {
                         _revealAnswer();
@@ -1712,6 +1826,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                           break;
                         case 'lockAll':
                           _lockAllActivities();
+                          break;
+                        case 'resetAll':
+                          _resetAllStudentsProgress();
                           break;
                       }
                     },
@@ -1743,6 +1860,17 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                             Icon(Icons.lock_outline, color: Colors.red, size: 18),
                             SizedBox(width: 8),
                             Text('Cerrar TODAS las actividades', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuDivider(),
+                      const PopupMenuItem(
+                        value: 'resetAll',
+                        child: Row(
+                          children: [
+                            Icon(Icons.restart_alt, color: Colors.orange, size: 18),
+                            SizedBox(width: 8),
+                            Text('🔄 Reiniciar progreso estudiantes', style: TextStyle(color: Colors.orange)),
                           ],
                         ),
                       ),
@@ -2033,6 +2161,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   
   Widget _buildStudentControlButtons(Slide currentSlide) {
     final isActivity = currentSlide.type == SlideType.activity && currentSlide.activity != null;
+    final isThisActivityEnabled = _isActivityEnabled(currentSlide.id);
     
     return Consumer<TeacherService>(
       builder: (context, teacherService, _) {
@@ -2088,13 +2217,89 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               tooltip: "Exportar a Excel",
             ),
             
+            // =====================================================
+            // BOTÓN DE REINICIO DE PROGRESO (ADMINISTRADOR)
+            // =====================================================
+            PopupMenuButton<String>(
+              icon: Icon(
+                Icons.admin_panel_settings,
+                color: Colors.orange,
+                size: _isProjectorMode ? 28 : 24,
+              ),
+              tooltip: "Opciones de administrador",
+              color: Colors.grey[900],
+              onSelected: (value) {
+                if (value == 'reset_all') {
+                  _resetAllStudentsProgress();
+                } else if (value == 'lock_all') {
+                  _lockAllActivities();
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem<String>(
+                  value: 'reset_all',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.restart_alt, color: Colors.red, size: 20),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Reiniciar progreso de estudiantes',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Borra TODO el avance de todos',
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem<String>(
+                  value: 'lock_all',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.lock_outline, color: Colors.orange, size: 20),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Cerrar todas las actividades',
+                            style: TextStyle(color: Colors.orange),
+                          ),
+                          Text(
+                            'Bloquea respuestas pendientes',
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            
             // Botón para activar/desactivar actividad (solo si es actividad)
             if (isActivity) ...[
               const SizedBox(width: 4),
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 decoration: BoxDecoration(
-                  color: _activityEnabledForStudents 
+                  color: isThisActivityEnabled 
                       ? Colors.green.withOpacity(0.3)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
@@ -2102,22 +2307,22 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 child: IconButton(
                   onPressed: _toggleActivityForStudents,
                   icon: Icon(
-                    _activityEnabledForStudents 
+                    isThisActivityEnabled 
                         ? Icons.play_circle_filled 
                         : Icons.play_circle_outline,
-                    color: _activityEnabledForStudents 
+                    color: isThisActivityEnabled 
                         ? Colors.green 
                         : Colors.white70,
                     size: _isProjectorMode ? 28 : 24,
                   ),
-                  tooltip: _activityEnabledForStudents 
+                  tooltip: isThisActivityEnabled 
                       ? "Desactivar actividad para estudiantes (A)"
                       : "Activar actividad para estudiantes (A)",
                 ),
               ),
               
               // Indicador de respuestas
-              if (_activityEnabledForStudents && connectedCount > 0) ...[
+              if (isThisActivityEnabled && connectedCount > 0) ...[
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

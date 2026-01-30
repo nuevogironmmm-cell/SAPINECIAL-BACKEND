@@ -138,6 +138,12 @@ class StudentService extends ChangeNotifier {
   String get medalsDisplay => _currentStudent?.medalsDisplay ?? '';
   int get consecutiveCorrect => _currentStudent?.consecutiveCorrect ?? 0;
   
+  // RANKING EN TIEMPO REAL
+  List<Map<String, dynamic>> _ranking = [];
+  final _rankingController = StreamController<List<Map<String, dynamic>>>.broadcast();
+  List<Map<String, dynamic>> get ranking => List.unmodifiable(_ranking);
+  Stream<List<Map<String, dynamic>>> get rankingStream => _rankingController.stream;
+  
   // ============================================================
   // conexión Y REGISTRO
   // ============================================================
@@ -461,6 +467,11 @@ class StudentService extends ChangeNotifier {
           // Cerrar TODAS las actividades
           _handleAllActivitiesLocked();
           break;
+        
+        case 'PROGRESS_RESET':
+          // El administrador reinició el progreso de todos
+          _handleProgressReset(data);
+          break;
           
         case 'ANSWER_RECEIVED':
           // Manejado en submitAnswer()
@@ -475,6 +486,10 @@ class StudentService extends ChangeNotifier {
             _currentStudent = Student.fromJson(data);
             notifyListeners();
           }
+          break;
+        
+        case 'RANKING_UPDATE':
+          _handleRankingUpdate(data);
           break;
           
         case 'ERROR':
@@ -554,6 +569,47 @@ class StudentService extends ChangeNotifier {
     notifyListeners();
     
     debugPrint('[StudentService] Todas las actividades cerradas');
+  }
+  
+  /// Maneja actualizaciones de ranking en tiempo real
+  void _handleRankingUpdate(Map<String, dynamic> data) {
+    final rankingData = data['ranking'] as List<dynamic>?;
+    if (rankingData != null) {
+      _ranking = rankingData.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      _rankingController.add(_ranking);
+      debugPrint('[StudentService] Ranking actualizado: ${_ranking.length} estudiantes');
+      notifyListeners();
+    }
+  }
+  
+  /// Maneja el reinicio de progreso por parte del administrador
+  void _handleProgressReset(Map<String, dynamic> data) {
+    debugPrint('[StudentService] ¡Progreso reiniciado por el administrador!');
+    
+    // Limpiar TODA la información local
+    _activeActivities.clear();
+    _activityResponses.clear();
+    _answerResults.clear();
+    _currentActivity = null;
+    _hasResponded = false;
+    
+    // Resetear datos del estudiante
+    if (_currentStudent != null) {
+      _currentStudent = Student(
+        sessionId: _currentStudent!.sessionId,
+        name: _currentStudent!.name,
+        status: StudentConnectionStatus.connected,
+        accumulatedPercentage: 0.0,
+        connectedAt: _currentStudent!.connectedAt,
+      );
+    }
+    
+    // Notificar a los listeners
+    _activityController.add(null);
+    _activitiesController.add(_activeActivities);
+    notifyListeners();
+    
+    debugPrint('[StudentService] Estado local reiniciado completamente');
   }
   
   /// Agrega una actividad a la lista de activas si no existe
@@ -692,7 +748,12 @@ class StudentService extends ChangeNotifier {
     disconnect();
     _messageController.close();
     _activityController.close();
+    _activitiesController.close();
     _errorController.close();
+    _newActivityController.close();
+    _answerRevealedController.close();
+    _answerResultController.close();
+    _rankingController.close();
     super.dispose();
   }
 }
