@@ -1,5 +1,6 @@
 ﻿import 'dart:ui';
 import 'dart:math' as math;
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -342,95 +343,122 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   
   /// Exporta los resultados a Excel
   Future<void> _exportToExcel() async {
-    final teacherService = context.read<TeacherService>();
-    final students = teacherService.connectedStudents;
-    
-    if (students.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.warning_amber, color: Colors.white),
-              SizedBox(width: 8),
-              Text('No hay estudiantes para exportar'),
-            ],
-          ),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-    
-    // Mostrar indicador de carga
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => const Center(
-        child: Card(
-          child: Padding(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Generando Excel...'),
-              ],
+    try {
+      final teacherService = context.read<TeacherService>();
+      final students = teacherService.connectedStudents;
+      
+      if (students.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No hay estudiantes para exportar'), backgroundColor: Colors.orange),
+          );
+        }
+        return;
+      }
+      
+      // Mostrar indicador de carga
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Generando Excel...'),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
-    
-    // Convertir estudiantes a formato exportable
-    final exportData = students.map((s) => {
-      'name': s.name,
-      'percentage': s.accumulatedPercentage,
-      'status': s.status.name,
-      'responses': s.responses.map((key, value) => MapEntry(key, value.toJson())),
-      'lastActivity': s.lastActivityAt?.toString() ?? '-',
-      'medals': s.medals.map((m) => m.toJson()).toList(),
-      'consecutiveCorrect': s.consecutiveCorrect,
-      'totalActivitiesAnswered': s.totalActivitiesAnswered,
-      'classification': s.classification.name,
-      'classificationIcon': s.classificationIcon,
-    }).toList();
-    
-    final success = await ExportService.exportStudentResults(
-      students: exportData,
-      sessionTitle: session.title,
-      context: context,
-    );
-    
-    // Cerrar diálogo de carga
-    if (mounted) Navigator.of(context).pop();
-    
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 8),
-              Text('¡Excel exportado exitosamente!'),
+      );
+      
+      // Convertir estudiantes a formato exportable
+      final exportData = students.map((s) => {
+        'name': s.name,
+        'percentage': s.accumulatedPercentage,
+        'status': s.status.name,
+        'responses': jsonEncode(s.responses.map((key, value) => MapEntry(key, value.toJson()))),
+        'lastActivity': s.lastActivityAt?.toString() ?? '-',
+        'medals': jsonEncode(s.medals.map((m) => m.toJson()).toList()),
+        'consecutiveCorrect': s.consecutiveCorrect,
+        'totalActivitiesAnswered': s.totalActivitiesAnswered,
+        'classification': s.classification.name,
+        'classificationIcon': s.classificationIcon,
+      }).toList();
+      
+      debugPrint("Iniciando exportación con ${exportData.length} registros");
+
+      final success = await ExportService.exportStudentResults(
+        students: exportData,
+        sessionTitle: session.title,
+        context: context,
+      );
+      
+      // Cerrar diálogo de carga
+      if (mounted) Navigator.of(context).pop();
+      
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('¡Excel exportado exitosamente!'),
+                ],
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          // El servicio devolvió false pero sin excepción
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('El servicio de exportación falló (sin detalles)'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e, stackTrace) {
+      debugPrint("Error exportando Excel: $e");
+      debugPrint(stackTrace.toString());
+      
+      if (mounted) {
+        // Asegurar que se cierra el diálogo de carga si estaba abierto
+        if (Navigator.canPop(context)) Navigator.of(context).pop();
+
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Error de Exportación'),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Ocurrió un error inesperado al generar el Excel:'),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    color: Colors.grey[200],
+                    child: Text(e.toString(), style: const TextStyle(fontSize: 12, color: Colors.black)),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(child: const Text('Cerrar'), onPressed: () => Navigator.of(ctx).pop()),
             ],
           ),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.error, color: Colors.white),
-              SizedBox(width: 8),
-              Text('Error al exportar Excel'),
-            ],
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+        );
+      }
     }
   }
   
@@ -443,6 +471,16 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       final teacherService = context.read<TeacherService>();
       teacherService.revealAnswer(currentSlide.id);
     }
+  }
+
+  void _forceRevealAnswer() {
+    setState(() {
+       final currentBlock = session.blocks[currentBlockIndex];
+       final currentSlide = currentBlock.slides[currentSlideIndex];
+       if (currentSlide.activity != null) {
+         currentSlide.activity!.isRevealed = true;
+       }
+    });
   }
 
   void _toggleProjectorMode() {
@@ -1802,7 +1840,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                   if (isActivity && isThisActivityEnabled)
                     IconButton(
                       onPressed: () {
-                        _revealAnswer();
+                        _forceRevealAnswer();
                         _revealAnswerToStudents();
                       },
                       icon: const Icon(Icons.visibility, color: Colors.amber, size: 20),
@@ -1810,6 +1848,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                       tooltip: 'Revelar respuesta',
                     ),
+                  
                   
                   // Menú adicional (opciones menos usadas)
                   PopupMenuButton<String>(

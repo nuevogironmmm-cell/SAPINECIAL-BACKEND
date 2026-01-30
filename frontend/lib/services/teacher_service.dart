@@ -217,6 +217,14 @@ class TeacherService extends ChangeNotifier {
       'payload': {'activityId': activityId}
     });
   }
+
+  /// Expulsa a un estudiante de la clase
+  void kickStudent(String studentId) {
+    _sendMessage({
+      'action': 'KICK_STUDENT',
+      'payload': {'studentId': studentId}
+    });
+  }
   
   /// Solicita actualización del dashboard
   void requestDashboardUpdate() {

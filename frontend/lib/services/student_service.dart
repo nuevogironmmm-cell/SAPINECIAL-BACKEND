@@ -14,6 +14,9 @@ import '../config/app_config.dart';
 /// - Envío de respuestas y reflexiones
 /// - sincronización de estado con el servidor
 class StudentService extends ChangeNotifier {
+  StudentService() {
+    tryReconnect();
+  }
   // ============================================================
   // ESTADO DEL SERVICIO
   // ============================================================

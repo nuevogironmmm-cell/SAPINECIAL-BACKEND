@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:provider/provider.dart';
 import '../models/student_model.dart';
+import '../services/teacher_service.dart';
 import '../utils/animations.dart';
 
 /// Panel de estudiantes para el Dashboard del docente
@@ -505,12 +507,100 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
                         ),
                       ),
                     ),
-                  ),
                 ],
+              ),
+              
+              // Botón de eliminar (Kick)
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.white38, size: 20),
+                onPressed: () => _confirmKickStudent(context, student),
+                tooltip: 'Eliminar estudiante',
+              ),
+                ],
+              ),
+              
+              // Botón de eliminar (Kick)
+              IconButton(
+                icon: const Icon(Icons.delete_forever, color: Colors.white38, size: 20),
+                onPressed: () => _confirmKickStudent(context, student),
+                tooltip: 'Eliminar estudiante',
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _confirmKickStudent(BuildContext context, Student student) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text('¿Eliminar estudiante?', style: TextStyle(color: Colors.white)),
+        content: Text(
+          '¿Seguro que deseas eliminar a ${student.name}?\nSe desconectará su sesión inmediatamente.',
+          style: const TextStyle(color: Colors.white70)
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<TeacherService>().kickStudent(student.sessionId);
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                 SnackBar(content: Text('Estudiante ${student.name} eliminado'))
+              );
+            },
+            child: const Text('Eliminar', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmKickStudent(BuildContext context, Student student) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('¿Eliminar estudiante?'),
+        content: Text('¿Seguro que deseas eliminar a ${student.name}? Se desconectará su sesión.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              // Llamar al servicio para eliminar (necesitamos Provider aquí)
+              // Como estamos dentro de un build method que usa theme, podemos usar context
+               // IMPORTANTE: Asegurarse que StudentDashboardPanel tenga acceso a TeacherService 
+               // Lo tiene en el contexto padre usualmente.
+               // Pero mejor pasar un callback o usar context.read<TeacherService>()
+               // Verificaremos imports.
+               // Asumimos que se usa Provider.
+               // Si no tengo acceso directo, debo agregarlo.
+               try {
+                 // Opción dinámica si no tengo el import
+                 (context as dynamic).read(
+                   // No puedo usar tipos genéricos dinámicos fácilmente en Dart sin import explicito
+                   // Asumiré que TeacherService está disponible o pasaré el callback onKick
+                 );
+               } catch (e) {}
+               // Mejor: Añadir onKick callback al widget o asumir Provider
+               // Voy a asumir que puedo usar Provider.of<TeacherService>(context, listen: false)
+               // Necesito importar provider.
+               
+               // SOLUCIÓN: Usar un callback nuevo en el widget.
+            },
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

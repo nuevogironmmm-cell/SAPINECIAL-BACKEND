@@ -19,7 +19,7 @@ const _imgParalelismo = 'https://images.unsplash.com/photo-1457369804613-52c61a4
 
 final mockClassSession = ClassSession(
   id: 'session_1',
-  title: 'Introducción',
+  title: 'Unidad 1: Literatura Sapiencial',
   blocks: [
     ClassBlock(
       title: 'Introducción',
@@ -751,75 +751,77 @@ final mockClassSession = ClassSession(
         Slide(
           id: 's8_9',
           type: SlideType.activity,
-          title: 'Actividad 8: Ordena el Versículo',
-          content: 'Ordena las palabras para formar este versículo clave de la literatura sapiencial.',
+          title: 'Actividad 8: Proverbios 1:7',
+          content: 'Selecciona el versículo correcto de la literatura sapiencial.',
           biblicalReference: 'Proverbios 1:7',
           activity: ActivityData(
-            question: 'Construye el versículo correcto:',
-            type: ActivityType.wordPuzzle,
+            question: '¿Cuál es el principio de la sabiduría según Proverbios 1:7?',
+            type: ActivityType.multipleChoice,
             options: [
-              'sabiduría', 'El', 'de', 'temor', 'Jehová', 'es', 'la', 'principio', 'el', 'de'
-            ],
-            correctWordOrder: [
-              'El', 'principio', 'de', 'la', 'sabiduría', 'es', 'el', 'temor', 'de', 'Jehová'
+              'El principio de la sabiduría es el temor de Jehová',
+              'El principio de la sabiduría es el conocimiento',
+              'El principio de la sabiduría es la obediencia',
+              'El principio de la sabiduría es la fe',
             ],
             correctOptionIndex: 0,
+            explanation: '¡Correcto! "El principio de la sabiduría es el temor de Jehová" - Este es el versículo fundamental de toda la literatura sapiencial.',
           ),
         ),
         Slide(
           id: 's8_10',
           type: SlideType.activity,
           title: 'Actividad 9: Job y la Esperanza',
-          content: 'Ordena la famosa declaración de fe de Job en medio de su sufrimiento.',
+          content: 'La famosa declaración de fe de Job en medio de su sufrimiento.',
           biblicalReference: 'Job 19:25',
           activity: ActivityData(
-            question: 'Reconstruye la declaración:',
-            type: ActivityType.wordPuzzle,
+            question: '¿Qué declaró Job en medio de su sufrimiento? (Job 19:25)',
+            type: ActivityType.multipleChoice,
             options: [
-              'vive', 'Yo', 'mi', 'Redentor', 'sé', 'que', 'levantará', 'polvo', 'el', 'sobre', 'Y', 'fin', 'al', 'se' 
-            ],
-            correctWordOrder: [
-              'Yo', 'sé', 'que', 'mi', 'Redentor', 'vive', 'Y', 'al', 'fin', 'se', 'levantará', 'sobre', 'el', 'polvo'
+              'Yo sé que mi Redentor vive',
+              'Yo sé que Dios es bueno',
+              'Yo sé que seré restaurado',
+              'Yo sé que todo pasará',
             ],
             correctOptionIndex: 0,
+            explanation: '¡Excelente! Job declaró: "Yo sé que mi Redentor vive, Y al fin se levantará sobre el polvo" - Una poderosa declaración de fe en medio del sufrimiento.',
           ),
         ),
         Slide(
           id: 's8_11',
           type: SlideType.activity,
           title: 'Actividad 10: El Pastor Divino',
-          content: 'Ordena el inicio del Salmo más conocido de la Biblia.',
+          content: 'El Salmo más conocido de la Biblia.',
           biblicalReference: 'Salmo 23:1',
           activity: ActivityData(
-            question: 'Completa el versículo:',
-            type: ActivityType.wordPuzzle,
+            question: '¿Cómo comienza el Salmo 23?',
+            type: ActivityType.multipleChoice,
             options: [
-              'pastor', 'Jehová', 'es', 'mi', 'nada', 'faltará', 'me'
-            ],
-            correctWordOrder: [
-              'Jehová', 'es', 'mi', 'pastor', 'nada', 'me', 'faltará'
+              'Jehová es mi pastor; nada me faltará',
+              'Jehová es mi luz y mi salvación',
+              'Jehová es mi fortaleza y mi escudo',
+              'Jehová es mi refugio y mi castillo',
             ],
             correctOptionIndex: 0,
-            explanation: '¡Excelente! "Jehová es mi pastor; nada me faltará". La máxima expresión de confianza en la provisión de Dios.',
+            explanation: '¡Excelente! "Jehová es mi pastor; nada me faltará" (Salmo 23:1). La máxima expresión de confianza en la provisión de Dios.',
           ),
         ),
         Slide(
           id: 's8_12',
           type: SlideType.activity,
           title: 'Actividad 11: Los Tiempos de Dios',
-          content: 'Ordena este versículo sobre la soberanía de Dios en el tiempo.',
+          content: 'La soberanía de Dios en el tiempo según Eclesiastés.',
           biblicalReference: 'Eclesiastés 3:1',
           activity: ActivityData(
-            question: 'Ordena el texto:',
-            type: ActivityType.wordPuzzle,
+            question: '¿Qué nos enseña Eclesiastés 3:1 sobre el tiempo?',
+            type: ActivityType.multipleChoice,
             options: [
-              'Todo', 'tiempo', 'su', 'tiene', 'y', 'todo', 'lo', 'que', 'quiere', 'se', 'debajo', 'cielo', 'del', 'tiene', 'hora', 'su'
-            ],
-            correctWordOrder: [
-              'Todo', 'tiene', 'su', 'tiempo', 'y', 'todo', 'lo', 'que', 'se', 'quiere', 'debajo', 'del', 'cielo', 'tiene', 'su', 'hora'
+              'Todo tiene su tiempo, y todo lo que se quiere debajo del cielo tiene su hora',
+              'El tiempo es oro y no debemos perderlo',
+              'Debemos aprovechar cada momento de la vida',
+              'El tiempo pasará pero la Palabra permanece',
             ],
             correctOptionIndex: 0,
-            explanation: '¡Correcto! "Todo tiene su tiempo...". Nos enseña a discernir los momentos oportunos en la vida bajo el sol.',
+            explanation: '¡Correcto! "Todo tiene su tiempo, y todo lo que se quiere debajo del cielo tiene su hora". Nos enseña a discernir los momentos oportunos en la vida bajo el sol.',
           ),
         ),
       ],
@@ -902,6 +904,39 @@ final mockClassSession = ClassSession(
             explanation: '¡Perfecto! "El principio de la sabiduría es el temor de Jehová" (Proverbios 1:7) es el lema central de la literatura sapiencial.',
           ),
         ),
+        // SOPA DE LETRAS INTERACTIVA (Deshabilitada por ahora)
+        /*
+        Slide(
+          id: 's9_6',
+          type: SlideType.activity,
+          title: 'Sopa de Letras: Sabiduría',
+          content: 'Encuentra las 15 palabras clave sobre la literatura sapiencial en el tiempo límite.',
+          activity: ActivityData(
+            question: 'Busca: PARALELISMO, SINONIMICO, ANTITETICO, SINTETICO, CLIMATICO, JOB, SALMOS, PROVERBIOS, ECLESIASTES, CANTARES, SABIDURIA, TEMOR, JUSTICIA, ENSEÑANZA, VERDAD.',
+            type: ActivityType.wordSearch,
+            options: [
+              'PARALELISMO',
+              'SINONIMICO',
+              'ANTITETICO',
+              'SINTETICO',
+              'CLIMATICO',
+              'JOB',
+              'SALMOS',
+              'PROVERBIOS',
+              'ECLESIASTES',
+              'CANTARES',
+              'SABIDURIA',
+              'TEMOR',
+              'JUSTICIA',
+              'ENSEÑANZA',
+              'VERDAD'
+            ],
+            correctOptionIndex: 0,
+            explanation: '¡Excelente! Encontraste todas las palabras clave de la literatura sapiencial.',
+            percentageValue: 25, // Vale más puntos
+          ),
+        ),
+        */
       ],
     ),
   ],

@@ -24,6 +24,7 @@ enum StudentActivityType {
   multipleChoice,   // Opción múltiple
   trueFalse,        // Verdadero / Falso
   shortAnswer,      // Respuesta corta
+  wordSearch,       // Sopa de letras
 }
 
 // ============================================================

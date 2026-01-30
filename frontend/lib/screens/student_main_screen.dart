@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 import '../services/student_service.dart';
 import '../models/student_model.dart';
+import '../widgets/word_search_widget.dart';
 import '../utils/animations.dart';
 import 'student_login_screen.dart';
 
@@ -71,6 +72,10 @@ class _StudentMainScreenState extends State<StudentMainScreen>
       if (activity != null && activity.isActive) {
         setState(() {
           _selectedAnswer = null;
+          // Limpiar selecciÃ³n previa para asegurar que aparezca vacÃ­a
+          if (activity.id != null) {
+            _selectedAnswers.remove(activity.id);
+          }
           _activityStartTime = DateTime.now();
         });
       }
@@ -216,7 +221,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   
   /// Obtiene la letra correspondiente a un índice de opción
   String _getLetterForIndex(int index) {
-    const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
     return index < letters.length ? letters[index] : '${index + 1}';
   }
   
@@ -230,8 +235,8 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   }
   
   /// Envía la respuesta para una actividad específica
-  Future<void> _submitAnswerForActivity(String activityId) async {
-    final selectedAnswer = _selectedAnswers[activityId];
+  Future<void> _submitAnswerForActivity(String activityId, {int? overrideAnswer}) async {
+    final selectedAnswer = overrideAnswer ?? _selectedAnswers[activityId];
     if (selectedAnswer == null) return;
     
     final studentService = context.read<StudentService>();
@@ -1512,9 +1517,27 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             ),
             
             const SizedBox(height: 24),
-            
-            // Opciones
-            if (!hasResponded)
+
+            // CONTENIDO DE LA ACTIVIDAD SEGÚN TIPO
+            if (activity.type == StudentActivityType.wordSearch)
+               Container(
+                 width: double.infinity,
+                 constraints: const BoxConstraints(maxWidth: 400),
+                 child: WordSearchWidget(
+                   words: activity.options, // Las palabras a buscar están en options
+                   gridSize: 10,
+                   isReadOnly: hasResponded,
+                   onWordFound: (foundWords) {
+                     // Opcional: Feedback visual o sonoro
+                   },
+                   onCompleted: (completed) {
+                     if (completed && !hasResponded) {
+                       _submitAnswerForActivity(activity.id, overrideAnswer: 0); // 0 = Completado
+                     }
+                   },
+                 ),
+               )
+            else if (!hasResponded)
               ...activity.options.asMap().entries.map((entry) {
                 final index = entry.key;
                 final option = entry.value;

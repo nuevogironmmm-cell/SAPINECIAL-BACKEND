@@ -39,6 +39,7 @@ enum ActivityType {
   multipleChoice,
   trueFalse,
   wordPuzzle,
+  wordSearch, // Nuevo tipo para sopa de letras real
 }
 
 class ActivityData {
@@ -48,6 +49,7 @@ class ActivityData {
   final String? explanation; // Opcional - solo se revela si est? presente
   final ActivityType type;
   final List<String>? correctWordOrder; // Solo para wordPuzzle
+  final double percentageValue; // Valor porcentual de la actividad (defecto 10%)
   bool isRevealed;
 
   ActivityData({
@@ -57,6 +59,7 @@ class ActivityData {
     this.explanation, // Ahora es opcional
     this.type = ActivityType.multipleChoice,
     this.correctWordOrder,
+    this.percentageValue = 5.0,
     this.isRevealed = false,
   });
 }
