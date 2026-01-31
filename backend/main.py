@@ -2,7 +2,7 @@
 """
 Backend para Literatura Sapiencial
 Servidor WebSocket con sistema completo de estudiantes
-VersiÛn 2.1 - Con persistencia de progreso y soporte para 50+ usuarios
+Versi√≥n 2.1 - Con persistencia de progreso y soporte para 50+ usuarios
 """
 import os
 import asyncio
@@ -20,10 +20,10 @@ PROGRESS_FILE = "student_progress.json"
 
 app = FastAPI(title="Sapiencial App Backend")
 
-# ConfiguraciÛn de CORS (permite conexiones desde Netlify)
+# Configuraci√≥n de CORS (permite conexiones desde Netlify)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producciÛn, especificar el dominio de Netlify
+    allow_origins=["*"],  # En producci√≥n, especificar el dominio de Netlify
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -68,11 +68,11 @@ class StudentClassification(str, Enum):
     FAILED = "failed"
 
 # ============================================================
-# FUNCIONES DE CLASIFICACI”N
+# FUNCIONES DE CLASIFICACI√ìN
 # ============================================================
 
 def get_classification(percentage: float) -> StudentClassification:
-    """Obtiene CLASIFICACI”N seg˙n porcentaje"""
+    """Obtiene CLASIFICACI√ìN seg√∫n porcentaje"""
     if percentage >= 100:
         return StudentClassification.WINNER
     elif percentage >= 90:
@@ -86,7 +86,7 @@ def get_classification(percentage: float) -> StudentClassification:
     return StudentClassification.FAILED
 
 def get_classification_icon(classification: StudentClassification) -> str:
-    """Obtiene Ìcono de CLASIFICACI”N"""
+    """Obtiene √≠cono de CLASIFICACI√ìN"""
     icons = {
         StudentClassification.WINNER: "??",
         StudentClassification.EXCELLENT: "?",
@@ -100,26 +100,26 @@ def get_classification_icon(classification: StudentClassification) -> str:
 def get_motivational_message(percentage: float) -> str:
     """Obtiene mensaje motivacional para estudiante"""
     if percentage >= 100:
-        return "°Excelente! Dominaste el tema ??"
+        return "¬°Excelente! Dominaste el tema ??"
     elif percentage >= 90:
         return "Muy buen trabajo, casi perfecto ??"
     elif percentage >= 80:
-        return "Vas muy bien, sigue asÌ ??"
+        return "Vas muy bien, sigue as√≠ ??"
     elif percentage >= 70:
         return "Buen avance, puedes mejorar ??"
     elif percentage >= 60:
         return "Buen intento, sigue practicando ??"
-    return "°¡nimo, cada clase es una nueva oportunidad! ??"
+    return "¬°√Ånimo, cada clase es una nueva oportunidad! ??"
 
 # ============================================================
-# ConfiguraciÛn DE SEGURIDAD
+# Configuraci√≥n DE SEGURIDAD
 # ============================================================
 
 TEACHER_ACCESS_TOKEN = "profesor2026"
 TEACHER_TOKEN_HASH = hashlib.sha256(TEACHER_ACCESS_TOKEN.encode()).hexdigest()
 
 def validate_token(token: str, role: str) -> bool:
-    """Valida el token de acceso seg˙n el rol"""
+    """Valida el token de acceso seg√∫n el rol"""
     if role == "teacher":
         token_hash = hashlib.sha256(token.encode()).hexdigest()
         return token_hash == TEACHER_TOKEN_HASH
@@ -128,7 +128,7 @@ def validate_token(token: str, role: str) -> bool:
     return False
 
 def generate_session_id() -> str:
-    """Genera un ID de sesiÛn ˙nico"""
+    """Genera un ID de sesi√≥n √∫nico"""
     return str(uuid.uuid4())[:8]
 
 # ============================================================
@@ -230,7 +230,7 @@ class StudentData:
         }
     
     def add_reflection(self, topic: str, content: str):
-        """Agrega reflexiÛn"""
+        """Agrega reflexi√≥n"""
         reflection = {
             "id": generate_session_id(),
             "student_session_id": self.session_id,
@@ -256,7 +256,7 @@ class StudentData:
         self.last_activity_at = None
     
     def get_current_lesson_index(self) -> int:
-        """Obtiene el Ìndice de la lecciÛn actual (basado en respuestas completadas)"""
+        """Obtiene el √≠ndice de la lecci√≥n actual (basado en respuestas completadas)"""
         return len(self.responses)
     
     def get_completed_lessons(self) -> List[str]:
@@ -264,7 +264,7 @@ class StudentData:
         return list(self.responses.keys())
     
     def has_completed_all(self, total_lessons: int) -> bool:
-        """Verifica si completÛ todas las lecciones"""
+        """Verifica si complet√≥ todas las lecciones"""
         return len(self.responses) >= total_lessons
     
     def to_dict(self) -> Dict:
@@ -282,7 +282,7 @@ class StudentData:
         }
     
     def to_summary(self) -> Dict:
-        """VersiÛn resumida para dashboard"""
+        """Versi√≥n resumida para dashboard"""
         return {
             "sessionId": self.session_id,
             "name": self.name,
@@ -293,7 +293,7 @@ class StudentData:
         }
     
     def to_ranking_entry(self) -> Dict:
-        """VersiÛn para ranking/leaderboard"""
+        """Versi√≥n para ranking/leaderboard"""
         return {
             "name": self.name,
             "percentage": self.accumulated_percentage,
@@ -321,12 +321,12 @@ class ActivityData:
         self.activity_type = activity_type
         self.state = ActivityState.LOCKED
         self.time_limit_seconds = time_limit_seconds
-        self.title = title  # TÌtulo de la diapositiva/actividad
-        self.slide_content = slide_content  # Contenido extra (ej: la cita bÌblica)
-        self.biblical_reference = biblical_reference  # Referencia bÌblica (ej: "EclesiastÈs 1:2")
+        self.title = title  # T√≠tulo de la diapositiva/actividad
+        self.slide_content = slide_content  # Contenido extra (ej: la cita b√≠blica)
+        self.biblical_reference = biblical_reference  # Referencia b√≠blica (ej: "Eclesiast√©s 1:2")
     
     def to_student_dict(self) -> Dict:
-        """VersiÛn para estudiante (sin respuesta correcta)"""
+        """Versi√≥n para estudiante (sin respuesta correcta)"""
         return {
             "id": self.id,
             "type": self.activity_type.value,
@@ -341,7 +341,7 @@ class ActivityData:
         }
     
     def to_dict(self) -> Dict:
-        """VersiÛn completa para docente"""
+        """Versi√≥n completa para docente"""
         data = self.to_student_dict()
         data["correctIndex"] = self.correct_index
         return data
@@ -351,7 +351,7 @@ class ActivityData:
 # ============================================================
 
 class StudentManager:
-    """Gestiona estudiantes conectados - Soporta hasta 100 conexiones simult·neas"""
+    """Gestiona estudiantes conectados - Soporta hasta 100 conexiones simult√°neas"""
     def __init__(self):
         self.students: Dict[str, StudentData] = {}  # session_id -> StudentData
         self.names_in_use: set = set()  # Nombres activos (evita duplicados)
@@ -363,7 +363,7 @@ class StudentManager:
         global _saved_progress
         saved_students = _saved_progress.get("students", {})
         for name, data in saved_students.items():
-            # No crear conexiÛn, solo guardar datos para reconexiÛn
+            # No crear conexi√≥n, solo guardar datos para reconexi√≥n
             print(f"[INFO] Progreso cargado: {name} - {data.get('accumulated_percentage', 0)}%")
     
     def _get_saved_data(self, name: str) -> Optional[Dict]:
@@ -385,7 +385,7 @@ class StudentManager:
         _saved_progress = load_progress()
     
     def _find_student_by_name(self, name: str) -> Optional[StudentData]:
-        """Busca estudiante por nombre (ignorando may˙sculas)"""
+        """Busca estudiante por nombre (ignorando may√∫sculas)"""
         name_lower = name.strip().lower()
         for student in self.students.values():
             if student.name.lower() == name_lower:
@@ -405,12 +405,12 @@ class StudentManager:
         # Verificar si existe un estudiante con este nombre
         existing = self._find_student_by_name(name)
         if existing:
-            # Si est· desconectado, permitir reconexiÛn
+            # Si est√° desconectado, permitir reconexi√≥n
             if allow_reconnect and existing.status == StudentConnectionStatus.DISCONNECTED:
                 return True, "RECONNECT"
-            # Si est· conectado, rechazar
+            # Si est√° conectado, rechazar
             if existing.status != StudentConnectionStatus.DISCONNECTED:
-                return False, "Este nombre ya est· en uso en la clase"
+                return False, "Este nombre ya est√° en uso en la clase"
         
         # Verificar si hay datos guardados (estudiante anterior que se reconecta)
         if self._get_saved_data(name):
@@ -431,7 +431,7 @@ class StudentManager:
         if message == "RECONNECT":
             return self.reconnect_student(name, websocket)
         
-        # Generar ID de sesiÛn
+        # Generar ID de sesi√≥n
         session_id = generate_session_id()
         
         # Verificar si hay datos guardados para restaurar
@@ -461,7 +461,7 @@ class StudentManager:
             print(f"[INFO] Estudiante reconectado: {student.name}")
             return student, "Reconectado exitosamente"
         
-        return None, "No se encontrÛ sesiÛn previa"
+        return None, "No se encontr√≥ sesi√≥n previa"
     
     def disconnect_student(self, websocket: WebSocket):
         """Desconecta un estudiante y guarda su progreso"""
@@ -480,7 +480,7 @@ class StudentManager:
         return self.students.get(session_id) if session_id else None
     
     def get_student_by_session(self, session_id: str) -> Optional[StudentData]:
-        """Obtiene estudiante por ID de sesiÛn"""
+        """Obtiene estudiante por ID de sesi√≥n"""
         return self.students.get(session_id)
     
     def get_connected_students(self) -> List[StudentData]:
@@ -494,7 +494,7 @@ class StudentManager:
         responded = [s for s in connected if s.status == StudentConnectionStatus.RESPONDED]
         not_responded = [s for s in connected if s.status == StudentConnectionStatus.NOT_RESPONDED]
         
-        # Conteo de votos por opciÛn para la actividad actual
+        # Conteo de votos por opci√≥n para la actividad actual
         vote_counts = {}
         if current_activity_id:
             for student in connected:
@@ -511,7 +511,7 @@ class StudentManager:
             "notRespondedCount": len(not_responded),
             "currentActivityId": current_activity_id,
             "responseRate": (len(responded) / len(connected) * 100) if connected else 0,
-            "voteCounts": vote_counts,  # Nuevo: conteo de votos por opciÛn
+            "voteCounts": vote_counts,  # Nuevo: conteo de votos por opci√≥n
         }
     
     def get_ranking(self, limit: int = 5) -> List[Dict]:
@@ -533,12 +533,12 @@ class StudentManager:
             student.reset_for_new_activity()
     
     def reset_all_students_progress(self):
-        """Reinicia TODO el progreso de TODOS los estudiantes (funciÛn de admin)"""
+        """Reinicia TODO el progreso de TODOS los estudiantes (funci√≥n de admin)"""
         reset_count = 0
         for session_id, student in self.students.items():
             student.reset_all_progress()
             reset_count += 1
-        # TambiÈn limpiar el archivo de persistencia
+        # Tambi√©n limpiar el archivo de persistencia
         self._clear_saved_progress()
         return reset_count
     
@@ -554,7 +554,7 @@ class StudentManager:
             print(f"[ERROR] Error limpiando archivo de progreso: {e}")
     
     async def broadcast_to_students(self, message: Dict):
-        """EnvÌa mensaje a todos los estudiantes conectados"""
+        """Env√≠a mensaje a todos los estudiantes conectados"""
         json_msg = json.dumps(message, ensure_ascii=False)
         disconnected = []
         
@@ -570,7 +570,7 @@ class StudentManager:
             self.disconnect_student(ws)
     
     async def send_to_student(self, session_id: str, message: Dict):
-        """EnvÌa mensaje a un estudiante especÌfico"""
+        """Env√≠a mensaje a un estudiante espec√≠fico"""
         student = self.students.get(session_id)
         if student and student.websocket:
             try:
@@ -602,7 +602,7 @@ class TeacherConnectionManager:
             print("[INFO] Docente desconectado")
     
     async def broadcast_to_teachers(self, message: Dict):
-        """EnvÌa mensaje a todos los docentes"""
+        """Env√≠a mensaje a todos los docentes"""
         json_msg = json.dumps(message, ensure_ascii=False)
         disconnected = []
         
@@ -674,7 +674,7 @@ state = ClassState()
 
 @app.get("/")
 async def root():
-    """Endpoint de verificaciÛn"""
+    """Endpoint de verificaci√≥n"""
     connected_students = student_manager.get_connected_students()
     return {
         "status": "ok",
@@ -698,7 +698,7 @@ async def get_students():
 
 @app.post("/validate-name")
 async def validate_student_name(name: str = Query(...)):
-    """Valida si un nombre est· disponible"""
+    """Valida si un nombre est√° disponible"""
     is_valid, message = student_manager.validate_name(name)
     return {"valid": is_valid, "message": message}
 
@@ -716,7 +716,7 @@ async def teacher_websocket(
         await websocket.accept()
         await websocket.send_text(json.dumps({
             "type": "ERROR",
-            "data": {"message": "Token inv·lido", "code": "AUTH_FAILED"}
+            "data": {"message": "Token inv√°lido", "code": "AUTH_FAILED"}
         }))
         await websocket.close(code=4003)
         return
@@ -746,7 +746,7 @@ async def teacher_websocket(
             except json.JSONDecodeError:
                 await websocket.send_text(json.dumps({
                     "type": "ERROR",
-                    "data": {"message": "JSON inv·lido"}
+                    "data": {"message": "JSON inv√°lido"}
                 }))
                 continue
             
@@ -824,7 +824,7 @@ async def handle_teacher_action(websocket: WebSocket, message: Dict):
     elif action == "LOCK_ACTIVITY":
         activity_id = payload.get("activityId")
         
-        # Si se especifica un activityId, bloquear esa actividad especÌfica
+        # Si se especifica un activityId, bloquear esa actividad espec√≠fica
         if activity_id:
             activity = state.get_activity(activity_id)
             if activity:
@@ -897,7 +897,7 @@ async def handle_teacher_action(websocket: WebSocket, message: Dict):
         }))
     
     elif action == "REQUEST_DASHBOARD":
-        # Docente solicita actualizaciÛn del dashboard
+        # Docente solicita actualizaci√≥n del dashboard
         await websocket.send_text(json.dumps({
             "type": "DASHBOARD_UPDATE",
             "data": student_manager.get_dashboard_summary(
@@ -906,7 +906,7 @@ async def handle_teacher_action(websocket: WebSocket, message: Dict):
         }))
     
     elif action == "RESET_ALL_STUDENTS_PROGRESS":
-        # Reinicio GLOBAL de progreso de todos los estudiantes (funciÛn admin)
+        # Reinicio GLOBAL de progreso de todos los estudiantes (funci√≥n admin)
         reset_count = student_manager.reset_all_students_progress()
         
         # Cerrar todas las actividades
@@ -929,7 +929,7 @@ async def handle_teacher_action(websocket: WebSocket, message: Dict):
             "type": "STUDENTS_RESET_COMPLETE",
             "data": {
                 "resetCount": reset_count,
-                "message": f"Se reiniciÛ el progreso de {reset_count} estudiante(s)"
+                "message": f"Se reinici√≥ el progreso de {reset_count} estudiante(s)"
             }
         })
         
@@ -942,7 +942,7 @@ async def handle_teacher_action(websocket: WebSocket, message: Dict):
         print(f"[INFO] Progreso reiniciado para {reset_count} estudiantes")
 
 async def broadcast_all(message: Dict):
-    """EnvÌa mensaje a docentes y estudiantes"""
+    """Env√≠a mensaje a docentes y estudiantes"""
     await teacher_manager.broadcast_to_teachers(message)
     await student_manager.broadcast_to_students(message)
 
@@ -971,7 +971,7 @@ async def student_websocket(websocket: WebSocket):
             except json.JSONDecodeError:
                 await websocket.send_text(json.dumps({
                     "type": "ERROR",
-                    "data": {"message": "JSON inv·lido"}
+                    "data": {"message": "JSON inv√°lido"}
                 }))
                 continue
             
@@ -984,7 +984,7 @@ async def student_websocket(websocket: WebSocket):
                 reconnect = payload.get("reconnect", False)
                 
                 if reconnect:
-                    # Intentar reconexiÛn
+                    # Intentar reconexi√≥n
                     student, msg = student_manager.reconnect_student(name, websocket)
                     if student:
                         await websocket.send_text(json.dumps({
@@ -1029,7 +1029,7 @@ async def student_websocket(websocket: WebSocket):
                     "data": state.to_dict()
                 }))
                 
-                # IMPORTANTE: Si hay actividad activa, enviarla explÌcitamente
+                # IMPORTANTE: Si hay actividad activa, enviarla expl√≠citamente
                 if state.current_activity and state.current_activity.state == ActivityState.ACTIVE:
                     await websocket.send_text(json.dumps({
                         "type": "ACTIVITY_UNLOCKED",
@@ -1074,7 +1074,7 @@ async def student_websocket(websocket: WebSocket):
                 if activity.state != ActivityState.ACTIVE:
                     await websocket.send_text(json.dumps({
                         "type": "ERROR",
-                        "data": {"message": "La actividad no est· activa. Pide al profesor que la habilite."}
+                        "data": {"message": "La actividad no est√° activa. Pide al profesor que la habilite."}
                     }))
                     continue
                 
@@ -1139,10 +1139,10 @@ async def student_websocket(websocket: WebSocket):
                     }
                 })
                 
-                # Guardar progreso despuÈs de cada respuesta
+                # Guardar progreso despu√©s de cada respuesta
                 student_manager._save_all_progress()
             
-            # ---- ENVIAR reflexiÛn ----
+            # ---- ENVIAR reflexi√≥n ----
             elif action == "SUBMIT_REFLECTION":
                 if not student:
                     await websocket.send_text(json.dumps({
@@ -1157,17 +1157,17 @@ async def student_websocket(websocket: WebSocket):
                 if len(content) < 10:
                     await websocket.send_text(json.dumps({
                         "type": "ERROR",
-                        "data": {"message": "La reflexiÛn debe tener al menos 10 caracteres"}
+                        "data": {"message": "La reflexi√≥n debe tener al menos 10 caracteres"}
                     }))
                     continue
                 
-                # Registrar reflexiÛn
+                # Registrar reflexi√≥n
                 reflection = student.add_reflection(topic, content)
                 
                 # Confirmar al estudiante
                 await websocket.send_text(json.dumps({
                     "type": "REFLECTION_RECEIVED",
-                    "data": {"message": "reflexiÛn enviada correctamente"}
+                    "data": {"message": "reflexi√≥n enviada correctamente"}
                 }))
                 
                 # Notificar al docente
@@ -1214,7 +1214,7 @@ async def student_websocket(websocket: WebSocket):
 
 @app.websocket("/ws-dev/{role}")
 async def websocket_dev_endpoint(websocket: WebSocket, role: str):
-    """Endpoint de desarrollo SIN autenticaciÛn"""
+    """Endpoint de desarrollo SIN autenticaci√≥n"""
     if role == "teacher":
         await teacher_manager.connect(websocket)
         try:
