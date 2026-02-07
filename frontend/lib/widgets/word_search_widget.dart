@@ -578,9 +578,16 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
             children: [
               // La Cuadr?cula
               GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onPanStart: (d) => _onPanStart(d, BoxConstraints(maxWidth: size, maxHeight: size)),
                 onPanUpdate: (d) => _onPanUpdate(d, BoxConstraints(maxWidth: size, maxHeight: size)),
                 onPanEnd: _onPanEnd,
+                onVerticalDragStart: (d) => _onPanStart(d, BoxConstraints(maxWidth: size, maxHeight: size)),
+                onVerticalDragUpdate: (d) => _onPanUpdate(d, BoxConstraints(maxWidth: size, maxHeight: size)),
+                onVerticalDragEnd: _onPanEnd,
+                onHorizontalDragStart: (d) => _onPanStart(d, BoxConstraints(maxWidth: size, maxHeight: size)),
+                onHorizontalDragUpdate: (d) => _onPanUpdate(d, BoxConstraints(maxWidth: size, maxHeight: size)),
+                onHorizontalDragEnd: _onPanEnd,
                 child: Container(
                   width: size,
                   height: size,

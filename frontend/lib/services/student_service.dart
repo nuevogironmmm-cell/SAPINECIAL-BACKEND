@@ -301,7 +301,7 @@ class StudentService extends ChangeNotifier {
           .where((msg) => msg['type'] == 'ANSWER_RECEIVED' || 
                          msg['type'] == 'ERROR')
           .first
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 30));
       
       if (response['type'] == 'ANSWER_RECEIVED') {
         final data = response['data'];
@@ -339,7 +339,9 @@ class StudentService extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      _errorMessage = 'Error de conexión';
+      _errorMessage = e is TimeoutException 
+          ? 'Tiempo de espera agotado. Intenta de nuevo.' 
+          : 'Error de conexión';
       _activityResponses[activityId] = false;
       if (_currentActivity?.id == activityId) {
         _hasResponded = false;
@@ -434,7 +436,7 @@ class StudentService extends ChangeNotifier {
           .where((msg) => msg['type'] == 'REFLECTION_RECEIVED' || 
                          msg['type'] == 'ERROR')
           .first
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 30));
       
       if (response['type'] == 'REFLECTION_RECEIVED') {
         _errorMessage = null;
@@ -446,7 +448,9 @@ class StudentService extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      _errorMessage = 'Error de conexión';
+      _errorMessage = e is TimeoutException 
+          ? 'Tiempo de espera agotado.' 
+          : 'Error de conexión';
       notifyListeners();
       return false;
     }

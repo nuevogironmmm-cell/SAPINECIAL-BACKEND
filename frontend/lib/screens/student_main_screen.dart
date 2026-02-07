@@ -29,7 +29,7 @@ class StudentMainScreen extends StatefulWidget {
 }
 
 class _StudentMainScreenState extends State<StudentMainScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final _reflectionController = TextEditingController();
   final _scrollController = ScrollController();
   
@@ -57,6 +57,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     
     _progressController = AnimationController(
       vsync: this,
@@ -95,6 +96,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _reflectionController.dispose();
     _scrollController.dispose();
     _progressController.dispose();
@@ -103,6 +105,22 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     _answerResultSubscription?.cancel();
     _answerRevealSubscription?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Cuando la app vuelve al primer plano, solicitar actualización de estado
+      debugPrint("App resumed - Requesting state update");
+      final studentService = context.read<StudentService>();
+      if (studentService.isConnected) {
+        studentService.requestStateUpdate();
+      } else {
+        // Si no está conectado, intentar reconectar
+        studentService.connect();
+      }
+    }
+  }
   }
   
   /// Cuando llega una nueva actividad
@@ -601,21 +619,51 @@ class _StudentMainScreenState extends State<StudentMainScreen>
               children: [
                 Text(
                   student?.name ?? 'Estudiante',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  style: const TextStyle(
                     color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
                 Text(
-                  'ID: ${student?.sessionId ?? '---'}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white54,
+                  service.isConnected ? 'En línea' : 'Desconectado',
+                  style: TextStyle(
+                    color: service.isConnected ? Colors.greenAccent : Colors.redAccent,
+                    fontSize: 12,
                   ),
                 ),
               ],
             ),
           ),
           
+          // Botón de actualizar manual
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white70),
+            onPressed: () {
+              // Feedback táctil
+              HapticFeedback.lightImpact();
+              // Solicitar actualización
+              if (service.isConnected) {
+                 service.requestStateUpdate();
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   const SnackBar(
+                     content: Text('Actualizando...'),
+                     duration: Duration(seconds: 1),
+                     behavior: SnackBarBehavior.floating,
+                   ),
+                 );
+              } else {
+                service.connect();
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   const SnackBar(
+                     content: Text('Reconectando...'),
+                     duration: Duration(seconds: 1),
+                     behavior: SnackBarBehavior.floating,
+                   ),
+                 );
+              }
+            },
+          ),
           // Botón de salir
           IconButton(
             onPressed: _logout,
