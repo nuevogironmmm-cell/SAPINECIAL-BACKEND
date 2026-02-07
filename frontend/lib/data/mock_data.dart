@@ -17,7 +17,7 @@ const _imgEclesiastes = 'https://images.unsplash.com/photo-1485841890310-6a055c8
 const _imgCantares = 'https://images.unsplash.com/photo-1518621736915-f3b1c41bfd00?w=800';
 const _imgParalelismo = 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800';
 
-final mockClassSession = ClassSession(
+final unit1Session = ClassSession(
   id: 'session_1',
   title: 'Unidad 1: Literatura Sapiencial',
   blocks: [
@@ -52,13 +52,20 @@ final mockClassSession = ClassSession(
           activity: ActivityData(
             question: '¿Cuál de estos libros se considera el más antiguo de la Biblia?',
             options: [
+
               'Génesis',
-              'Job',
+
               'Salmos',
-              'Proverbios',
+
+              'Job',
+
               'Isaías',
+
+              'Proverbios',
+
             ],
-            correctOptionIndex: 1,
+
+            correctOptionIndex: 2,
             explanation: 'Respuesta correcta: JOB. Aunque Génesis narra los eventos más antiguos, el libro de Job fue probablemente escrito antes, posiblemente en la era patriarcal.',
           ),
         ),
@@ -644,12 +651,18 @@ final mockClassSession = ClassSession(
           activity: ActivityData(
             question: '¿Qué tipo de paralelismo se observa?',
             options: [
-              'Paralelismo sinónimo',
+
               'Paralelismo antitético',
-              'Paralelismo sintético',
+
+              'Paralelismo sinónimo',
+
               'Paralelismo climático',
+
+              'Paralelismo sintético',
+
             ],
-            correctOptionIndex: 0,
+
+            correctOptionIndex: 1,
             explanation: 'Respuesta correcta: PARALELISMO SINÓNIMO. Ambas líneas expresan la misma idea con palabras diferentes.',
           ),
         ),
@@ -662,12 +675,18 @@ final mockClassSession = ClassSession(
           activity: ActivityData(
             question: '¿Qué tipo de paralelismo se observa en este versículo?',
             options: [
-              'Paralelismo sinónimo',
-              'Paralelismo antitético',
+
               'Paralelismo sintético',
+
               'Paralelismo emblemático',
+
+              'Paralelismo antitético',
+
+              'Paralelismo sinónimo',
+
             ],
-            correctOptionIndex: 1,
+
+            correctOptionIndex: 2,
             explanation: 'Respuesta correcta: PARALELISMO ANTITÉTICO. Las dos líneas contrastan ideas opuestas: sabio vs necio, alegría vs tristeza.',
           ),
         ),
@@ -680,13 +699,20 @@ final mockClassSession = ClassSession(
           activity: ActivityData(
             question: '¿A qué libro poético pertenece esta famosa frase?',
             options: [
+
               'Job',
-              'Salmos',
-              'Proverbios',
+
               'Eclesiastés',
+
+              'Salmos',
+
               'Cantares',
+
+              'Proverbios',
+
             ],
-            correctOptionIndex: 3,
+
+            correctOptionIndex: 1,
             explanation: 'Respuesta correcta: ECLESIASTÉS. Esta frase es el tema central del libro, escrito por Salomón reflexionando sobre el sentido de la vida.',
           ),
         ),
@@ -699,13 +725,20 @@ final mockClassSession = ClassSession(
           activity: ActivityData(
             question: 'Completa: El principio de la sabiduría es el temor de...',
             options: [
-              'los hombres',
-              'la muerte',
+
               'Jehová',
-              'el pecado',
+
+              'los hombres',
+
+              'la muerte',
+
               'lo desconocido',
+
+              'el pecado',
+
             ],
-            correctOptionIndex: 2,
+
+            correctOptionIndex: 0,
             explanation: 'Respuesta correcta: JEHOVÁ. Este es uno de los versículos más importantes de la literatura sapiencial.',
           ),
         ),
@@ -718,13 +751,20 @@ final mockClassSession = ClassSession(
           activity: ActivityData(
             question: '¿Qué tipo de poesía representa este versículo?',
             options: [
-              'Poesía de lamento',
+
               'Poesía de sabiduría',
-              'Poesía de amor',
+
+              'Poesía de lamento',
+
               'Poesía profética',
+
+              'Poesía de amor',
+
               'Poesía de alabanza',
+
             ],
-            correctOptionIndex: 2,
+
+            correctOptionIndex: 3,
             explanation: 'Respuesta correcta: POESÍA DE AMOR. Cantares es un poema de amor que celebra la relación entre el esposo y la esposa.',
           ),
         ),
@@ -739,12 +779,18 @@ final mockClassSession = ClassSession(
             question: '¿Qué característica define mejor al libro de Job?',
             type: ActivityType.multipleChoice,
             options: [
-              'Drama sobre el sufrimiento y la soberanía de Dios',
+
               'Una comedia romántica',
+
+              'Drama sobre el sufrimiento y la soberanía de Dios',
+
+              'Una colección de himnos',
+
               'Un libro de leyes',
-              'Una colección de himnos'
+
             ],
-            correctOptionIndex: 0,
+
+            correctOptionIndex: 1,
             explanation: 'Correcto: Job es un drama profundo que explora el sufrimiento humano bajo la soberanía divina.',
           ),
         ),
@@ -758,12 +804,18 @@ final mockClassSession = ClassSession(
             question: '¿Cuál es el principio de la sabiduría según Proverbios 1:7?',
             type: ActivityType.multipleChoice,
             options: [
-              'El principio de la sabiduría es el temor de Jehová',
+
               'El principio de la sabiduría es el conocimiento',
-              'El principio de la sabiduría es la obediencia',
+
+              'El principio de la sabiduría es el temor de Jehová',
+
               'El principio de la sabiduría es la fe',
+
+              'El principio de la sabiduría es la obediencia',
+
             ],
-            correctOptionIndex: 0,
+
+            correctOptionIndex: 1,
             explanation: '¡Correcto! "El principio de la sabiduría es el temor de Jehová" - Este es el versículo fundamental de toda la literatura sapiencial.',
           ),
         ),
@@ -777,12 +829,18 @@ final mockClassSession = ClassSession(
             question: '¿Qué declaró Job en medio de su sufrimiento? (Job 19:25)',
             type: ActivityType.multipleChoice,
             options: [
-              'Yo sé que mi Redentor vive',
+
               'Yo sé que Dios es bueno',
-              'Yo sé que seré restaurado',
+
+              'Yo sé que mi Redentor vive',
+
               'Yo sé que todo pasará',
+
+              'Yo sé que seré restaurado',
+
             ],
-            correctOptionIndex: 0,
+
+            correctOptionIndex: 1,
             explanation: '¡Excelente! Job declaró: "Yo sé que mi Redentor vive, Y al fin se levantará sobre el polvo" - Una poderosa declaración de fe en medio del sufrimiento.',
           ),
         ),
@@ -796,12 +854,18 @@ final mockClassSession = ClassSession(
             question: '¿Cómo comienza el Salmo 23?',
             type: ActivityType.multipleChoice,
             options: [
-              'Jehová es mi pastor; nada me faltará',
+
               'Jehová es mi luz y mi salvación',
-              'Jehová es mi fortaleza y mi escudo',
+
+              'Jehová es mi pastor; nada me faltará',
+
               'Jehová es mi refugio y mi castillo',
+
+              'Jehová es mi fortaleza y mi escudo',
+
             ],
-            correctOptionIndex: 0,
+
+            correctOptionIndex: 1,
             explanation: '¡Excelente! "Jehová es mi pastor; nada me faltará" (Salmo 23:1). La máxima expresión de confianza en la provisión de Dios.',
           ),
         ),
@@ -822,6 +886,47 @@ final mockClassSession = ClassSession(
             ],
             correctOptionIndex: 0,
             explanation: '¡Correcto! "Todo tiene su tiempo, y todo lo que se quiere debajo del cielo tiene su hora". Nos enseña a discernir los momentos oportunos en la vida bajo el sol.',
+          ),
+        ),
+        Slide(
+          id: 's8_13_puzzle',
+          type: SlideType.activity,
+          title: 'Actividad 12: Ordena el Versículo',
+          content: 'Ordena las palabras correctamente para formar el versículo.',
+          biblicalReference: 'Salmo 119:105',
+          activity: ActivityData(
+            question: 'Ordena el siguiente versículo:',
+            type: ActivityType.wordPuzzle,
+            options: [
+              'camino',
+              'lámpara',
+              'mi',
+              'es',
+              'tu',
+              'a',
+              'palabra',
+              'pies',
+              'y',
+              'mis',
+              'lumbrera',
+              'a',
+            ],
+            correctOptionIndex: 0,
+            correctWordOrder: [
+              'lámpara',
+              'es',
+              'a',
+              'mis',
+              'pies',
+              'tu',
+              'palabra',
+              'y',
+              'lumbrera',
+              'a',
+              'mi',
+              'camino',
+            ],
+            explanation: '¡Muy bien! "Lámpara es a mis pies tu palabra, y lumbrera a mi camino." (Salmo 119:105)',
           ),
         ),
       ],
@@ -941,3 +1046,938 @@ final mockClassSession = ClassSession(
     ),
   ],
 );
+
+
+final unit2Session = ClassSession(
+  id: 'session_2',
+  title: 'Unidad 2: El Libro de Job',
+  blocks: [
+    ClassBlock(
+      title: 'Introducción General',
+      slides: [
+        Slide(
+          id: 'u2_b1_s1',
+          type: SlideType.title,
+          title: '¿Quién fue Job?',
+          content: 'Su nombre significa "arrepentimiento" o "perseguido". Es recordado universalmente como el gran ejemplo de paciencia en medio del dolor.',
+          imageUrl: 'https://images.unsplash.com/photo-1500099817043-86d46000d58f?w=800',
+        ),
+        Slide(
+          id: 'u2_b1_s2',
+          type: SlideType.content,
+          title: 'Género Literario',
+          content: 'Pertenece a la literatura sapiencial al tratar preguntas universales. Es un poema dramático enmarcado en un relato épico, escrito mayormente en verso.',
+        ),
+        Slide(
+          id: 'u2_b1_s3',
+          type: SlideType.content,
+          title: 'Un Relato Verídico',
+          content: 'No es una alegoría. La Biblia confirma su existencia real (Ez 14:14, Stg 5:11). Era un hombre rico y seminómada que conocía a Dios como "Shaddai".',
+          biblicalReference: 'Ezequiel 14:14',
+        ),
+        Slide(
+          id: 'u2_b1_s4',
+          type: SlideType.content,
+          title: 'Estructura del Libro',
+          content: '1. Prólogo (Prosa)\n2. Diálogos con amigos (Verso)\n3. Discursos de Eliú\n4. Dios habla desde la tempestad\n5. Epílogo (Prosa)',
+        ),
+        Slide(
+          id: 'u2_b1_s5',
+          type: SlideType.content,
+          title: 'Fecha y Contexto',
+          content: 'La historia de Job ocurrió en la era patriarcal (aprox. 2000-1800 a.C.), antes de la ley mosaica. Job era sacerdote de su propia familia y su riqueza se medía en ganado, características típicas de la época de Abraham.',
+        ),
+        Slide(
+          id: 'u2_b1_s5e',
+          type: SlideType.content,
+          title: '🎬 Mapa Histórico: La Tierra de Uz',
+          content: '{{MAP_JOB_HISTORICO}}', // Widget animado estilo documental
+        ),
+        Slide(
+          id: 'u2_b1_s5f',
+          type: SlideType.content,
+          title: '🎬 Línea de Tiempo Animada',
+          content: '{{TIMELINE_JOB}}', // Widget de línea de tiempo animada
+        ),
+        Slide(
+          id: 'u2_b1_s6',
+          type: SlideType.content,
+          title: 'Autoría y Redacción',
+          content: 'Autor desconocido. Aunque la tradición menciona a Moisés, el estilo sapiencial sugiere a un sabio de la época de Salomón, quien dio forma poética a una historia real antigua.',
+        ),
+        Slide(
+          id: 'u2_b1_s7',
+          type: SlideType.content,
+          title: 'El Gran Tema: Teodicea',
+          content: 'Trata el problema del sufrimiento de los justos. Refuta la teoría de la retribución (sufrimiento = castigo) y muestra que los caminos de Dios son soberanos y misteriosos.',
+        ),
+        Slide(
+          id: 'u2_b1_s8',
+          type: SlideType.content,
+          title: 'Los Protagonistas',
+          content: 'Job (Integridad probada), Satanás (Acusador cínico), Los Amigos (Defensores de la tradición y el dogma), y Dios (Soberanía absoluta y sabiduría infinita).',
+        ),
+      ],
+    ),
+    ClassBlock(
+      title: 'Prólogo',
+      slides: [
+        Slide(
+          id: 'u2_b2_s1',
+          type: SlideType.title,
+          title: 'El Prólogo (Job 1-2)',
+          content: 'Job es un "hombre cabal, recto, que temía a Dios y se apartaba del mal". Piadoso, rico y cabeza de una numerosa familia de cierto prestigio.',
+          biblicalReference: 'Job 1:1',
+        ),
+        Slide(
+          id: 'u2_b2_s2',
+          type: SlideType.content,
+          title: 'La Escena Celestial',
+          content: 'Un día "en que los Hijos de Dios venían a presentarse ante Yahvé", Dios pregunta a Satán qué opina de la rectitud de Job. Satán afirma que Job maldecirá a Dios si perdiese su riqueza.',
+          biblicalReference: 'Job 1:6',
+        ),
+        Slide(
+          id: 'u2_b2_s3',
+          type: SlideType.content,
+          title: 'El Desafío de Satanás',
+          content: '¿Teme Job a Dios de balde? El adversario cuestiona la piedad de Job y sugiere que si le quita todo lo que tiene, Job negará a Dios.',
+          biblicalReference: 'Job 1:9',
+        ),
+        Slide(
+          id: 'u2_b2_s4',
+          type: SlideType.content,
+          title: 'Las Pruebas de Job',
+          content: 'Dios permite a Satanás probar la fe de Job, privándole de sus bienes, su familia y por último, su salud. Satán procede a despojar a Job de sus posesiones e incluso de sus hijos, y más tarde llena su cuerpo de llagas dolorosas en grado extremo.',
+        ),
+        Slide(
+          id: 'u2_b2_s5',
+          type: SlideType.content,
+          title: 'La Fidelidad de Job',
+          content: 'Con todo, Job se niega a maldecir a Dios. "No pecó Job con sus labios". Tres de sus amigos llegan para confortarle, pero quedan aturdidos "y ninguno de ellos dijo una palabra, porque veían que el dolor era muy grande".',
+          biblicalReference: 'Job 2:10, 13',
+        ),
+        Slide(
+          id: 'u2_b2_s6',
+          type: SlideType.title,
+          title: 'Grandes Versículos de Job',
+          content: 'En este libro hay dichos que han llegado a ser parte de la expresión de la piedad cristiana.',
+        ),
+        Slide(
+          id: 'u2_b2_s7',
+          type: SlideType.content,
+          title: 'Dichos de Confianza (Parte 1)',
+          content: '"Desnudo salí del vientre de mi madre, y desnudo volveré allá"\n\n"Jehová dio, y Jehová quitó, sea el nombre de Jehová bendito"',
+          biblicalReference: 'Job 1:21',
+        ),
+        Slide(
+          id: 'u2_b2_s8',
+          type: SlideType.content,
+          title: 'Dichos de Confianza (Parte 2)',
+          content: '"¿Recibiremos de Dios el bien, y el mal no lo recibiremos?" (Respuesta a su esposa que le instaba maldecir a Dios y morir)\n\n"He aquí, aunque él me matare, en él esperaré"',
+          biblicalReference: 'Job 2:10, 13:15',
+        ),
+        Slide(
+          id: 'u2_b2_s9',
+          type: SlideType.content,
+          title: 'La Gran Declaración de Fe',
+          content: '"Yo sé que mi Redentor vive, y que él será mi abogado aquí en la tierra, y aunque la piel se me caiga a pedazos, yo en persona, veré a Dios. Con mis propios ojos he de verlo, yo mismo y no un extraño"',
+          biblicalReference: 'Job 19:25-27',
+        ),
+        Slide(
+          id: 'u2_b2_s10',
+          type: SlideType.title,
+          title: 'Preguntas que Hallan Respuesta en Cristo',
+          content: 'Job plantea preguntas profundas que solo encuentran respuesta plena en Jesucristo.',
+        ),
+        Slide(
+          id: 'u2_b2_s11',
+          type: SlideType.content,
+          title: '¿Cómo se Justificará el Hombre?',
+          content: '"¿Y cómo se justificará el hombre con Dios?"',
+          biblicalReference: 'Job 9:2',
+        ),
+        Slide(
+          id: 'u2_b2_s12',
+          type: SlideType.content,
+          title: 'Respuesta en Cristo',
+          content: '"Justificados, pues, por la fe, tenemos paz para con Dios por medio de nuestro Señor Jesucristo"',
+          biblicalReference: 'Romanos 5:1',
+        ),
+        Slide(
+          id: 'u2_b2_s13',
+          type: SlideType.content,
+          title: '¿Quién Hará Limpio lo Inmundo?',
+          content: '"¿Quién hará limpio a lo inmundo?"',
+          biblicalReference: 'Job 14:4',
+        ),
+        Slide(
+          id: 'u2_b2_s14',
+          type: SlideType.content,
+          title: 'Respuesta en Cristo',
+          content: '"La sangre de Jesucristo su Hijo nos limpia de todo pecado"',
+          biblicalReference: '1 Juan 1:7',
+        ),
+        Slide(
+          id: 'u2_b2_s15',
+          type: SlideType.content,
+          title: '¿Hay un Mediador?',
+          content: '"¡Oh, quién hará que Dios me escuche! No hay entre nosotros árbitro que ponga su mano sobre nosotros dos"',
+          biblicalReference: 'Job 31:35, 9:33',
+        ),
+        Slide(
+          id: 'u2_b2_s16',
+          type: SlideType.content,
+          title: 'Respuesta en Cristo',
+          content: '"Hay un solo Dios, y un solo mediador entre Dios y los hombres, Jesucristo hombre"\n\n"Abogado tenemos para con el Padre, a Jesucristo el justo"',
+          biblicalReference: '1 Timoteo 2:5, 1 Juan 2:1',
+        ),
+        Slide(
+          id: 'u2_b2_s17',
+          type: SlideType.content,
+          title: '¿Volverá a Vivir el Hombre?',
+          content: '"Si el hombre muriere, ¿volverá a vivir?"',
+          biblicalReference: 'Job 14:14',
+        ),
+        Slide(
+          id: 'u2_b2_s18',
+          type: SlideType.content,
+          title: 'Respuesta en Cristo',
+          content: '"Yo soy la resurrección y la vida; el que cree en mí, aunque esté muerto, vivirá"',
+          biblicalReference: 'Juan 11:25',
+        ),
+      ],
+    ),
+    ClassBlock(
+      title: 'Job y sus amigos',
+      slides: [
+        Slide(
+          id: 'u2_b3_s1',
+          type: SlideType.title,
+          title: 'Job y Sus Amigos',
+          content: 'Tras el primer lamento de Job (capítulo 3), consta de tres ciclos de discursos. La mayor parte del libro está dedicada a estos diálogos.',
+        ),
+        Slide(
+          id: 'u2_b3_s2',
+          type: SlideType.content,
+          title: 'El Silencio Inicial',
+          content: 'Cuando sus tres amigos lo visitan, quedan tan impresionados de su condición, que se sientan en silencio durante siete días antes de empezar sus discursos.',
+        ),
+        Slide(
+          id: 'u2_b3_s3',
+          type: SlideType.content,
+          title: 'Los Tres Amigos',
+          content: 'Elifaz temanita, Bildad suhita y Sofar naamatita parten de la misma premisa: que los grandes sufrimientos se deben a gran pecado. Tratan de llevar a Job al convencimiento de su culpa.',
+        ),
+        Slide(
+          id: 'u2_b3_s4',
+          type: SlideType.content,
+          title: 'El Dilema de Job',
+          content: '¿Es Dios enemigo de Job? ¿Por qué no hay tribunales de justicia donde Job puede presentar su causa delante del Altísimo? ¿Por qué no hay árbitro que pueda poner su mano sobre las dos partes?',
+          biblicalReference: 'Job 23:3-4, 9:33',
+        ),
+        Slide(
+          id: 'u2_b3_s5',
+          type: SlideType.content,
+          title: 'La Gran Pregunta',
+          content: 'Los cuatro buscan contestar la pregunta: ¿Por qué sufre el justo? A pesar de los grandes vituperios contra su vida, Job sostiene que es inocente.',
+        ),
+        Slide(
+          id: 'u2_b3_s6',
+          type: SlideType.content,
+          title: 'Un Nuevo Concepto',
+          content: 'Otro concepto se introduce en la discusión: que los sufrimientos de Job no son por castigo, sino que constituyen un medio para probar su carácter.',
+          biblicalReference: 'Job 5:17',
+        ),
+        Slide(
+          id: 'u2_b3_s7',
+          type: SlideType.content,
+          title: 'La Fe Inquebrantable de Job',
+          content: 'El mismo Job no abandona la convicción de que Dios es su amigo. De alguna manera Él intervendrá para vindicar a su siervo.',
+          biblicalReference: 'Job 19:25',
+        ),
+        Slide(
+          id: 'u2_b3_s8',
+          type: SlideType.title,
+          title: 'Satanás en el Libro de Job',
+          content: 'Un espíritu escéptico respecto del hombre, deseoso de encontrarle defectos y de poder acusarle ante Dios.',
+        ),
+        Slide(
+          id: 'u2_b3_s9',
+          type: SlideType.content,
+          title: 'El Carácter de Satanás',
+          content: 'No puede creer que los hombres sirven a Dios desinteresadamente, sino con motivos tan egoístas como los suyos. Es un ser malvado, cínico, de ironía fría, ansioso de desatar sobre los hombres toda suerte de males.',
+        ),
+        Slide(
+          id: 'u2_b3_s10',
+          type: SlideType.title,
+          title: 'Perfil de los Amigos',
+          content: 'Cada uno con su personalidad distintiva, pero todos defendiendo la tesis tradicional: el padecimiento es retribución divina.',
+        ),
+        Slide(
+          id: 'u2_b3_s11',
+          type: SlideType.content,
+          title: 'Elifaz el Temanita',
+          content: 'Sabio venerable y devoto, con entendimiento penetrante acompañado de compasión tierna; pero capaz, a la vez, de ser severo. Argumenta basándose en la experiencia de sus largos años y los hechos.',
+        ),
+        Slide(
+          id: 'u2_b3_s12',
+          type: SlideType.content,
+          title: 'Bildad el Suhita',
+          content: 'Una persona sentenciosa, más erudita, conocedora de las tradiciones. Su discurso es más cortés pero su lenguaje más áspero que el de Elifaz.',
+        ),
+        Slide(
+          id: 'u2_b3_s13',
+          type: SlideType.content,
+          title: 'Sofar el Naamatita',
+          content: 'Más impetuoso, dejándose llevar por los arrebatos juveniles. Es un moralista dogmático e intolerante de las ideas de Job.',
+        ),
+        Slide(
+          id: 'u2_b3_s14',
+          type: SlideType.content,
+          title: 'La Reacción de Job',
+          content: 'Job, que proclama su inocencia con resolución, primero se irrita y acto seguido monta en cólera contra sus amigos por sus opiniones quizá injustificadas y frívolas.',
+        ),
+        Slide(
+          id: 'u2_b3_s15',
+          type: SlideType.content,
+          title: 'El Clamor de Job',
+          content: '"¡Oh! ¿Quién hará que se me escuche? Esta es mi última palabra: ¡respóndeme, Šadday!"',
+          biblicalReference: 'Job 31:35',
+        ),
+        Slide(
+          id: 'u2_b3_s16',
+          type: SlideType.content,
+          title: 'El Carácter de Job',
+          content: 'Job tiene el carácter más elevado que el de los demás. Su personalidad demuestra pasión combinada con fe inquebrantable en Dios, paciencia inagotable, tenacidad en protestar lo que le parece ser la injusticia.',
+        ),
+        Slide(
+          id: 'u2_b3_s17',
+          type: SlideType.content,
+          title: 'Capítulos 28-31',
+          content: 'El capítulo 28 es un bello elogio a la sabiduría. Del 29 al 31 es un resumen hecho por Job de todo el debate anterior. En la confusión moral del debate, se oyen alternadamente gritos de protesta y palabras de sumisión.',
+        ),
+      ],
+    ),
+    ClassBlock(
+      title: 'Discurso de Eliú',
+      slides: [
+        Slide(
+          id: 'u2_b4_s1',
+          type: SlideType.title,
+          title: 'Eliú Entra en Escena',
+          content: 'El último discurso es dado por Eliú. Un joven arameo que procura ser más positivo y original que los tres amigos.',
+          biblicalReference: 'Job 32-37',
+        ),
+        Slide(
+          id: 'u2_b4_s2',
+          type: SlideType.content,
+          title: 'Lo Distintivo de Eliú',
+          content: 'Se distingue de los primeros tres en su énfasis: el sufrimiento puede ser el misericordioso castigo de Dios, a fin de iluminarle el alma y originar una relación más perfecta con Dios.',
+          biblicalReference: 'Job 33:30, 36:7-10',
+        ),
+        Slide(
+          id: 'u2_b4_s3',
+          type: SlideType.content,
+          title: 'Pero Comparte la Premisa',
+          content: 'Sin embargo, como los otros consejeros, Eliú suponía que Job había pecado y por consiguiente merecía su sufrimiento.',
+        ),
+        Slide(
+          id: 'u2_b4_s4',
+          type: SlideType.content,
+          title: 'El Consejo de Eliú',
+          content: 'Cuando Eliú habla acerca de poner su fe en Dios, en lugar de pedir explicaciones, le sugiere que cambie de actitud y se humille.',
+        ),
+        Slide(
+          id: 'u2_b4_s5',
+          type: SlideType.content,
+          title: 'La Ira de Eliú',
+          content: 'Su ira va dirigida contra Job "porque pretendía tener razón frente a Dios" y contra sus tres amigos "porque no habían hallado nada que replicar y de esa forma habían dejado mal a Dios".',
+          biblicalReference: 'Job 32:2-3',
+        ),
+        Slide(
+          id: 'u2_b4_s6',
+          type: SlideType.content,
+          title: 'La Acusación de Eliú',
+          content: 'Eliú sostiene que Job "a su pecado le añade rebeldía" por cuestionar el juicio de Dios.',
+          biblicalReference: 'Job 34:37',
+        ),
+        Slide(
+          id: 'u2_b4_s7',
+          type: SlideType.content,
+          title: 'La Grandeza de Dios',
+          content: '"¡Es Šadday! No podemos alcanzarle. Grande en fuerza y equidad"',
+          biblicalReference: 'Job 37:23',
+        ),
+        Slide(
+          id: 'u2_b4_s8',
+          type: SlideType.content,
+          title: 'El Carácter de Eliú',
+          content: 'Su alto concepto de sí mismo se destaca más que su capacidad intelectual. Desautoriza a Job y a sus amigos justificando a Dios con una elocuencia difusa.',
+        ),
+        Slide(
+          id: 'u2_b4_s9',
+          type: SlideType.content,
+          title: 'Transición: Dios Responde',
+          content: 'Después de dar cada uno su discurso, Dios responde desde un torbellino. Posiblemente, el propósito de Dios era enfrentar a Job con sus sentimientos de autoestima y autojustificación.',
+        ),
+      ],
+    ),
+    ClassBlock(
+      title: 'Dios habla',
+      slides: [
+        Slide(
+          id: 'u2_b5_s1',
+          type: SlideType.title,
+          title: 'Dios Responde desde el Torbellino',
+          content: '"¿Dónde estabas tú cuando yo fundaba la tierra?"',
+          biblicalReference: 'Job 38:4',
+        ),
+        Slide(
+          id: 'u2_b5_s2',
+          type: SlideType.content,
+          title: 'Soberanía Divina',
+          content: 'Dios no explica su justicia, sino que revela su poder y sabiduría infinita. Las preguntas de Dios (Job 38-41) confirman el conocimiento de Job sobre la bondad y grandeza de Dios.',
+          biblicalReference: 'Job 38-41',
+        ),
+        Slide(
+          id: 'u2_b5_s3',
+          type: SlideType.content,
+          title: 'Dios a Su Lado',
+          content: 'El que creó y sostiene al mundo con todas sus maravillas, no ha perdido de vista su sufrimiento. Job halló a Dios a su lado, no tan cercano como en sus días de prosperidad, pero más íntimamente conocido.',
+        ),
+        Slide(
+          id: 'u2_b5_s4',
+          type: SlideType.content,
+          title: 'La Refutación de Dios',
+          content: 'Con preguntas irrelevantes, Dios refuta a Job y presenta su respuesta más directa a una pregunta que éste formulara en el pasado.',
+          biblicalReference: 'Job 40:8',
+        ),
+        Slide(
+          id: 'u2_b5_s5',
+          type: SlideType.content,
+          title: 'La Pregunta de Job',
+          content: '"¿Qué es Šadday para que le sirvamos, qué podemos ganar con aplacarle?"',
+          biblicalReference: 'Job 21:15',
+        ),
+        Slide(
+          id: 'u2_b5_s6',
+          type: SlideType.content,
+          title: 'El Arrepentimiento de Job',
+          content: 'Reconociendo al fin que sus palabras han estado guiadas por la ignorancia y que lo máximo que puede hacer es acercarse a Dios a través de una visión de éste, Job se arrepiente.',
+          biblicalReference: 'Job 42:1-6',
+        ),
+      ],
+    ),
+    ClassBlock(
+      title: 'Epílogo',
+      slides: [
+        Slide(
+          id: 'u2_b6_s1',
+          type: SlideType.title,
+          title: 'El Epílogo',
+          content: 'Última sección del libro (Job 38:1 al 42:6). Dios refuta los argumentos de los tres amigos de Job.',
+          biblicalReference: 'Job 42',
+        ),
+        Slide(
+          id: 'u2_b6_s2',
+          type: SlideType.content,
+          title: 'Dios Vindica a Job',
+          content: '"No habéis hablado con verdad de mí, como mi siervo Job." Eliú no aparece en la reprensión de Dios.',
+          biblicalReference: 'Job 42:7',
+        ),
+        Slide(
+          id: 'u2_b6_s3',
+          type: SlideType.content,
+          title: 'La Intervención Divina',
+          content: 'En el epílogo llega la intervención divina y la humillación de Job, recuperando así su prosperidad con creces, mostrándose la superabundante bondad de Dios.',
+        ),
+        Slide(
+          id: 'u2_b6_s4',
+          type: SlideType.content,
+          title: 'Dios desde la Tempestad',
+          content: 'Dios habla desde el seno de la tempestad. Parece ignorar por completo el deseo que tiene Job de una explicación. En cambio, humilla a Job y le desafía para que explique cómo fue creado el universo.',
+        ),
+        Slide(
+          id: 'u2_b6_s5',
+          type: SlideType.content,
+          title: 'La Restauración',
+          content: 'Otorga a Job el doble de las riquezas y posesiones que tuviera en otro tiempo, le bendice con siete hijos y tres hermosas hijas y prolonga sus días.',
+          biblicalReference: 'Job 42:10-17',
+        ),
+        Slide(
+          id: 'u2_b6_s6',
+          type: SlideType.content,
+          title: 'Estilo Literario',
+          content: 'El epílogo, al igual que el prólogo, está compuesto en prosa, y allí es donde se refleja con mayor claridad el probable origen popular de los discursos.',
+        ),
+        Slide(
+          id: 'u2_b6_s7',
+          type: SlideType.content,
+          title: 'Paz y Alegría',
+          content: 'Esta es la parte final de todo el poema y es aquí cuando la paz y la alegría regresan al alma de Job al oír la voz de Jehová.',
+        ),
+        Slide(
+          id: 'u2_b6_s8',
+          type: SlideType.title,
+          title: 'El Clímax del Poema',
+          content: '"De oídas te había oído; mas ahora mis ojos te ven."',
+          biblicalReference: 'Job 42:5',
+        ),
+        Slide(
+          id: 'u2_b6_s9',
+          type: SlideType.content,
+          title: 'Palabras de Satisfacción',
+          content: 'Cuando Job dio esta expresión, su enfermedad estaba al extremo; sin embargo, eso no le preocupó ante el gozo de haber obtenido su victoria, pasando por encima de toda circunstancia adversa.',
+        ),
+        Slide(
+          id: 'u2_b6_s10',
+          type: SlideType.content,
+          title: 'La Victoria de Job',
+          content: 'Job llegó al tribunal divino; y así nos enseña que no importa lo que estemos pasando, Dios nos sacará adelante.',
+        ),
+        Slide(
+          id: 'u2_b6_s11',
+          type: SlideType.content,
+          title: 'Más Allá del Sufrimiento',
+          content: 'Este libro va más allá del problema del sufrimiento; llega profundamente al problema de las relaciones personales del hombre con Dios, que al final no es algo que tenga una explicación sino una experiencia.',
+        ),
+      ],
+    ),
+    ClassBlock(
+      title: 'Bosquejo',
+      slides: [
+        Slide(
+          id: 'u2_b7_s1',
+          type: SlideType.title,
+          title: 'Bosquejo del Libro de Job',
+          content: 'Estructura literaria y teológica completa del libro.',
+        ),
+        Slide(
+          id: 'u2_b7_s2',
+          type: SlideType.content,
+          title: 'I. El Prólogo (1-2)',
+          content: 'El desafío de Satanás y la prueba de Job.\n\nA. La piedad y prosperidad de Job (1:1-5)\nB. Job puesto a prueba pero permanece fiel (1:6-2:13)',
+        ),
+        Slide(
+          id: 'u2_b7_s3',
+          type: SlideType.content,
+          title: 'II. Primer Ciclo del Debate (3-14)',
+          content: 'A. Lamento de Job (3)\nB. Primer discurso de Elifaz (4-5): Exhorta a Job a someterse y arrepentirse\nC. Job protesta y se defiende (6-7): Solo el afligido conoce su desdicha',
+        ),
+        Slide(
+          id: 'u2_b7_s4',
+          type: SlideType.content,
+          title: 'II. Primer Ciclo (Continuación)',
+          content: 'D. Primer discurso de Bildad (8): Las quejas de Job ponían en duda la justicia divina\nE. Job contesta a Bildad (9-10): Ningún mortal puede discutir su inocencia ante el Todopoderoso',
+        ),
+        Slide(
+          id: 'u2_b7_s5',
+          type: SlideType.content,
+          title: 'II. Primer Ciclo (Final)',
+          content: 'F. Primer discurso de Sofar (11): Acusa de maldad a Job. Dios tiene razón y tú no la tienes\nG. Job contesta a Sofar (12-14): Señala que los malos prosperan y defiende su integridad',
+        ),
+        Slide(
+          id: 'u2_b7_s6',
+          type: SlideType.content,
+          title: 'III. Segundo Ciclo del Debate (15-21)',
+          content: 'A. Segundo discurso de Elifaz (15): Acusa a Job de presunción\nB. Job contesta (16-17): Apelará a Dios para ser vindicado\nC. Segundo discurso de Bildad (18): Job sufre el castigo merecido',
+        ),
+        Slide(
+          id: 'u2_b7_s7',
+          type: SlideType.content,
+          title: 'III. Segundo Ciclo (Final)',
+          content: 'D. Job expresa confianza en Dios (19)\nE. Segundo discurso de Sofar (20): Acusa a Job de rechazar a Dios\nF. Job contesta a Sofar (21): El impío no padece en esta vida',
+        ),
+        Slide(
+          id: 'u2_b7_s8',
+          type: SlideType.content,
+          title: 'IV. Tercer Ciclo del Debate (22-31)',
+          content: 'A. Tercer discurso de Elifaz (22): Imputa faltas graves a Job\nB. Job afirma que el mal triunfa (23-24)\nC. Tercer discurso de Bildad (25): El hombre no puede ser justificado ante Dios',
+        ),
+        Slide(
+          id: 'u2_b7_s9',
+          type: SlideType.content,
+          title: 'IV. Tercer Ciclo (Final)',
+          content: 'D. Job responde a Bildad (26-27): Dios es soberano y juzgará al impío\nE. El elogio de la sabiduría divina (28)\nF. Conclusión: quejas y apología de Job (29-31)',
+        ),
+        Slide(
+          id: 'u2_b7_s10',
+          type: SlideType.content,
+          title: 'V. Discursos de Eliú (32-37)',
+          content: 'A. Eliú interviene en el debate (32:1-5)\nB. Primer discurso (32:6-33:33): El fracaso de los tres sabios\nC. Segundo discurso (34): Eliú contesta las acusaciones de Job',
+        ),
+        Slide(
+          id: 'u2_b7_s11',
+          type: SlideType.content,
+          title: 'V. Discursos de Eliú (Final)',
+          content: 'D. Tercer discurso (35): Eliú anima a Job a esperar pacientemente\nE. Cuarto discurso (36-37): Eliú exalta la grandeza de Dios',
+        ),
+        Slide(
+          id: 'u2_b7_s12',
+          type: SlideType.content,
+          title: 'VI. Jehová Confunde a Job (38:1-42:6)',
+          content: 'A. Primer discurso de Dios (38:1-40:2): Empleando preguntas, despliega su sabiduría infinita\nB. Job se humilla ante Dios (40:3-5)',
+        ),
+        Slide(
+          id: 'u2_b7_s13',
+          type: SlideType.content,
+          title: 'VI. Jehová Confunde a Job (Final)',
+          content: 'C. Segundo discurso de Dios (40:6-41:34): Manifestaciones del poder divino sobre la creación\nD. Arrepentimiento y confesión de Job (42:1-6)',
+        ),
+        Slide(
+          id: 'u2_b7_s14',
+          type: SlideType.content,
+          title: 'VII. Epílogo (42:7-17)',
+          content: 'A. Jehová vindica a Job (42:7-9)\nB. Jehová restaura la situación original de Job (42:10-17)',
+        ),
+      ],
+    ),
+    ClassBlock(
+      title: 'Actividades y Dinámicas',
+      slides: [
+        Slide(
+          id: 'u2_act_intro',
+          type: SlideType.title,
+          title: 'Actividades Interactivas',
+          content: 'Participa con tu celular: demuestra tu comprensión del libro de Job.',
+        ),
+        Slide(
+          id: 'u2_act_1',
+          type: SlideType.activity,
+          title: 'Actividad 1: El Carácter de Job',
+          content: '¿Cómo describe la Biblia a Job al inicio del libro?',
+          biblicalReference: 'Job 1:1',
+          activity: ActivityData(
+            question: '¿Cuál era la descripción de Job según Job 1:1?',
+            type: ActivityType.multipleChoice,
+            options: [
+              'Un hombre sabio y elocuente',
+              'Un hombre cabal, recto, que temía a Dios y se apartaba del mal',
+              'Un hombre pobre pero justo',
+              'Un profeta del Señor',
+              'Un sacerdote del templo',
+            ],
+            correctOptionIndex: 1,
+            explanation: '¡Correcto! Job era "un hombre cabal, recto, que temía a Dios y se apartaba del mal" - La descripción más completa de integridad en el AT.',
+          ),
+        ),
+        Slide(
+          id: 'u2_act_2',
+          type: SlideType.activity,
+          title: 'Actividad 2: El Desafío de Satanás',
+          content: '¿Qué pregunta cínica hizo Satanás sobre Job?',
+          biblicalReference: 'Job 1:9',
+          activity: ActivityData(
+            question: '¿Cuál fue la pregunta de Satanás que inició la prueba de Job?',
+            type: ActivityType.multipleChoice,
+            options: [
+              '¿Acaso Job es perfecto?',
+              '¿Por qué bendices a Job?',
+              '¿Acaso teme Job a Dios de balde?',
+              '¿Es Job digno de tus bendiciones?',
+              '¿Puede Job resistir la prueba?',
+            ],
+            correctOptionIndex: 2,
+            explanation: '¡Correcto! "¿Acaso teme Job a Dios de balde?" - Satanás sugería que Job solo servía a Dios por interés.',
+          ),
+        ),
+        Slide(
+          id: 'u2_act_3',
+          type: SlideType.activity,
+          title: 'Actividad 3: Palabras de Confianza',
+          content: 'Las famosas palabras de Job ante la pérdida total.',
+          biblicalReference: 'Job 1:21',
+          activity: ActivityData(
+            question: '¿Qué declaró Job después de perder todo?',
+            type: ActivityType.multipleChoice,
+            options: [
+              '¿Por qué me has abandonado, Señor?',
+              'Desnudo salí del vientre de mi madre, y desnudo volveré allá. Jehová dio, y Jehová quitó',
+              'Mi Dios, ¿hasta cuándo será esto?',
+              'He pecado y merezco este castigo',
+              'Maldito sea el día en que nací',
+            ],
+            correctOptionIndex: 1,
+            explanation: '¡Excelente! "Desnudo salí del vientre de mi madre, y desnudo volveré allá. Jehová dio, y Jehová quitó, sea el nombre de Jehová bendito."',
+          ),
+        ),
+        Slide(
+          id: 'u2_act_4',
+          type: SlideType.activity,
+          title: 'Actividad 4: Los Tres Amigos',
+          content: 'Identifica a los tres amigos de Job.',
+          activity: ActivityData(
+            question: '¿Cuáles son los nombres de los tres amigos de Job?',
+            type: ActivityType.multipleChoice,
+            options: [
+              'Pedro, Santiago y Juan',
+              'Moisés, Aarón y Miriam',
+              'Elifaz, Bildad y Sofar',
+              'Daniel, Sadrac y Mesac',
+              'Sem, Cam y Jafet',
+            ],
+            correctOptionIndex: 2,
+            explanation: '¡Correcto! Elifaz temanita, Bildad suhita y Sofar naamatita fueron los tres amigos que visitaron a Job.',
+          ),
+        ),
+        Slide(
+          id: 'u2_act_5',
+          type: SlideType.activity,
+          title: 'Actividad 5: La Premisa de los Amigos',
+          content: '¿Cuál era el argumento principal de los amigos de Job?',
+          activity: ActivityData(
+            question: '¿Qué creían los tres amigos sobre el sufrimiento de Job?',
+            type: ActivityType.multipleChoice,
+            options: [
+              'Que Job estaba siendo probado por Dios',
+              'Que los grandes sufrimientos se deben a gran pecado',
+              'Que Job debía tener más fe',
+              'Que era un ataque del enemigo',
+              'Que era una lección para otros',
+            ],
+            correctOptionIndex: 1,
+            explanation: '¡Correcto! Los amigos partían de la premisa tradicional: los grandes sufrimientos se deben a gran pecado (teoría de la retribución).',
+          ),
+        ),
+        Slide(
+          id: 'u2_act_6',
+          type: SlideType.activity,
+          title: 'Actividad 6: Eliú',
+          content: '¿Qué perspectiva diferente aportó Eliú?',
+          biblicalReference: 'Job 33:30',
+          activity: ActivityData(
+            question: '¿Cuál era la perspectiva distintiva de Eliú sobre el sufrimiento?',
+            type: ActivityType.multipleChoice,
+            options: [
+              'El sufrimiento es siempre castigo por pecado',
+              'El sufrimiento puede ser el misericordioso medio de Dios para iluminar el alma',
+              'El sufrimiento no tiene explicación',
+              'El sufrimiento es obra del diablo únicamente',
+              'El sufrimiento indica falta de fe',
+            ],
+            correctOptionIndex: 1,
+            explanation: '¡Correcto! Eliú enfatizó que el sufrimiento puede ser misericordioso para iluminar el alma y originar una relación más perfecta con Dios.',
+          ),
+        ),
+        Slide(
+          id: 'u2_act_7',
+          type: SlideType.activity,
+          title: 'Actividad 7: La Pregunta de Dios',
+          content: 'La primera pregunta de Dios a Job desde el torbellino.',
+          biblicalReference: 'Job 38:4',
+          activity: ActivityData(
+            question: '¿Cuál fue la primera pregunta que Dios hizo a Job?',
+            type: ActivityType.multipleChoice,
+            options: [
+              '¿Por qué me cuestionas?',
+              '¿Dónde estabas tú cuando yo fundaba la tierra?',
+              '¿Quién eres tú para juzgarme?',
+              '¿Has sido fiel a mis mandamientos?',
+              '¿Por qué no confías en mí?',
+            ],
+            correctOptionIndex: 1,
+            explanation: '¡Excelente! "¿Dónde estabas tú cuando yo fundaba la tierra?" - Dios confronta a Job con su infinita sabiduría y poder creador.',
+          ),
+        ),
+        Slide(
+          id: 'u2_act_8',
+          type: SlideType.activity,
+          title: 'Actividad 8: El Clímax',
+          content: 'La expresión culminante de Job.',
+          biblicalReference: 'Job 42:5',
+          activity: ActivityData(
+            question: '¿Cuál fue la declaración que marca el clímax del libro?',
+            type: ActivityType.multipleChoice,
+            options: [
+              'Sé que mis pecados son muchos',
+              'He aprendido mi lección',
+              'De oídas te había oído; mas ahora mis ojos te ven',
+              'Ahora entiendo tu justicia',
+              'Prometo nunca más cuestionar',
+            ],
+            correctOptionIndex: 2,
+            explanation: '¡Perfecto! "De oídas te había oído; mas ahora mis ojos te ven" - Job pasó de conocimiento teórico a experiencia personal con Dios.',
+          ),
+        ),
+        Slide(
+          id: 'u2_act_9',
+          type: SlideType.activity,
+          title: 'Actividad 9: La Restauración',
+          content: '¿Cómo restauró Dios a Job?',
+          biblicalReference: 'Job 42:10',
+          activity: ActivityData(
+            question: '¿Cuánto le dio Dios a Job al final del libro?',
+            type: ActivityType.multipleChoice,
+            options: [
+              'Lo mismo que tenía antes',
+              'El doble de todo lo que había tenido',
+              'Menos de lo que tenía, pero con paz',
+              'Solo salud, sin riquezas',
+              'Riquezas espirituales únicamente',
+            ],
+            correctOptionIndex: 1,
+            explanation: '¡Correcto! Dios otorgó a Job "el doble de todo lo que había tenido antes" (Job 42:10), demostrando su superabundante bondad.',
+          ),
+        ),
+        Slide(
+          id: 'u2_act_10',
+          type: SlideType.activity,
+          title: 'Actividad 10: Preguntas en Cristo',
+          content: '¿Qué pregunta de Job encuentra respuesta en el Nuevo Testamento?',
+          biblicalReference: 'Job 14:14',
+          activity: ActivityData(
+            question: '"Si el hombre muriere, ¿volverá a vivir?" ¿Dónde encuentra respuesta esta pregunta?',
+            type: ActivityType.multipleChoice,
+            options: [
+              'En la promesa a Abraham',
+              'En la ley de Moisés',
+              'En las palabras de Jesús: "Yo soy la resurrección y la vida"',
+              'En los Salmos de David',
+              'En las profecías de Isaías',
+            ],
+            correctOptionIndex: 2,
+            explanation: '¡Excelente! Jesús responde: "Yo soy la resurrección y la vida; el que cree en mí, aunque esté muerto, vivirá" (Juan 11:25).',
+          ),
+        ),
+        Slide(
+          id: 'u2_act_11',
+          type: SlideType.activity,
+          title: 'Actividad 11: Satanás en Job',
+          content: '¿Cómo se presenta a Satanás en el libro de Job?',
+          activity: ActivityData(
+            question: '¿Cuál es la característica principal de Satanás en el libro de Job?',
+            type: ActivityType.multipleChoice,
+            options: [
+              'Como una serpiente engañadora',
+              'Como un león rugiente',
+              'Como un espíritu escéptico, cínico, deseoso de acusar al hombre ante Dios',
+              'Como un ángel de luz',
+              'Como un adversario violento',
+            ],
+            correctOptionIndex: 2,
+            explanation: '¡Correcto! Satanás se presenta como un espíritu escéptico, cínico, que no puede creer que los hombres sirvan a Dios desinteresadamente.',
+          ),
+        ),
+        Slide(
+          id: 'u2_act_12',
+          type: SlideType.activity,
+          title: 'Actividad 12: La Gran Lección',
+          content: '¿Cuál es la enseñanza central del libro de Job?',
+          activity: ActivityData(
+            question: 'El libro de Job va más allá del problema del sufrimiento. ¿A qué llega profundamente?',
+            type: ActivityType.multipleChoice,
+            options: [
+              'A la necesidad de obedecer los mandamientos',
+              'A las relaciones personales del hombre con Dios, que no es explicación sino experiencia',
+              'A la importancia de los rituales religiosos',
+              'A la necesidad de confesar los pecados',
+              'A la importancia de tener buenos amigos',
+            ],
+            correctOptionIndex: 1,
+            explanation: '¡Perfecto! El libro llega profundamente al problema de las relaciones personales con Dios, que al final no es algo que tenga una explicación sino una experiencia.',
+          ),
+        ),
+        Slide(
+          id: 'u2_act_13',
+          type: SlideType.activity,
+          title: 'Actividad 13: Estructura del Libro',
+          content: '¿Cuántos ciclos de discursos hay entre Job y sus amigos?',
+          activity: ActivityData(
+            question: '¿Cuántos ciclos de discursos componen el debate entre Job y sus tres amigos?',
+            type: ActivityType.multipleChoice,
+            options: [
+              'Un ciclo',
+              'Dos ciclos',
+              'Tres ciclos',
+              'Cuatro ciclos',
+              'Cinco ciclos',
+            ],
+            correctOptionIndex: 2,
+            explanation: '¡Correcto! Hay tres ciclos de discursos: Primer ciclo (caps. 3-14), Segundo ciclo (caps. 15-21), y Tercer ciclo (caps. 22-31).',
+          ),
+        ),
+        Slide(
+          id: 'u2_act_14',
+          type: SlideType.activity,
+          title: 'Actividad 14: El Mediador',
+          content: 'Job clamaba por un árbitro entre él y Dios.',
+          biblicalReference: 'Job 9:33',
+          activity: ActivityData(
+            question: 'Job se lamentaba: "No hay entre nosotros árbitro." ¿Quién es ese mediador según el NT?',
+            type: ActivityType.multipleChoice,
+            options: [
+              'Los ángeles',
+              'Moisés',
+              'Los profetas',
+              'Jesucristo hombre',
+              'El Espíritu Santo',
+            ],
+            correctOptionIndex: 3,
+            explanation: '¡Excelente! "Hay un solo Dios, y un solo mediador entre Dios y los hombres, Jesucristo hombre" (1 Timoteo 2:5).',
+          ),
+        ),
+        Slide(
+          id: 'u2_act_15',
+          type: SlideType.activity,
+          title: 'Actividad 15: Reflexión Final',
+          content: '¿Por qué Dios reprendió a los amigos de Job?',
+          biblicalReference: 'Job 42:7',
+          activity: ActivityData(
+            question: '¿Qué dijo Dios sobre los tres amigos de Job?',
+            type: ActivityType.multipleChoice,
+            options: [
+              'Que habían sido buenos consejeros',
+              'Que no habían hablado con verdad de Él, como su siervo Job',
+              'Que debían aprender más sobre la ley',
+              'Que habían sido demasiado duros con Job',
+              'Que necesitaban más experiencia',
+            ],
+            correctOptionIndex: 1,
+            explanation: '¡Correcto! Dios dijo: "No habéis hablado con verdad de mí, como mi siervo Job" - Los amigos defendían una teología incorrecta sobre el sufrimiento.',
+          ),
+        ),
+        // ============================================================
+        // SOPA DE LETRAS INTERACTIVA - ACTIVIDAD ESPECIAL
+        // ============================================================
+        Slide(
+          id: 'u2_act_sopa',
+          type: SlideType.activity,
+          title: '🎯 Sopa de Letras: El Libro de Job',
+          content: 'Encuentra las 20 palabras clave del libro de Job. ¡El estudiante que termine en menor tiempo gana!',
+          activity: ActivityData(
+            question: 'Encuentra todas las palabras relacionadas con el libro de Job',
+            type: ActivityType.wordSearch,
+            options: [
+              // 20 palabras clave del libro de Job
+              'JOB',
+              'SATANAS',
+              'ELIFAZ',
+              'BILDAD',
+              'SOFAR',
+              'ELIU',
+              'DIOS',
+              'TORBELLINO',
+              'REDENTOR',
+              'SUFRIMIENTO',
+              'FE',
+              'PACIENCIA',
+              'PRUEBA',
+              'SABIDURIA',
+              'RESTAURACION',
+              'JUSTO',
+              'PROLOGO',
+              'EPILOGO',
+              'MEDIADOR',
+              'SHADDAI',
+            ],
+            correctOptionIndex: 0,
+            percentageValue: 20.0, // Vale más por ser actividad especial
+            explanation: '¡Felicidades! Has demostrado conocer los conceptos clave del libro de Job. Recuerda: "De oídas te había oído; mas ahora mis ojos te ven" (Job 42:5).',
+          ),
+        ),
+      ],
+    ),
+  ],
+);
+
+final List<ClassSession> availableUnits = [unit1Session, unit2Session];

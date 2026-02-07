@@ -359,6 +359,42 @@ class StudentService extends ChangeNotifier {
     
     return submitAnswerForActivity(_currentActivity!.id, answerIndex, responseTimeMs: responseTimeMs);
   }
+
+  /// Envía progreso de sopa de letras al docente
+  void sendWordSearchProgress({
+    required String activityId,
+    required int wordsFound,
+    required int totalWords,
+    required int elapsedSeconds,
+  }) {
+    _sendMessage({
+      'action': 'WORD_SEARCH_PROGRESS',
+      'payload': {
+        'activityId': activityId,
+        'wordsFound': wordsFound,
+        'totalWords': totalWords,
+        'elapsedSeconds': elapsedSeconds,
+      }
+    });
+  }
+
+  /// Envía resultado final de sopa de letras al docente
+  void sendWordSearchResult({
+    required String activityId,
+    required int timeSeconds,
+    required int wordsFound,
+    required int totalWords,
+  }) {
+    _sendMessage({
+      'action': 'WORD_SEARCH_RESULT',
+      'payload': {
+        'activityId': activityId,
+        'timeSeconds': timeSeconds,
+        'wordsFound': wordsFound,
+        'totalWords': totalWords,
+      }
+    });
+  }
   
   /// Obtiene una actividad específica de la lista de activas
   StudentActivity? getActivity(String activityId) {
@@ -712,6 +748,10 @@ class StudentService extends ChangeNotifier {
     } catch (e) {
       debugPrint('[StudentService] Error guardando nombre: $e');
     }
+  }
+
+  Future<String?> getSavedName() async {
+    return _getSavedStudentName();
   }
   
   Future<String?> _getSavedStudentName() async {

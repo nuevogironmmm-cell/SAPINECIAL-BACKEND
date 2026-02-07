@@ -1,4 +1,5 @@
 ﻿import 'dart:ui';
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -15,9 +16,33 @@ import '../utils/animations.dart';
 import '../services/teacher_service.dart';
 import '../services/export_service.dart';
 import '../widgets/student_dashboard_panel.dart';
+import '../widgets/word_search_widget.dart';
+import '../widgets/uz_map_widget.dart';
+import '../widgets/job_historical_map.dart';
+import '../widgets/job_historical_timeline.dart';
+import 'unit_selection_screen.dart';
+
+class _WordSearchProgress {
+  final String studentName;
+  final int wordsFound;
+  final int totalWords;
+  final int elapsedSeconds;
+  final DateTime updatedAt;
+
+  _WordSearchProgress({
+    required this.studentName,
+    required this.wordsFound,
+    required this.totalWords,
+    required this.elapsedSeconds,
+    required this.updatedAt,
+  });
+
+  double get progressPercent => totalWords == 0 ? 0 : wordsFound / totalWords;
+}
 
 class TeacherDashboard extends StatefulWidget {
-  const TeacherDashboard({super.key});
+  final ClassSession? session;
+  const TeacherDashboard({super.key, this.session});
 
   @override
   State<TeacherDashboard> createState() => _TeacherDashboardState();
@@ -25,7 +50,7 @@ class TeacherDashboard extends StatefulWidget {
 
 class _TeacherDashboardState extends State<TeacherDashboard>
     with TickerProviderStateMixin {
-  ClassSession session = mockClassSession;
+  late ClassSession session;
   int currentBlockIndex = 0;
   int currentSlideIndex = 0;
   Map<String, List<int>> studentSelections = {};
@@ -39,6 +64,12 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   List<String> _puzzleAvailableWords = [];
   List<String> _puzzleSelectedWords = [];
   bool? _puzzleIsCorrect;
+  
+  // ESTADO PARA SOPA DE LETRAS
+  int _wordSearchTimeMinutes = 5; // Tiempo en minutos (5 a 15)
+  final List<WordSearchRanking> _wordSearchRanking = []; // Ranking de ganadores
+  final Map<String, _WordSearchProgress> _wordSearchProgress = {}; // Progreso en vivo
+  StreamSubscription<Map<String, dynamic>>? _teacherMessageSub;
 
   // ============================================================
   // ESTADO PARA ANIMACIONES EDUCATIVAS
@@ -64,6 +95,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   @override
   void initState() {
     super.initState();
+    session = widget.session ?? unit1Session;
+
     // Escuchar atajos de teclado
     RawKeyboard.instance.addListener(_handleKeyPress);
     
@@ -94,13 +127,59 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   Future<void> _connectTeacherService() async {
     final teacherService = context.read<TeacherService>();
     await teacherService.connect();
+
+    _teacherMessageSub?.cancel();
+    _teacherMessageSub = teacherService.messageStream.listen(_handleTeacherMessage);
   }
 
   @override
   void dispose() {
     RawKeyboard.instance.removeListener(_handleKeyPress);
+    _teacherMessageSub?.cancel();
     _slideAnimController.dispose();
     super.dispose();
+  }
+
+  void _handleTeacherMessage(Map<String, dynamic> message) {
+    final type = message['type'];
+    final data = message['data'] ?? {};
+
+    if (type == 'WORD_SEARCH_PROGRESS') {
+      final sessionId = data['studentSessionId']?.toString() ?? '';
+      if (sessionId.isEmpty) return;
+
+      setState(() {
+        _wordSearchProgress[sessionId] = _WordSearchProgress(
+          studentName: data['studentName'] ?? 'Estudiante',
+          wordsFound: data['wordsFound'] ?? 0,
+          totalWords: data['totalWords'] ?? 0,
+          elapsedSeconds: data['elapsedSeconds'] ?? 0,
+          updatedAt: DateTime.now(),
+        );
+      });
+    }
+
+    if (type == 'WORD_SEARCH_RESULT') {
+      addWordSearchResult(
+        data['studentName'] ?? 'Estudiante',
+        data['timeSeconds'] ?? 0,
+        data['wordsFound'] ?? 0,
+        data['totalWords'] ?? 0,
+      );
+
+      final sessionId = data['studentSessionId']?.toString() ?? '';
+      if (sessionId.isNotEmpty) {
+        setState(() {
+          _wordSearchProgress[sessionId] = _WordSearchProgress(
+            studentName: data['studentName'] ?? 'Estudiante',
+            wordsFound: data['wordsFound'] ?? 0,
+            totalWords: data['totalWords'] ?? 0,
+            elapsedSeconds: data['timeSeconds'] ?? 0,
+            updatedAt: DateTime.now(),
+          );
+        });
+      }
+    }
   }
 
   void _handleKeyPress(RawKeyEvent event) {
@@ -176,12 +255,14 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         question: activity.question,
         options: activity.options,
         correctIndex: activity.correctOptionIndex,
-        percentageValue: 10.0,
+        percentageValue: activity.percentageValue,
         activityType: activity.type == ActivityType.multipleChoice 
             ? 'multipleChoice' 
             : activity.type == ActivityType.wordPuzzle 
                 ? 'wordPuzzle' 
-                : 'multipleChoice',
+                : activity.type == ActivityType.wordSearch
+                    ? 'wordSearch'
+                    : 'multipleChoice',
         title: safeTitle,  // Título sin revelar respuesta
         slideContent: slide.content,  // Contenido (la cita bíblica)
         biblicalReference: slide.biblicalReference,  // Referencia bíblica
@@ -195,6 +276,10 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       setState(() {
         _enabledActivities[slideId] = true;
         _activityEnabledForStudents = true;  // Mantener compatibilidad
+        if (activity.type == ActivityType.wordSearch) {
+          _wordSearchRanking.clear();
+          _wordSearchProgress.clear();
+        }
       });
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -863,6 +948,19 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                             : Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              IconButton(
+                                onPressed: () {
+                                  Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(
+                                      builder: (context) => const UnitSelectionScreen(),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.home, color: Colors.white70),
+                                tooltip: "Volver a Unidades",
+                              ),
+                              Container(height: 20, width: 1, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 10)),
+                              
                               Row(
                                 children: [
                                   IconButton(
@@ -1095,20 +1193,46 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 SizedBox(height: _isProjectorMode ? 40 : 30),
                 
                 // Contenido Principal con animación
-                FadeInSlide(
-                  duration: const Duration(milliseconds: 500),
-                  delay: const Duration(milliseconds: 250),
-                  beginOffset: const Offset(0, 0.06),
-                  child: Text(
-                    slide.content,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.merriweather(
-                      fontSize: slide.imageUrl != null ? _contentWithImageFontSize : _contentFontSize,
-                      color: Colors.white.withOpacity(0.95),
-                      height: 1.5
+                // Marcadores especiales para widgets dinámicos
+                if (slide.content == '{{MAP_UZ}}')
+                  FadeInSlide(
+                    duration: const Duration(milliseconds: 500),
+                    delay: const Duration(milliseconds: 250),
+                    beginOffset: const Offset(0, 0.06),
+                    child: UzMapWidget(isProjectorMode: _isProjectorMode),
+                  )
+                else if (slide.content == '{{MAP_JOB_HISTORICO}}')
+                  FadeInSlide(
+                    duration: const Duration(milliseconds: 500),
+                    delay: const Duration(milliseconds: 250),
+                    beginOffset: const Offset(0, 0.06),
+                    child: JobHistoricalMap(isProjectorMode: _isProjectorMode),
+                  )
+                else if (slide.content == '{{TIMELINE_JOB}}')
+                  FadeInSlide(
+                    duration: const Duration(milliseconds: 500),
+                    delay: const Duration(milliseconds: 250),
+                    beginOffset: const Offset(0, 0.06),
+                    child: JobHistoricalTimeline(
+                      isProjectorMode: _isProjectorMode,
+                      autoPlay: true,
+                    ),
+                  )
+                else
+                  FadeInSlide(
+                    duration: const Duration(milliseconds: 500),
+                    delay: const Duration(milliseconds: 250),
+                    beginOffset: const Offset(0, 0.06),
+                    child: Text(
+                      slide.content,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.merriweather(
+                        fontSize: slide.imageUrl != null ? _contentWithImageFontSize : _contentFontSize,
+                        color: Colors.white.withOpacity(0.95),
+                        height: 1.5
+                      ),
                     ),
                   ),
-                ),
 
                 // Referencia Bíblica con animación
                 if (slide.biblicalReference != null) ...[
@@ -1183,6 +1307,14 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                       delay: const Duration(milliseconds: 400),
                       beginOffset: const Offset(0, 0.05),
                       child: _buildWordPuzzleUI(),
+                    ),
+                  ] else if (slide.activity!.type == ActivityType.wordSearch) ...[
+                    // SOPA DE LETRAS INTERACTIVA
+                    FadeInSlide(
+                      duration: const Duration(milliseconds: 400),
+                      delay: const Duration(milliseconds: 400),
+                      beginOffset: const Offset(0, 0.05),
+                      child: _buildWordSearchUI(slide),
                     ),
                   ],
                 ],
@@ -1273,8 +1405,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                       ),
                     ),
                   ),
-                  // NUEVO: Badge de votos en vivo
-                  if (_activityEnabledForStudents && voteCount > 0) ...[
+                  // NUEVO: Badge de votos en vivo - SOLO SI REVELADO
+                  if (_activityEnabledForStudents && voteCount > 0 && (slide.activity!.isRevealed)) ...[
                     ScaleIn(
                       duration: const Duration(milliseconds: 300),
                       beginScale: 0.5,
@@ -1372,8 +1504,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     ),
                 ],
               ),
-              // NUEVO: Barra de progreso de votos
-              if (_activityEnabledForStudents && totalStudents > 0 && voteCount > 0) ...[
+              // NUEVO: Barra de progreso de votos - SOLO SI REVELADO
+              if (_activityEnabledForStudents && totalStudents > 0 && voteCount > 0 && (slide.activity!.isRevealed)) ...[
                 SizedBox(height: _isProjectorMode ? 12 : 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
@@ -1647,6 +1779,570 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     
     return puzzleContent;
   }
+
+  // ============================================================
+  // SOPA DE LETRAS INTERACTIVA - Widget para docente
+  // ============================================================
+  Widget _buildWordSearchUI(Slide slide) {
+    final words = slide.activity?.options ?? [];
+    final isRevealed = slide.activity?.isRevealed ?? false;
+    
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: _isProjectorMode ? 1200 : 900,
+        maxHeight: _isProjectorMode ? 800 : 650,
+      ),
+      child: Column(
+        children: [
+          // Título con instrucciones y selector de tiempo
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.amber.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.amber.withOpacity(0.3)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.grid_on, color: Colors.amber, size: 28),
+                    const SizedBox(width: 12),
+                    Text(
+                      '🎯 SOPA DE LETRAS: ${words.length} PALABRAS',
+                      style: GoogleFonts.oswald(
+                        fontSize: _isProjectorMode ? 28 : 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Selector de tiempo
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.timer, color: Colors.white70, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Tiempo límite:',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: _isProjectorMode ? 16 : 14,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Botones de tiempo
+                    ...List.generate(3, (index) {
+                      final minutes = 5 + (index * 5); // 5, 10, 15
+                      final isSelected = _wordSearchTimeMinutes == minutes;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _wordSearchTimeMinutes = minutes;
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.amber
+                                    : Colors.white.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Colors.amber
+                                      : Colors.white24,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Text(
+                                '$minutes min',
+                                style: TextStyle(
+                                  color: isSelected ? Colors.black : Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: _isProjectorMode ? 16 : 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Widget de sopa de letras con ranking
+          Expanded(
+            child: Row(
+              children: [
+                // Sopa de letras principal
+                Expanded(
+                  flex: 3,
+                  child: WordSearchWidget(
+                    key: ValueKey('wordsearch_$_wordSearchTimeMinutes'), // Reinicia al cambiar tiempo
+                    words: words,
+                    gridSize: 15, // Grid de 15x15 para 20 palabras
+                    timeLimitSeconds: _wordSearchTimeMinutes * 60, // Tiempo configurable
+                    isReadOnly: false,
+                    seedKey: slide.id,
+                    ranking: _wordSearchRanking,
+                    onWordFound: (foundWords) {
+                      debugPrint('Palabras encontradas: ${foundWords.length}');
+                    },
+                    onCompleted: (success) {
+                      if (success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor: Colors.green,
+                            content: Row(
+                              children: [
+                                const Icon(Icons.emoji_events, color: Colors.white),
+                                const SizedBox(width: 12),
+                                Text(
+                                  '¡Todas las palabras encontradas!',
+                                  style: GoogleFonts.oswald(color: Colors.white, fontSize: 18),
+                                ),
+                              ],
+                            ),
+                            duration: const Duration(seconds: 5),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ),
+                
+                // Panel de ranking de estudiantes (si hay resultados)
+                if (_wordSearchProgress.isNotEmpty || _wordSearchRanking.isNotEmpty) ...[
+                  const SizedBox(width: 16),
+                  SizedBox(
+                    width: 280,
+                    child: _buildWordSearchRankingPanel(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          
+          // Mensaje informativo para el docente
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    'Los estudiantes pueden jugar desde sus dispositivos. El menor tiempo gana.',
+                    style: TextStyle(
+                      color: Colors.blue.shade200,
+                      fontSize: _isProjectorMode ? 16 : 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Si está revelada, mostrar las palabras
+          if (isRevealed) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.green, size: 24),
+                      const SizedBox(width: 8),
+                      Text(
+                        'PALABRAS DEL JUEGO:',
+                        style: GoogleFonts.oswald(
+                          color: Colors.green,
+                          fontSize: _isProjectorMode ? 20 : 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: words.map((word) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.green.withOpacity(0.5)),
+                      ),
+                      child: Text(
+                        word.toUpperCase(),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: _isProjectorMode ? 14 : 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )).toList(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+  
+  // ============================================================
+  // PANEL DE RANKING DE SOPA DE LETRAS PARA EL DOCENTE
+  // ============================================================
+  Widget _buildWordSearchRankingPanel() {
+    final progressList = _wordSearchProgress.values.toList()
+      ..sort((a, b) {
+        if (b.wordsFound != a.wordsFound) {
+          return b.wordsFound.compareTo(a.wordsFound);
+        }
+        return a.elapsedSeconds.compareTo(b.elapsedSeconds);
+      });
+    final hasProgress = progressList.isNotEmpty;
+    final hasWinners = _wordSearchRanking.isNotEmpty;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.amber.withOpacity(0.15),
+            Colors.orange.withOpacity(0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.amber.withOpacity(0.3), width: 2),
+      ),
+      child: Column(
+        children: [
+          if (hasProgress) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.trending_up, color: Colors.amber, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'PROGRESO EN VIVO',
+                  style: GoogleFonts.oswald(
+                    color: Colors.amber,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '${progressList.length} estudiantes jugando',
+              style: TextStyle(color: Colors.white54, fontSize: 12),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              flex: hasWinners ? 1 : 2,
+              child: ListView.builder(
+                itemCount: progressList.length,
+                itemBuilder: (context, index) {
+                  final progress = progressList[index];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white10, width: 1),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                progress.studentName,
+                                style: GoogleFonts.oswald(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${progress.wordsFound}/${progress.totalWords}',
+                              style: TextStyle(color: Colors.green.shade300, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        LinearProgressIndicator(
+                          value: progress.progressPercent,
+                          minHeight: 6,
+                          backgroundColor: Colors.white10,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.green.shade400),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(Icons.timer, size: 12, color: Colors.white54),
+                            const SizedBox(width: 4),
+                            Text(
+                              _formatTimeSimple(progress.elapsedSeconds),
+                              style: TextStyle(color: Colors.white54, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+          if (hasProgress && hasWinners) ...[
+            const Divider(color: Colors.amber, height: 24),
+          ],
+          if (hasWinners) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('👑', style: TextStyle(fontSize: 22)),
+                const SizedBox(width: 8),
+                Text(
+                  'GANADORES (TIEMPO)',
+                  style: GoogleFonts.oswald(
+                    color: Colors.amber,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text('👑', style: TextStyle(fontSize: 22)),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '${_wordSearchRanking.length} estudiantes terminaron',
+              style: TextStyle(color: Colors.white54, fontSize: 12),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              flex: hasProgress ? 1 : 2,
+              child: ListView.builder(
+                itemCount: _wordSearchRanking.length,
+                itemBuilder: (context, index) {
+                  final rank = _wordSearchRanking[index];
+                  final isTop3 = index < 3;
+                  
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isTop3 
+                          ? _getRankColor(index).withOpacity(0.2)
+                          : Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isTop3 ? _getRankColor(index) : Colors.white10,
+                        width: isTop3 ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        // Posición/Medalla
+                        Container(
+                          width: 36,
+                          height: 36,
+                          alignment: Alignment.center,
+                          decoration: isTop3 ? BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: _getRankGradient(index),
+                            ),
+                          ) : null,
+                          child: Text(
+                            WordSearchRanking.getMedal(index),
+                            style: TextStyle(fontSize: isTop3 ? 20 : 16),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        
+                        // Información del estudiante
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                rank.studentName,
+                                style: GoogleFonts.oswald(
+                                  color: isTop3 ? _getRankColor(index) : Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: isTop3 ? FontWeight.bold : FontWeight.normal,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Row(
+                                children: [
+                                  Icon(Icons.timer, size: 12, color: Colors.white54),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    rank.formattedTime,
+                                    style: TextStyle(color: Colors.white54, fontSize: 11),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${rank.wordsFound}/${rank.totalWords}',
+                                    style: TextStyle(color: Colors.green.shade300, fontSize: 11),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          TextButton.icon(
+            onPressed: () {
+              setState(() {
+                _wordSearchRanking.clear();
+                _wordSearchProgress.clear();
+              });
+            },
+            icon: const Icon(Icons.refresh, color: Colors.white54, size: 18),
+            label: Text(
+              'Reiniciar ranking',
+              style: TextStyle(color: Colors.white54, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Color _getRankColor(int position) {
+    switch (position) {
+      case 0: return Colors.amber;
+      case 1: return Colors.grey.shade400;
+      case 2: return Colors.orange.shade700;
+      default: return Colors.white70;
+    }
+  }
+  
+  List<Color> _getRankGradient(int position) {
+    switch (position) {
+      case 0: return [Colors.amber.shade300, Colors.amber.shade700];
+      case 1: return [Colors.grey.shade300, Colors.grey.shade500];
+      case 2: return [Colors.orange.shade400, Colors.orange.shade800];
+      default: return [Colors.grey, Colors.grey];
+    }
+  }
+  
+  // Método para agregar un resultado al ranking (llamado desde WebSocket)
+  void addWordSearchResult(String studentName, int timeSeconds, int wordsFound, int totalWords) {
+    setState(() {
+      _wordSearchRanking.removeWhere((r) => r.studentName == studentName);
+      _wordSearchRanking.add(WordSearchRanking(
+        studentName: studentName,
+        timeSeconds: timeSeconds,
+        wordsFound: wordsFound,
+        totalWords: totalWords,
+        completedAt: DateTime.now(),
+      ));
+      
+      // Ordenar solo por tiempo (m?s r?pido gana)
+      _wordSearchRanking.sort((a, b) => a.timeSeconds.compareTo(b.timeSeconds));
+    });
+    
+    // Mostrar notificación al docente
+    final position = _wordSearchRanking.indexWhere((r) => r.studentName == studentName);
+    final medal = position < 3 ? WordSearchRanking.getMedal(position) : '✓';
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: position < 3 ? Colors.amber.shade700 : Colors.blue,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.only(bottom: 100, left: 20, right: 20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        content: Row(
+          children: [
+            Text(medal, style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$studentName terminó la sopa de letras',
+                    style: GoogleFonts.oswald(color: Colors.white, fontSize: 16),
+                  ),
+                  Text(
+                    '$wordsFound palabras en ${_formatTimeSimple(timeSeconds)}',
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+  
+  String _formatTimeSimple(int seconds) {
+    final min = seconds ~/ 60;
+    final sec = seconds % 60;
+    return '${min.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
+  }
   
   // Widget de botón animado reutilizable
   Widget _buildAnimatedButton({
@@ -1725,6 +2421,23 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // Botón Home (Volver a unidades)
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => const UnitSelectionScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.home, color: Colors.white70, size: 20),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                tooltip: 'Volver a Unidades',
+              ),
+              
+              Container(height: 16, width: 1, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 4)),
+              
               // Botón Menú de Bloques (NAVEGACIÓN)
               IconButton(
                 onPressed: () => _showBlocksModal(),

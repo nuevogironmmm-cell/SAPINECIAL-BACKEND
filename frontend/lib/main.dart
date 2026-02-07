@@ -7,6 +7,7 @@ import 'services/teacher_service.dart';
 // import 'services/auth_service.dart'; // Temporalmente deshabilitado para pruebas
 import 'screens/teacher_dashboard.dart';
 import 'screens/student_login_screen.dart';
+import 'screens/unit_selection_screen.dart';
 // import 'screens/auth_wrapper.dart'; // Temporalmente deshabilitado para pruebas
 
 void main() {
@@ -215,7 +216,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) => 
-              const TeacherDashboard(),
+              const UnitSelectionScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(
               opacity: animation,

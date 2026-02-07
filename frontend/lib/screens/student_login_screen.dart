@@ -112,8 +112,11 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
       }
     }
     
-    // Registrar estudiante
-    final success = await studentService.register(name);
+    // Registrar estudiante (reconectar si el nombre coincide con el guardado)
+    final savedName = await studentService.getSavedName();
+    final shouldReconnect = savedName != null &&
+      savedName.trim().toLowerCase() == name.toLowerCase();
+    final success = await studentService.register(name, reconnect: shouldReconnect);
     
     setState(() => _isLoading = false);
     
@@ -331,7 +334,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
             ),
             decoration: InputDecoration(
               labelText: 'Tu nombre',
-              hintText: 'Ej: Juan Pérez',
+              hintText: 'Ej: Juan Pï¿½rez',
               prefixIcon: Icon(
                 Icons.person_outline,
                 color: theme.colorScheme.primary,

@@ -13,7 +13,7 @@ class ExportService {
   // ============================================================
   static final _primaryColor = ExcelColor.fromHexString('#1E3A5F');      // Azul oscuro profesional
   static final _secondaryColor = ExcelColor.fromHexString('#C5A065');    // Dorado elegante
-  static final _accentGreen = ExcelColor.fromHexString('#2E7D32');       // Verde éxito
+  static final _accentGreen = ExcelColor.fromHexString('#2E7D32');       // Verde xito
   static final _accentRed = ExcelColor.fromHexString('#C62828');         // Rojo alerta
   static final _accentOrange = ExcelColor.fromHexString('#EF6C00');      // Naranja advertencia
   static final _lightGray = ExcelColor.fromHexString('#F5F5F5');         // Gris claro fondo
@@ -154,11 +154,16 @@ class ExportService {
       final fileName = 'Reporte_${safeTitle}_$dateStr';
       
       debugPrint('Guardando archivo: $fileName.xlsx');
-      
+
+      if (bytes == null) {
+        debugPrint('Error: Los bytes del archivo Excel son nulos.');
+        return false;
+      }
+
       // Guardar el archivo
       await FileSaver.instance.saveFile(
         name: fileName,
-        bytes: Uint8List.fromList(bytes),
+        bytes: Uint8List.fromList(bytes!),
         ext: 'xlsx',
         mimeType: MimeType.microsoftExcel,
       );
@@ -180,7 +185,7 @@ class ExportService {
     List<Map<String, dynamic>> students,
     String sessionTitle,
   ) {
-    // Calcular métricas
+    // Calcular mtricas
     final percentages = students.map((s) => (s['percentage'] ?? 0.0) as double).toList();
     final avg = percentages.isEmpty ? 0.0 : percentages.reduce((a, b) => a + b) / percentages.length;
     final max = percentages.isEmpty ? 0.0 : percentages.reduce((a, b) => a > b ? a : b);
@@ -224,7 +229,7 @@ class ExportService {
     metricsTitle.value = TextCellValue('M?TRICAS PRINCIPALES');
     metricsTitle.cellStyle = _headerStyle;
     
-    // Fila de métricas
+    // Fila de mtricas
     final metrics = [
       ['Total Estudiantes', students.length.toString()],
       ['Promedio General', '${avg.toStringAsFixed(1)}%'],
@@ -437,7 +442,7 @@ class ExportService {
     
     // Encabezados
     final headers = [
-      'N°', 'Nombre Completo', 'Puntaje Final', 'Correctas', 'Incorrectas', 
+      'N', 'Nombre Completo', 'Puntaje Final', 'Correctas', 'Incorrectas', 
       'Tasa Acierto', 'Tiempo Prom.', '?ltima Actividad'
     ];
     for (var i = 0; i < headers.length; i++) {
@@ -456,7 +461,7 @@ class ExportService {
       final incorrectCount = responses.length - correctCount;
       final hitRate = responses.isEmpty ? 0.0 : (correctCount / responses.length) * 100;
       
-      // N°
+      // N
       sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIdx))
           .value = IntCellValue(i + 1);
       sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIdx))

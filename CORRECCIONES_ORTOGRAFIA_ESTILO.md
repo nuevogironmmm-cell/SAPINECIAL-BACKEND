@@ -138,6 +138,91 @@ Se realiz? revisi?n minuciosa de:
 
 ---
 
+## 7. REGLAS PARA RES?MENES ACAD?MICOS
+
+> **Rol:** Act?a como un lector académico y pedag?gico experto.
+
+### ?? Tarea Principal
+Elaborar un **RESUMEN FIEL Y COHERENTE** del libro/cap?tulo/texto proporcionado.
+
+### ?? REGLAS OBLIGATORIAS
+
+| # | Regla |
+|---|-------|
+| 1 | Ce?irse **EXCLUSIVAMENTE** al contenido del libro |
+| 2 | **NO** agregar ideas, doctrinas, opiniones ni interpretaciones personales |
+| 3 | **NO** mezclar informaci?n de otros autores o fuentes |
+| 4 | Mantener el **orden l?gico y progresivo** del texto original |
+| 5 | Usar lenguaje claro, respetando el **enfoque y tono del autor** |
+
+### ?? ESTRUCTURA DEL RESUMEN
+
+```
+1. IDEA CENTRAL
+   ??? Del cap?tulo o secci?n
+
+2. PUNTOS CLAVE
+   ??? Solo lo m?s importante
+
+3. CONCEPTOS ENFATIZADOS
+   ??? Repetidos o destacados por el autor
+
+4. CONCLUSI?N PRINCIPAL
+   ??? Del autor (no propia)
+```
+
+### ?? USO DE EJEMPLOS
+
+- Incluir ejemplos **SOLO** cuando el libro los sugiera
+- O cuando ayuden a entender mejor el concepto
+- **Sin alterar** el sentido original
+- Deben ser: **breves, claros y pr?cticos**
+
+### ? CRITERIOS DE CALIDAD
+
+| Criterio | Descripci?n |
+|----------|-------------|
+| **Coherencia interna** | Que todo conecte l?gicamente |
+| **Fidelidad al texto** | Respetar el contenido original |
+| **Claridad pedag?gica** | Apto para estudiantes |
+| **Resaltado** | Términos o ideas clave en **negrita** |
+
+### ?? CHECKLIST DE REVISI?N FINAL
+
+Antes de finalizar, verificar:
+
+- [ ] ? **Coherencia** - Las ideas fluyen l?gicamente
+- [ ] ? **Fidelidad al libro** - No hay agregados externos
+- [ ] ? **Ortograf?a y redacci?n** - Sin errores gramaticales
+
+### ?? PLANTILLA DE USO
+
+```markdown
+**Texto a resumir:**
+[PEGAR AQU? EL TEXTO O INDICAR EL CAP?TULO]
+
+---
+
+## RESUMEN
+
+### Idea Central
+[Escribir aqu?]
+
+### Puntos Clave
+1. [Punto 1]
+2. [Punto 2]
+3. [Punto 3]
+
+### Conceptos Enfatizados por el Autor
+- **[Concepto 1]**: [Breve explicaci?n]
+- **[Concepto 2]**: [Breve explicaci?n]
+
+### Conclusi?n del Autor
+[Escribir aqu? la conclusi?n principal]
+```
+
+---
+
 **Revisi?n completada por:** Auditor Senior de Aplicaciones Educativas  
 **Nivel de confianza:** Alt?simo (100%)  
 **Estado final:** ? LISTO PARA PRODUCCI?N

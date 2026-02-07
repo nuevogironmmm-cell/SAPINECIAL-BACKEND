@@ -10,6 +10,12 @@ class WordSearchWidget extends StatefulWidget {
   final Function(bool completed) onCompleted;
   final bool isReadOnly;
   final int timeLimitSeconds; // Por defecto 300 (5 min)
+  final String? studentName; // Nombre del estudiante (para ranking)
+  final Function(String name, int timeSeconds, int wordsFound)? onSubmitResult; // Callback al enviar
+  final List<WordSearchRanking>? ranking; // Ranking de ganadores
+  final String? seedKey; // Clave para generar la misma sopa en todos los dispositivos
+  final bool forceSideList; // Forzar lista de palabras a la derecha
+  final Function(int wordsFound, int totalWords, int elapsedSeconds)? onProgress; // Progreso en tiempo real
 
   const WordSearchWidget({
     Key? key,
@@ -19,10 +25,46 @@ class WordSearchWidget extends StatefulWidget {
     required this.onCompleted,
     this.isReadOnly = false,
     this.timeLimitSeconds = 300,
+    this.studentName,
+    this.onSubmitResult,
+    this.ranking,
+    this.seedKey,
+    this.forceSideList = false,
+    this.onProgress,
   }) : super(key: key);
 
   @override
   State<WordSearchWidget> createState() => _WordSearchWidgetState();
+}
+
+/// Modelo para ranking de sopa de letras
+class WordSearchRanking {
+  final String studentName;
+  final int timeSeconds;
+  final int wordsFound;
+  final int totalWords;
+  final DateTime completedAt;
+  
+  WordSearchRanking({
+    required this.studentName,
+    required this.timeSeconds,
+    required this.wordsFound,
+    required this.totalWords,
+    required this.completedAt,
+  });
+  
+  double get percentage => totalWords > 0 ? (wordsFound / totalWords) * 100 : 0;
+  String get formattedTime => '${(timeSeconds ~/ 60).toString().padLeft(2, '0')}:${(timeSeconds % 60).toString().padLeft(2, '0')}';
+  
+  // Medalla seg?n posici?n
+  static String getMedal(int position) {
+    switch (position) {
+      case 0: return '??'; // Primer lugar - Corona dorada
+      case 1: return '??'; // Segundo lugar
+      case 2: return '??'; // Tercer lugar
+      default: return '?';
+    }
+  }
 }
 
 class _WordSearchWidgetState extends State<WordSearchWidget> {
@@ -33,6 +75,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
   // Estado del juego
   bool _isGameStarted = false;
   bool _isGameFinished = false;
+  bool _hasSubmitted = false; // Si ya envi? el resultado
   Timer? _timer;
   int _elapsedSeconds = 0;
   int _remainingSeconds = 0;
@@ -218,13 +261,26 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
     return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
-  // --- L?GICA DE GENERACI?N (Igual que antes pero optimizada) ---
+  // --- L?GICA DE GENERACI?N MEJORADA: 8 DIRECCIONES ---
+  // Direcciones: 0=Der, 1=Izq, 2=Abajo, 3=Arriba, 4=DiagDerAbajo, 5=DiagIzqArriba, 6=DiagDerArriba, 7=DiagIzqAbajo
+  static const List<List<int>> _directions = [
+    [0, 1],   // 0: Derecha (horizontal)
+    [0, -1],  // 1: Izquierda (horizontal invertido)
+    [1, 0],   // 2: Abajo (vertical)
+    [-1, 0],  // 3: Arriba (vertical invertido)
+    [1, 1],   // 4: Diagonal derecha-abajo
+    [-1, -1], // 5: Diagonal izquierda-arriba
+    [-1, 1],  // 6: Diagonal derecha-arriba
+    [1, -1],  // 7: Diagonal izquierda-abajo
+  ];
+
   void _generateGrid() {
     _grid = List.generate(
       widget.gridSize,
       (_) => List.filled(widget.gridSize, ''),
     );
-    final random = Random();
+    final seed = _computeSeed();
+    final random = seed == null ? Random() : Random(seed);
     
     // Ordenar palabras por longitud descendente para facilitar colocaci?n
     final sortedWords = List<String>.from(_wordsToFind)
@@ -233,21 +289,27 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
     for (String word in sortedWords) {
       bool placed = false;
       int attempts = 0;
-      while (!placed && attempts < 200) { // M?s intentos
+      
+      // Mezclar direcciones para mayor variedad
+      final shuffledDirs = List<int>.generate(8, (i) => i)..shuffle(random);
+      
+      while (!placed && attempts < 300) {
         attempts++;
-        int direction = random.nextInt(3); // 0:Hor, 1:Ver, 2:Diag
+        // Elegir direcci?n aleatoria de las 8 posibles
+        int dirIndex = shuffledDirs[attempts % 8];
         int row = random.nextInt(widget.gridSize);
         int col = random.nextInt(widget.gridSize);
-        if (_canPlaceWord(word, row, col, direction)) {
-          _placeWord(word, row, col, direction);
+        
+        if (_canPlaceWord(word, row, col, dirIndex)) {
+          _placeWord(word, row, col, dirIndex);
           placed = true;
         }
       }
       if (!placed) debugPrint("?? No se pudo colocar: $word");
     }
 
-    // Rellenar
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    // Rellenar con letras aleatorias (incluyendo ? para espa?ol)
+    const letters = 'ABCDEFGHIJKLMN?OPQRSTUVWXYZ';
     for (int i = 0; i < widget.gridSize; i++) {
       for (int j = 0; j < widget.gridSize; j++) {
         if (_grid[i][j] == '') {
@@ -257,32 +319,53 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
     }
   }
 
-  bool _canPlaceWord(String word, int row, int col, int direction) {
-    // Verificaci?n de l?mites y colisiones
-    if (direction == 0) { // Horizontal
-      if (col + word.length > widget.gridSize) return false;
-      for (int i = 0; i < word.length; i++) {
-        if (_grid[row][col + i] != '' && _grid[row][col + i] != word[i]) return false;
-      }
-    } else if (direction == 1) { // Vertical
-      if (row + word.length > widget.gridSize) return false;
-      for (int i = 0; i < word.length; i++) {
-        if (_grid[row + i][col] != '' && _grid[row + i][col] != word[i]) return false;
-      }
-    } else { // Diagonal
-      if (row + word.length > widget.gridSize || col + word.length > widget.gridSize) return false;
-      for (int i = 0; i < word.length; i++) {
-        if (_grid[row + i][col + i] != '' && _grid[row + i][col + i] != word[i]) return false;
-      }
+  int? _computeSeed() {
+    final normalizedSeedKey = (widget.seedKey ?? '').trim();
+    final sortedSeedWords = List<String>.from(_wordsToFind)..sort();
+    final seedSource = '${normalizedSeedKey.isEmpty ? 'default' : normalizedSeedKey}|${widget.gridSize}|${sortedSeedWords.join('|')}';
+    return _stableHash(seedSource);
+  }
+
+  int _stableHash(String value) {
+    const int fnvOffset = 0x811C9DC5;
+    const int fnvPrime = 0x01000193;
+    int hash = fnvOffset;
+
+    for (int i = 0; i < value.length; i++) {
+      hash ^= value.codeUnitAt(i);
+      hash = (hash * fnvPrime) & 0x7fffffff;
+    }
+    return hash;
+  }
+
+  bool _canPlaceWord(String word, int row, int col, int dirIndex) {
+    final dRow = _directions[dirIndex][0];
+    final dCol = _directions[dirIndex][1];
+    
+    // Verificar que la palabra cabe en la direcci?n elegida
+    final endRow = row + dRow * (word.length - 1);
+    final endCol = col + dCol * (word.length - 1);
+    
+    if (endRow < 0 || endRow >= widget.gridSize) return false;
+    if (endCol < 0 || endCol >= widget.gridSize) return false;
+    
+    // Verificar colisiones
+    for (int i = 0; i < word.length; i++) {
+      final r = row + dRow * i;
+      final c = col + dCol * i;
+      if (_grid[r][c] != '' && _grid[r][c] != word[i]) return false;
     }
     return true;
   }
 
-  void _placeWord(String word, int row, int col, int direction) {
+  void _placeWord(String word, int row, int col, int dirIndex) {
+    final dRow = _directions[dirIndex][0];
+    final dCol = _directions[dirIndex][1];
+    
     for (int i = 0; i < word.length; i++) {
-      if (direction == 0) _grid[row][col + i] = word[i];
-      else if (direction == 1) _grid[row + i][col] = word[i];
-      else _grid[row + i][col + i] = word[i];
+      final r = row + dRow * i;
+      final c = col + dCol * i;
+      _grid[r][c] = word[i];
     }
   }
 
@@ -341,6 +424,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
       });
 
       widget.onWordFound(_foundWords.toList());
+      widget.onProgress?.call(_foundWords.length, _wordsToFind.length, _elapsedSeconds);
 
       if (_foundWords.length == _wordsToFind.length) {
         _endGame(success: true);
@@ -408,7 +492,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Si hay espacio suficiente (> 800px), poner lista a la derecha. Si no, abajo.
-        final bool isWide = constraints.maxWidth > 800;
+        final bool isWide = widget.forceSideList || constraints.maxWidth > 800;
         
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -457,9 +541,14 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                     Expanded(flex: 3, child: _buildGridSection(constraints)),
-                     const SizedBox(width: 30),
-                     Expanded(flex: 1, child: _buildWordListSection()),
+                    Expanded(flex: 3, child: _buildGridSection(constraints)),
+                    const SizedBox(width: 30),
+                    Expanded(
+                      flex: 1,
+                      child: SingleChildScrollView(
+                        child: _buildWordListSection(),
+                      ),
+                    ),
                   ],
                 ),
               )
@@ -498,7 +587,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                   decoration: BoxDecoration(
                     color: Colors.black45,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white24, width: 2),
+                    border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
                     boxShadow: [
                       BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: 2),
                     ],
@@ -523,7 +612,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                               color: isSelected 
                                   ? Colors.white.withOpacity(0.3) 
                                   : (isPainted ? _paintedCells[cellKey] : null),
-                              border: Border.all(color: Colors.white10, width: 0.5),
+                              border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.3),
                             ),
                             child: Text(
                               _grid[row][col],
@@ -669,8 +758,420 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
               );
             }).toList(),
           ),
+          
+          // ============================================================
+          // BOT?N DE ENVIAR RESULTADO (solo para estudiantes)
+          // ============================================================
+          if (_isGameStarted && widget.studentName != null && widget.onSubmitResult != null) ...[
+            const SizedBox(height: 24),
+            _buildSubmitButton(),
+          ],
+          
+          // ============================================================
+          // RANKING DE GANADORES ORDENADO POR TIEMPO (si est? disponible)
+          // ============================================================
+          if (widget.ranking != null && widget.ranking!.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            _buildRankingSection(),
+          ],
         ],
       ),
     );
+  }
+  
+  // ============================================================
+  // BOT?N DE ENVIAR RESULTADO
+  // ============================================================
+  Widget _buildSubmitButton() {
+    final canSubmit = _foundWords.isNotEmpty && !_hasSubmitted;
+    final isComplete = _foundWords.length == _wordsToFind.length;
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: _hasSubmitted 
+              ? [Colors.green.withOpacity(0.2), Colors.green.withOpacity(0.1)]
+              : isComplete 
+                  ? [Colors.amber.withOpacity(0.3), Colors.orange.withOpacity(0.2)]
+                  : [Colors.blue.withOpacity(0.2), Colors.blue.withOpacity(0.1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _hasSubmitted ? Colors.green : isComplete ? Colors.amber : Colors.blue.withOpacity(0.5),
+          width: 2,
+        ),
+      ),
+      child: Column(
+        children: [
+          if (_hasSubmitted) ...[
+            // Mensaje de confirmaci?n
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 28),
+                const SizedBox(width: 10),
+                Text(
+                  '?Resultado enviado!',
+                  style: GoogleFonts.oswald(
+                    color: Colors.green,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tu tiempo: ${_formatTime(_elapsedSeconds)} • ${_foundWords.length}/${_wordsToFind.length} palabras',
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ] else ...[
+            // Bot?n de enviar
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: canSubmit ? _submitResult : null,
+                borderRadius: BorderRadius.circular(30),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                  decoration: BoxDecoration(
+                    gradient: canSubmit 
+                        ? LinearGradient(
+                            colors: isComplete 
+                                ? [Colors.amber, Colors.orange]
+                                : [Colors.blue, Colors.blueAccent],
+                          )
+                        : null,
+                    color: canSubmit ? null : Colors.grey.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: canSubmit ? [
+                      BoxShadow(
+                        color: (isComplete ? Colors.amber : Colors.blue).withOpacity(0.4),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      ),
+                    ] : null,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isComplete ? Icons.emoji_events : Icons.send,
+                        color: canSubmit ? Colors.white : Colors.white38,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        isComplete ? '?? ?ENVIAR RESULTADO!' : 'Enviar progreso',
+                        style: GoogleFonts.oswald(
+                          color: canSubmit ? Colors.white : Colors.white38,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              isComplete 
+                  ? '?Completaste todo! Env?a tu resultado para el ranking'
+                  : 'Encuentra m?s palabras para mejorar tu posici?n',
+              style: TextStyle(
+                color: isComplete ? Colors.amber.shade200 : Colors.white54,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+  
+  void _submitResult() {
+    if (_hasSubmitted || widget.onSubmitResult == null) return;
+    
+    setState(() {
+      _hasSubmitted = true;
+    });
+    
+    widget.onSubmitResult!(
+      widget.studentName!,
+      _elapsedSeconds,
+      _foundWords.length,
+    );
+    
+    // Mostrar confirmaci?n
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        content: Row(
+          children: [
+            const Icon(Icons.send, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                '?Tu resultado fue enviado al docente!',
+                style: GoogleFonts.oswald(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+  
+  // ============================================================
+  // SECCI?N DE RANKING CON CORONAS
+  // ============================================================
+  Widget _buildRankingSection() {
+    // Ordenar por tiempo (m?s r?pido primero)
+    final sortedRanking = List<WordSearchRanking>.from(widget.ranking!)
+      ..sort((a, b) => a.timeSeconds.compareTo(b.timeSeconds));
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.amber.withOpacity(0.15),
+            Colors.orange.withOpacity(0.1),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.amber.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          // T?tulo del ranking con ?cono de velocidad
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.speed, color: Colors.amber, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'RANKING POR TIEMPO',
+                style: GoogleFonts.oswald(
+                  color: Colors.amber,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.emoji_events, color: Colors.amber, size: 24),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '?? El m?s r?pido gana la corona ??',
+            style: TextStyle(
+              color: Colors.amber.shade200,
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Lista de rankings ordenados por tiempo
+          ...sortedRanking.asMap().entries.map((entry) {
+            final index = entry.key;
+            final rank = entry.value;
+            final isFastest = index == 0; // El m?s r?pido
+            final isTop3 = index < 3;
+            
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isFastest 
+                    ? Colors.amber.withOpacity(0.3)
+                    : isTop3 
+                        ? _getPositionColor(index).withOpacity(0.2)
+                        : Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isFastest 
+                      ? Colors.amber.withOpacity(0.8)
+                      : isTop3 
+                          ? _getPositionColor(index).withOpacity(0.5) 
+                          : Colors.white10,
+                  width: isFastest ? 3 : isTop3 ? 2 : 1,
+                ),
+                boxShadow: isFastest ? [
+                  BoxShadow(
+                    color: Colors.amber.withOpacity(0.4),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                ] : null,
+              ),
+              child: Row(
+                children: [
+                  // Medalla o posici?n con efecto especial para el m?s r?pido
+                  Container(
+                    width: 50,
+                    height: 50,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: isFastest 
+                          ? LinearGradient(
+                              colors: [Colors.amber.shade200, Colors.amber.shade800],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : isTop3 
+                              ? LinearGradient(
+                                  colors: _getPositionGradient(index),
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                              : null,
+                      color: !isTop3 && !isFastest ? Colors.grey.shade800 : null,
+                      boxShadow: [
+                        BoxShadow(
+                          color: isFastest 
+                              ? Colors.amber.withOpacity(0.6)
+                              : isTop3 
+                                  ? _getPositionColor(index).withOpacity(0.5)
+                                  : Colors.black26,
+                          blurRadius: isFastest ? 12 : 8,
+                          spreadRadius: isFastest ? 2 : 1,
+                        ),
+                      ],
+                    ),
+                    child: isFastest 
+                        ? const Text('??', style: TextStyle(fontSize: 28))
+                        : Text(
+                            WordSearchRanking.getMedal(index),
+                            style: TextStyle(fontSize: isTop3 ? 24 : 18),
+                          ),
+                  ),
+                  const SizedBox(width: 12),
+                  
+                  // Nombre del estudiante con indicador de velocidad
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            if (isFastest) ...[
+                              const Icon(Icons.local_fire_department, 
+                                color: Colors.redAccent, size: 16),
+                              const SizedBox(width: 4),
+                            ],
+                            Expanded(
+                              child: Text(
+                                rank.studentName,
+                                style: GoogleFonts.oswald(
+                                  color: isFastest 
+                                      ? Colors.amber.shade100
+                                      : isTop3 
+                                          ? _getPositionColor(index) 
+                                          : Colors.white,
+                                  fontSize: isFastest ? 18 : isTop3 ? 16 : 14,
+                                  fontWeight: isFastest 
+                                      ? FontWeight.bold 
+                                      : isTop3 
+                                          ? FontWeight.bold 
+                                          : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          '${rank.wordsFound}/${rank.totalWords} palabras',
+                          style: TextStyle(
+                            color: isFastest ? Colors.amber.shade200 : Colors.white54,
+                            fontSize: 12,
+                          ),
+                        ),
+                        if (isFastest) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            '?? ?R?CORD DE VELOCIDAD! ??',
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  
+                  // Tiempo destacado
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isFastest 
+                          ? Colors.redAccent.withOpacity(0.9)
+                          : Colors.black38,
+                      borderRadius: BorderRadius.circular(20),
+                      border: isFastest ? Border.all(
+                        color: Colors.amber.withOpacity(0.8), 
+                        width: 2
+                      ) : null,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isFastest ? Icons.flash_on : Icons.timer,
+                          size: 16,
+                          color: isFastest ? Colors.yellow : Colors.white70,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          rank.formattedTime,
+                          style: GoogleFonts.robotoMono(
+                            color: isFastest ? Colors.white : Colors.white70,
+                            fontWeight: FontWeight.bold,
+                            fontSize: isFastest ? 16 : 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+  
+  Color _getPositionColor(int position) {
+    switch (position) {
+      case 0: return Colors.amber; // Oro - M?s r?pido
+      case 1: return Colors.grey.shade400; // Plata
+      case 2: return Colors.orange.shade700; // Bronce
+      default: return Colors.white70;
+    }
+  }
+  
+  List<Color> _getPositionGradient(int position) {
+    switch (position) {
+      case 0: return [Colors.amber.shade200, Colors.amber.shade800]; // Oro - M?s r?pido
+      case 1: return [Colors.grey.shade300, Colors.grey.shade500]; // Plata
+      case 2: return [Colors.orange.shade400, Colors.orange.shade800]; // Bronce
+      default: return [Colors.grey.shade400, Colors.grey.shade600];
+    }
   }
 }

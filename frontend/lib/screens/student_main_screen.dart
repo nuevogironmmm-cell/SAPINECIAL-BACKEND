@@ -1520,23 +1520,57 @@ class _StudentMainScreenState extends State<StudentMainScreen>
 
             // CONTENIDO DE LA ACTIVIDAD SEGÚN TIPO
             if (activity.type == StudentActivityType.wordSearch)
-               Container(
-                 width: double.infinity,
-                 constraints: const BoxConstraints(maxWidth: 400),
-                 child: WordSearchWidget(
-                   words: activity.options, // Las palabras a buscar están en options
-                   gridSize: 10,
-                   isReadOnly: hasResponded,
-                   onWordFound: (foundWords) {
-                     // Opcional: Feedback visual o sonoro
-                   },
-                   onCompleted: (completed) {
-                     if (completed && !hasResponded) {
-                       _submitAnswerForActivity(activity.id, overrideAnswer: 0); // 0 = Completado
-                     }
-                   },
-                 ),
-               )
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final studentService = context.read<StudentService>();
+                  final studentName = studentService.studentName ?? 'Estudiante';
+                  final screenSize = MediaQuery.of(context).size;
+                  final maxByWidth = constraints.maxWidth * 0.9;
+                  final maxByHeight = screenSize.height * 0.75;
+                  var size = maxByWidth < maxByHeight ? maxByWidth : maxByHeight;
+                  final maxSize = screenSize.width >= 1024 ? 960.0 : 720.0;
+                  size = size.clamp(280.0, maxSize).toDouble();
+
+                  return Center(
+                    child: SizedBox(
+                      width: constraints.maxWidth,
+                      height: size,
+                      child: WordSearchWidget(
+                        words: activity.options, // Las palabras a buscar están en options
+                        gridSize: 15,
+                        isReadOnly: hasResponded,
+                        seedKey: activity.id,
+                        studentName: studentName,
+                        forceSideList: true,
+                        onWordFound: (foundWords) {
+                          // Opcional: Feedback visual o sonoro
+                        },
+                        onProgress: (wordsFound, totalWords, elapsedSeconds) {
+                          studentService.sendWordSearchProgress(
+                            activityId: activity.id,
+                            wordsFound: wordsFound,
+                            totalWords: totalWords,
+                            elapsedSeconds: elapsedSeconds,
+                          );
+                        },
+                        onSubmitResult: (name, timeSeconds, wordsFound) {
+                          studentService.sendWordSearchResult(
+                            activityId: activity.id,
+                            timeSeconds: timeSeconds,
+                            wordsFound: wordsFound,
+                            totalWords: activity.options.length,
+                          );
+                        },
+                        onCompleted: (completed) {
+                          if (completed && !hasResponded) {
+                            _submitAnswerForActivity(activity.id, overrideAnswer: 0); // 0 = Completado
+                          }
+                        },
+                      ),
+                    ),
+                  );
+                },
+              )
             else if (!hasResponded)
               ...activity.options.asMap().entries.map((entry) {
                 final index = entry.key;

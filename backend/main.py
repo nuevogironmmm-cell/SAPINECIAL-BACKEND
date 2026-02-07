@@ -212,12 +212,6 @@ class StudentData:
             "response_time_ms": response_time_ms,
         }
         self.last_activity_at = datetime.now()
-        
-        if is_correct:
-            self.accumulated_percentage += percentage_value
-            if self.accumulated_percentage > 100:
-                self.accumulated_percentage = 100
-        
         self.status = StudentConnectionStatus.RESPONDED
     
     def to_saveable(self) -> Dict:
@@ -455,6 +449,8 @@ class StudentManager:
         
         if student:
             # Estudiante encontrado, reconectar
+            if student.websocket in self.websocket_to_student:
+                self.websocket_to_student.pop(student.websocket, None)
             student.websocket = websocket
             student.status = StudentConnectionStatus.CONNECTED
             self.websocket_to_student[websocket] = student.session_id
@@ -1099,6 +1095,11 @@ async def student_websocket(websocket: WebSocket):
                     percentage_value=activity.percentage_value,
                     response_time_ms=response_time_ms
                 )
+
+                # Recalcular porcentaje acumulado seg? actividades registradas
+                student.accumulated_percentage = student_manager.calculate_accumulated_percentage(
+                    student, state.activities
+                )
                 
                 # Confirmar al estudiante CON resultado
                 await websocket.send_text(json.dumps({
@@ -1129,6 +1130,58 @@ async def student_websocket(websocket: WebSocket):
                 await teacher_manager.broadcast_to_teachers({
                     "type": "DASHBOARD_UPDATE",
                     "data": student_manager.get_dashboard_summary(activity_id)
+                })
+
+            # ---- PROGRESO DE SOPA DE LETRAS ----
+            elif action == "WORD_SEARCH_PROGRESS":
+                if not student:
+                    await websocket.send_text(json.dumps({
+                        "type": "ERROR",
+                        "data": {"message": "Debes registrarte primero"}
+                    }))
+                    continue
+
+                activity_id = payload.get("activityId")
+                words_found = int(payload.get("wordsFound", 0))
+                total_words = int(payload.get("totalWords", 0))
+                elapsed_seconds = int(payload.get("elapsedSeconds", 0))
+
+                await teacher_manager.broadcast_to_teachers({
+                    "type": "WORD_SEARCH_PROGRESS",
+                    "data": {
+                        "studentName": student.name,
+                        "studentSessionId": student.session_id,
+                        "activityId": activity_id,
+                        "wordsFound": words_found,
+                        "totalWords": total_words,
+                        "elapsedSeconds": elapsed_seconds,
+                    }
+                })
+
+            # ---- RESULTADO DE SOPA DE LETRAS ----
+            elif action == "WORD_SEARCH_RESULT":
+                if not student:
+                    await websocket.send_text(json.dumps({
+                        "type": "ERROR",
+                        "data": {"message": "Debes registrarte primero"}
+                    }))
+                    continue
+
+                activity_id = payload.get("activityId")
+                time_seconds = int(payload.get("timeSeconds", 0))
+                words_found = int(payload.get("wordsFound", 0))
+                total_words = int(payload.get("totalWords", 0))
+
+                await teacher_manager.broadcast_to_teachers({
+                    "type": "WORD_SEARCH_RESULT",
+                    "data": {
+                        "studentName": student.name,
+                        "studentSessionId": student.session_id,
+                        "activityId": activity_id,
+                        "timeSeconds": time_seconds,
+                        "wordsFound": words_found,
+                        "totalWords": total_words,
+                    }
                 })
                 
                 # Enviar ranking actualizado a TODOS los estudiantes
