@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math';
 import 'dart:async';
@@ -152,7 +153,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
       widget.onCompleted(true);
     }
     
-    // Mostrar di?logo de resultados después de un breve delay
+    // Mostrar di?logo de resultados despus de un breve delay
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) _showResultsDialog(success);
     });
@@ -407,7 +408,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
     if (widget.isReadOnly || !_isGameStarted || _isGameFinished || _startPoint == null) return;
 
     final word = _getSelectedWord();
-    // Invertir palabra también por si acaso (para soporte bidireccional si se quisiera)
+    // Invertir palabra tambin por si acaso (para soporte bidireccional si se quisiera)
     final reversedWord = word.split('').reversed.join();
     
     if ((_wordsToFind.contains(word) && !_foundWords.contains(word)) || 
@@ -577,17 +578,18 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
           child: Stack(
             children: [
               // La Cuadr?cula
-              GestureDetector(
+              RawGestureDetector(
+                gestures: {
+                  EagerGestureRecognizer: GestureRecognizerFactoryWithHandlers<EagerGestureRecognizer>(
+                    () => EagerGestureRecognizer(),
+                    (EagerGestureRecognizer instance) {
+                      instance.onStart = (d) => _onPanStart(d, BoxConstraints(maxWidth: size, maxHeight: size));
+                      instance.onUpdate = (d) => _onPanUpdate(d, BoxConstraints(maxWidth: size, maxHeight: size));
+                      instance.onEnd = (d) => _onPanEnd(d);
+                    },
+                  ),
+                },
                 behavior: HitTestBehavior.opaque,
-                onPanStart: (d) => _onPanStart(d, BoxConstraints(maxWidth: size, maxHeight: size)),
-                onPanUpdate: (d) => _onPanUpdate(d, BoxConstraints(maxWidth: size, maxHeight: size)),
-                onPanEnd: _onPanEnd,
-                onVerticalDragStart: (d) => _onPanStart(d, BoxConstraints(maxWidth: size, maxHeight: size)),
-                onVerticalDragUpdate: (d) => _onPanUpdate(d, BoxConstraints(maxWidth: size, maxHeight: size)),
-                onVerticalDragEnd: _onPanEnd,
-                onHorizontalDragStart: (d) => _onPanStart(d, BoxConstraints(maxWidth: size, maxHeight: size)),
-                onHorizontalDragUpdate: (d) => _onPanUpdate(d, BoxConstraints(maxWidth: size, maxHeight: size)),
-                onHorizontalDragEnd: _onPanEnd,
                 child: Container(
                   width: size,
                   height: size,
@@ -832,7 +834,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Tu tiempo: ${_formatTime(_elapsedSeconds)} • ${_foundWords.length}/${_wordsToFind.length} palabras',
+              'Tu tiempo: ${_formatTime(_elapsedSeconds)}  ${_foundWords.length}/${_wordsToFind.length} palabras',
               style: const TextStyle(color: Colors.white70),
             ),
           ] else ...[
@@ -1181,4 +1183,16 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
       default: return [Colors.grey.shade400, Colors.grey.shade600];
     }
   }
+}
+
+
+class EagerGestureRecognizer extends PanGestureRecognizer {
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    super.addAllowedPointer(event);
+    resolve(GestureDisposition.accepted);
+  }
+
+  @override
+  String get debugDescription => 'EagerGestureRecognizer';
 }
