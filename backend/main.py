@@ -317,7 +317,7 @@ class ActivityData:
         self.time_limit_seconds = time_limit_seconds
         self.title = title  # T?tulo de la diapositiva/actividad
         self.slide_content = slide_content  # Contenido extra (ej: la cita b?blica)
-        self.biblical_reference = biblical_reference  # Referencia b?blica (ej: "Eclesiastés 1:2")
+        self.biblical_reference = biblical_reference  # Referencia b?blica (ej: "Eclesiasts 1:2")
     
     def to_student_dict(self) -> Dict:
         """Versi?n para estudiante (sin respuesta correcta)"""
@@ -534,7 +534,7 @@ class StudentManager:
         for session_id, student in self.students.items():
             student.reset_all_progress()
             reset_count += 1
-        # También limpiar el archivo de persistencia
+        # Tambin limpiar el archivo de persistencia
         self._clear_saved_progress()
         return reset_count
     
@@ -1136,6 +1136,21 @@ async def student_websocket(websocket: WebSocket):
                 })
 
             # ---- PROGRESO DE SOPA DE LETRAS ----
+
+            # ---- SOLICITAR ESTADO ACTUAL ----
+            elif action == "GET_STATE":
+                # Enviar estado actual
+                await websocket.send_text(json.dumps({
+                    "type": "STATE_UPDATE",
+                    "data": state.to_dict()
+                }))
+                # Si hay actividad activa, enviarla tambien
+                if state.current_activity and state.current_activity.state == ActivityState.ACTIVE:
+                    await websocket.send_text(json.dumps({
+                        "type": "ACTIVITY_UNLOCKED",
+                        "data": state.current_activity.to_student_dict()
+                    }))
+
             elif action == "WORD_SEARCH_PROGRESS":
                 if not student:
                     await websocket.send_text(json.dumps({
@@ -1195,7 +1210,7 @@ async def student_websocket(websocket: WebSocket):
                     }
                 })
                 
-                # Guardar progreso después de cada respuesta
+                # Guardar progreso despus de cada respuesta
                 student_manager._save_all_progress()
             
             # ---- ENVIAR reflexi?n ----
