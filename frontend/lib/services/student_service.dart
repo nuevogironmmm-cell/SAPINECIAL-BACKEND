@@ -159,6 +159,11 @@ class StudentService extends ChangeNotifier {
     _errorMessage = null;
     
     try {
+      // Forzar cierre si existe una conexión previa "zombie"
+      if (_channel != null) {
+        try { await _channel!.sink.close(); } catch (_) {}
+      }
+      
       final uri = Uri.parse(_baseUrl);
       _channel = WebSocketChannel.connect(uri);
       
@@ -262,6 +267,20 @@ class StudentService extends ChangeNotifier {
   Future<bool> tryReconnect() async {
     final savedName = await _getSavedStudentName();
     if (savedName != null && savedName.isNotEmpty) {
+      debugPrint('[StudentService] Intentando reconexión automática con nombre: $savedName');
+      
+      // Si ya estamos conectados y registrados, solo actualizar estado
+      if (_isConnected && _isRegistered && _studentName == savedName) {
+        requestStateUpdate();
+        return true;
+      }
+      
+      // Si estamos conectados pero no registrados, registrar
+      if (_isConnected && !_isRegistered) {
+        return await register(savedName, reconnect: true);
+      }
+
+      // Si no estamos conectados, conectar y registrar
       return await register(savedName, reconnect: true);
     }
     return false;

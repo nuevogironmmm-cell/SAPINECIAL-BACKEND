@@ -1577,11 +1577,13 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                   final maxByHeight = screenSize.height * 0.75;
                   var size = maxByWidth < maxByHeight ? maxByWidth : maxByHeight;
                   final maxSize = screenSize.width >= 1024 ? 960.0 : 720.0;
+                  // Usar el ancho disponible completo en móviles
+                  var size = constraints.maxWidth < maxByHeight ? constraints.maxWidth : maxByHeight;
                   size = size.clamp(280.0, maxSize).toDouble();
 
                   return Center(
                     child: SizedBox(
-                      width: constraints.maxWidth,
+                      width: size, // Usar size en lugar de constraints.maxWidth para que sea cuadrado
                       height: size,
                       child: WordSearchWidget(
                         words: activity.options, // Las palabras a buscar están en options
@@ -1589,7 +1591,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                         isReadOnly: hasResponded,
                         seedKey: activity.id,
                         studentName: studentName,
-                        forceSideList: true,
+                        forceSideList: false, // Permitir layout responsivo (lista abajo en móvil)
                         onWordFound: (foundWords) {
                           // Opcional: Feedback visual o sonoro
                         },

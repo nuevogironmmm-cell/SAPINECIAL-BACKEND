@@ -578,19 +578,26 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
           child: Stack(
             children: [
               // La Cuadr?cula
-              RawGestureDetector(
-                gestures: {
-                  EagerGestureRecognizer: GestureRecognizerFactoryWithHandlers<EagerGestureRecognizer>(
-                    () => EagerGestureRecognizer(),
-                    (EagerGestureRecognizer instance) {
-                      instance.onStart = (d) => _onPanStart(d, BoxConstraints(maxWidth: size, maxHeight: size));
-                      instance.onUpdate = (d) => _onPanUpdate(d, BoxConstraints(maxWidth: size, maxHeight: size));
-                      instance.onEnd = (d) => _onPanEnd(d);
-                    },
-                  ),
+              Listener(
+                onPointerDown: (_) {
+                  // Evitar que el parent (SingleChildScrollView) robe el gesto de scroll
+                  // cuando el usuario toca la cuadr?cula
+                  Scrollable.of(context).position.context.notificationContext?.findRenderObject()?.markNeedsLayout();
+                  // Esta acci?n es critica para que el scroll no se active mientras se juega
                 },
-                behavior: HitTestBehavior.opaque,
-                child: Container(
+                child: RawGestureDetector(
+                  gestures: {
+                    EagerGestureRecognizer: GestureRecognizerFactoryWithHandlers<EagerGestureRecognizer>(
+                      () => EagerGestureRecognizer(),
+                      (EagerGestureRecognizer instance) {
+                        instance.onStart = (d) => _onPanStart(d, BoxConstraints(maxWidth: size, maxHeight: size));
+                        instance.onUpdate = (d) => _onPanUpdate(d, BoxConstraints(maxWidth: size, maxHeight: size));
+                        instance.onEnd = (d) => _onPanEnd(d);
+                      },
+                    ),
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
                   width: size,
                   height: size,
                   decoration: BoxDecoration(
