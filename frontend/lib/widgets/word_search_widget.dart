@@ -635,7 +635,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                               style: GoogleFonts.robotoMono(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: cellSize * 0.6,
+                                fontSize: cellSize * 0.75, // Aumentado de 0.6 a 0.75 para mejor visibilidad m?vil
                                 shadows: [Shadow(color: Colors.black, blurRadius: 2)],
                               ),
                             ),

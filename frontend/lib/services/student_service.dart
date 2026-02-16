@@ -598,6 +598,27 @@ class StudentService extends ChangeNotifier {
   }
   
   void _handleActivityUnlocked(Map<String, dynamic> data) {
+    if (data['activity'] != null) {
+      final newActivity = StudentActivity.fromJson(data['activity']);
+      
+      // IMPORTANTE: Actualizar la lista de actividades activas
+      // Verificar si ya existe para no duplicar
+      final existingIndex = _activeActivities.indexWhere((a) => a.id == newActivity.id);
+      if (existingIndex >= 0) {
+        _activeActivities[existingIndex] = newActivity;
+      } else {
+        _activeActivities.add(newActivity);
+      }
+      
+      _currentActivity = newActivity;
+      _hasResponded = false; // Nueva actividad, no respondida
+      
+      _activityController.add(_currentActivity);
+      
+      // Notificar a la UI inmediatamente
+      notifyListeners();
+    }
+  }
     final newActivity = StudentActivity.fromJson(data);
     _currentActivity = newActivity;
     _hasResponded = false; // Nueva actividad
