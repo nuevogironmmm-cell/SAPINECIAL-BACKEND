@@ -619,21 +619,7 @@ class StudentService extends ChangeNotifier {
       notifyListeners();
     }
   }
-    final newActivity = StudentActivity.fromJson(data);
-    _currentActivity = newActivity;
-    _hasResponded = false; // Nueva actividad
-    
-    // AGREGAR A LA LISTA DE ACTIVIDADES ACTIVAS
-    _addActivityToActiveList(newActivity);
-    
-    _activityController.add(_currentActivity);
-    _activitiesController.add(_activeActivities);
-    
-    // EMITIR EVENTO DE NUEVA ACTIVIDAD (para sonidos/notificaciones)
-    _newActivityController.add(newActivity);
-    
-    notifyListeners();
-  }
+
   
   /// Maneja cuando el docente cierra TODAS las actividades
   void _handleAllActivitiesLocked() {

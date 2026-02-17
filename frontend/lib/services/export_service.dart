@@ -155,15 +155,10 @@ class ExportService {
       
       debugPrint('Guardando archivo: $fileName.xlsx');
 
-      if (bytes == null) {
-        debugPrint('Error: Los bytes del archivo Excel son nulos.');
-        return false;
-      }
-
       // Guardar el archivo
       await FileSaver.instance.saveFile(
         name: fileName,
-        bytes: Uint8List.fromList(bytes!),
+        bytes: Uint8List.fromList(bytes),
         ext: 'xlsx',
         mimeType: MimeType.microsoftExcel,
       );

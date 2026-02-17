@@ -1,16 +1,16 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'dart:async';
 
 /// ============================================================
 /// SISTEMA DE ANIMACIONES EDUCATIVAS
 /// ============================================================
-/// Diseñado para reforzar el aprendizaje sin distraer.
-/// Cada animación tiene un propósito pedagógico específico.
+/// Dise?ado para reforzar el aprendizaje sin distraer.
+/// Cada animaci?n tiene un prop?sito pedag?gico espec?fico.
 /// ============================================================
 
 // ============================================================
-// DURACIÓN DE ANIMACIONES (Consistencia UX)
+// DURACI?N DE ANIMACIONES (Consistencia UX)
 // ============================================================
 
 class AnimationDurations {
@@ -22,7 +22,7 @@ class AnimationDurations {
 }
 
 // ============================================================
-// CURVAS PERSONALIZADAS (Sensación natural)
+// CURVAS PERSONALIZADAS (Sensaci?n natural)
 // ============================================================
 
 class AnimationCurves {
@@ -35,8 +35,8 @@ class AnimationCurves {
 
 // ============================================================
 // WIDGET: FADE IN SLIDE (Entrada suave con deslizamiento)
-// Uso pedagógico: Introduce contenido nuevo de forma gradual,
-// permitiendo que el estudiante procese la información.
+// Uso pedag?gico: Introduce contenido nuevo de forma gradual,
+// permitiendo que el estudiante procese la informaci?n.
 // ============================================================
 
 class FadeInSlide extends StatefulWidget {
@@ -107,8 +107,8 @@ class _FadeInSlideState extends State<FadeInSlide>
 
 // ============================================================
 // WIDGET: SCALE IN (Entrada con escala)
-// Uso pedagógico: Resalta elementos importantes como títulos
-// o respuestas correctas, captando la atención del estudiante.
+// Uso pedag?gico: Resalta elementos importantes como t?tulos
+// o respuestas correctas, captando la atenci?n del estudiante.
 // ============================================================
 
 class ScaleIn extends StatefulWidget {
@@ -177,8 +177,8 @@ class _ScaleInState extends State<ScaleIn> with SingleTickerProviderStateMixin {
 }
 
 // ============================================================
-// WIDGET: ANIMATED BUTTON (Botón con micro-interacciones)
-// Uso pedagógico: Feedback táctil inmediato que confirma
+// WIDGET: ANIMATED BUTTON (Bot?n con micro-interacciones)
+// Uso pedag?gico: Feedback t?ctil inmediato que confirma
 // las acciones del usuario, reduciendo incertidumbre.
 // ============================================================
 
@@ -260,12 +260,12 @@ class _AnimatedButtonState extends State<AnimatedButton>
           padding: widget.padding,
           decoration: BoxDecoration(
             color: _isPressed
-                ? (widget.pressedColor ?? widget.backgroundColor.withOpacity(0.8))
+                ? (widget.pressedColor ?? widget.backgroundColor.withValues(alpha: 0.8))
                 : widget.backgroundColor,
             borderRadius: widget.borderRadius,
             boxShadow: [
               BoxShadow(
-                color: widget.backgroundColor.withOpacity(_isPressed ? 0.2 : 0.4),
+                color: widget.backgroundColor.withValues(alpha: _isPressed ? 0.2 : 0.4),
                 blurRadius: _isPressed ? 4 : widget.elevation * 2,
                 offset: Offset(0, _isPressed ? 2 : widget.elevation),
               ),
@@ -279,8 +279,8 @@ class _AnimatedButtonState extends State<AnimatedButton>
 }
 
 // ============================================================
-// WIDGET: PULSE ANIMATION (Pulso de atención)
-// Uso pedagógico: Llama la atención sobre elementos
+// WIDGET: PULSE ANIMATION (Pulso de atenci?n)
+// Uso pedag?gico: Llama la atenci?n sobre elementos
 // importantes sin ser intrusivo. Ideal para respuestas correctas.
 // ============================================================
 
@@ -357,8 +357,8 @@ class _PulseAnimationState extends State<PulseAnimation>
 }
 
 // ============================================================
-// WIDGET: SUCCESS CELEBRATION (Celebración de �éxito)
-// Uso pedagógico: Refuerzo positivo visual que motiva al
+// WIDGET: SUCCESS CELEBRATION (Celebraci?n de ?�xito)
+// Uso pedag?gico: Refuerzo positivo visual que motiva al
 // estudiante y celebra sus logros de aprendizaje.
 // ============================================================
 
@@ -446,7 +446,7 @@ class _SuccessCelebrationState extends State<SuccessCelebration>
             boxShadow: widget.celebrate
                 ? [
                     BoxShadow(
-                      color: Colors.green.withOpacity(0.5 * _glowAnimation.value),
+                      color: Colors.green.withValues(alpha: 0.5 * _glowAnimation.value),
                       blurRadius: 30 * _glowAnimation.value,
                       spreadRadius: 5 * _glowAnimation.value,
                     ),
@@ -465,7 +465,7 @@ class _SuccessCelebrationState extends State<SuccessCelebration>
 
 // ============================================================
 // WIDGET: SHAKE ANIMATION (Sacudida para error)
-// Uso pedagógico: Feedback negativo suave que indica error
+// Uso pedag?gico: Feedback negativo suave que indica error
 // sin ser punitivo, invitando a intentar de nuevo.
 // ============================================================
 
@@ -547,7 +547,7 @@ class _ShakeAnimationState extends State<ShakeAnimation>
 
 // ============================================================
 // WIDGET: STAGGERED LIST (Lista con entrada escalonada)
-// Uso pedagógico: Presenta opciones de forma secuencial,
+// Uso pedag?gico: Presenta opciones de forma secuencial,
 // permitiendo al estudiante procesar cada una.
 // ============================================================
 
@@ -582,8 +582,8 @@ class StaggeredList extends StatelessWidget {
 
 // ============================================================
 // WIDGET: PROGRESS INDICATOR ANIMATED (Indicador de progreso)
-// Uso pedagógico: Muestra el avance de forma visual,
-// motivando al estudiante a completar la lección.
+// Uso pedag?gico: Muestra el avance de forma visual,
+// motivando al estudiante a completar la lecci?n.
 // ============================================================
 
 class AnimatedProgressBar extends StatelessWidget {
@@ -624,13 +624,13 @@ class AnimatedProgressBar extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [
                       progressColor,
-                      progressColor.withOpacity(0.8),
+                      progressColor.withValues(alpha: 0.8),
                     ],
                   ),
                   borderRadius: borderRadius,
                   boxShadow: [
                     BoxShadow(
-                      color: progressColor.withOpacity(0.5),
+                      color: progressColor.withValues(alpha: 0.5),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -646,8 +646,8 @@ class AnimatedProgressBar extends StatelessWidget {
 }
 
 // ============================================================
-// WIDGET: SLIDE TRANSITION WRAPPER (Transición entre slides)
-// Uso pedagógico: Transición suave entre contenidos que
+// WIDGET: SLIDE TRANSITION WRAPPER (Transici?n entre slides)
+// Uso pedag?gico: Transici?n suave entre contenidos que
 // mantiene la continuidad del aprendizaje.
 // ============================================================
 
@@ -688,9 +688,9 @@ class SlideTransitionWrapper extends StatelessWidget {
 }
 
 // ============================================================
-// WIDGET: CONFETTI BURST (Explosión de confeti para logros)
-// Uso pedagógico: Celebración visual para logros importantes
-// que genera satisfacción y motivación.
+// WIDGET: CONFETTI BURST (Explosi?n de confeti para logros)
+// Uso pedag?gico: Celebraci?n visual para logros importantes
+// que genera satisfacci?n y motivaci?n.
 // ============================================================
 
 class ConfettiBurst extends StatefulWidget {
@@ -810,7 +810,7 @@ class _ConfettiPainter extends CustomPainter {
       final y = center.dy + math.sin(particle.angle) * distance + gravity;
       
       final paint = Paint()
-        ..color = particle.color.withOpacity(1 - progress)
+        ..color = particle.color.withValues(alpha: 1 - progress)
         ..style = PaintingStyle.fill;
       
       canvas.drawCircle(Offset(x, y), particle.size * (1 - progress * 0.5), paint);
@@ -824,8 +824,8 @@ class _ConfettiPainter extends CustomPainter {
 
 // ============================================================
 // WIDGET: TYPING TEXT (Texto que aparece letra por letra)
-// Uso pedagógico: Simula escritura en tiempo real, 
-// manteniendo la atención en textos importantes.
+// Uso pedag?gico: Simula escritura en tiempo real, 
+// manteniendo la atenci?n en textos importantes.
 // ============================================================
 
 class TypingText extends StatefulWidget {
@@ -848,7 +848,6 @@ class TypingText extends StatefulWidget {
 
 class _TypingTextState extends State<TypingText> {
   String _displayedText = '';
-  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -862,7 +861,6 @@ class _TypingTextState extends State<TypingText> {
       await Future.delayed(widget.characterDelay);
       if (!mounted) return;
       setState(() {
-        _currentIndex = i;
         _displayedText = widget.text.substring(0, i);
       });
     }
@@ -879,8 +877,8 @@ class _TypingTextState extends State<TypingText> {
 }
 
 // ============================================================
-// WIDGET: CONFETI DE PANTALLA COMPLETA (Celebración épica)
-// Uso pedagógico: Celebración máxima al completar todas las
+// WIDGET: CONFETI DE PANTALLA COMPLETA (Celebraci?n �pica)
+// Uso pedag?gico: Celebraci?n m?xima al completar todas las
 // lecciones o lograr puntaje perfecto.
 // ============================================================
 
@@ -1041,7 +1039,7 @@ class _FullConfettiPainter extends CustomPainter {
       final y = currentY * size.height;
       
       final paint = Paint()
-        ..color = particle.color.withOpacity(math.max(0, 1 - progress * 0.5))
+        ..color = particle.color.withValues(alpha: math.max(0, 1 - progress * 0.5))
         ..style = PaintingStyle.fill;
       
       canvas.save();
@@ -1092,8 +1090,8 @@ class _FullConfettiPainter extends CustomPainter {
 
 // ============================================================
 // WIDGET: COUNTDOWN TIMER (Temporizador con cuenta regresiva)
-// Uso pedagógico: Añade urgencia a las actividades y
-// otorga bonus por responder rápidamente.
+// Uso pedag?gico: A?ade urgencia a las actividades y
+// otorga bonus por responder r?pidamente.
 // ============================================================
 
 class CountdownTimer extends StatefulWidget {
@@ -1203,7 +1201,7 @@ class CountdownTimerState extends State<CountdownTimer>
     final isUrgent = _remainingSeconds <= 10;
     final isCritical = _remainingSeconds <= 5;
     
-    final bgColor = widget.backgroundColor ?? Colors.white.withOpacity(0.1);
+    final bgColor = widget.backgroundColor ?? Colors.white.withValues(alpha: 0.1);
     final progressColor = widget.progressColor ?? 
         (isCritical ? Colors.red : (isUrgent ? Colors.orange : theme.colorScheme.primary));
     final txtColor = widget.textColor ?? 
@@ -1222,12 +1220,12 @@ class CountdownTimerState extends State<CountdownTimer>
               shape: BoxShape.circle,
               color: bgColor,
               border: Border.all(
-                color: progressColor.withOpacity(0.3),
+                color: progressColor.withValues(alpha: 0.3),
                 width: 2,
               ),
               boxShadow: isUrgent ? [
                 BoxShadow(
-                  color: progressColor.withOpacity(0.4),
+                  color: progressColor.withValues(alpha: 0.4),
                   blurRadius: 15,
                   spreadRadius: 2,
                 ),
@@ -1243,7 +1241,7 @@ class CountdownTimerState extends State<CountdownTimer>
                   child: CircularProgressIndicator(
                     value: progress,
                     strokeWidth: 4,
-                    backgroundColor: Colors.white.withOpacity(0.1),
+                    backgroundColor: Colors.white.withValues(alpha: 0.1),
                     valueColor: AlwaysStoppedAnimation(progressColor),
                   ),
                 ),
@@ -1262,7 +1260,7 @@ class CountdownTimerState extends State<CountdownTimer>
                     Text(
                       'seg',
                       style: TextStyle(
-                        color: txtColor.withOpacity(0.7),
+                        color: txtColor.withValues(alpha: 0.7),
                         fontSize: widget.size * 0.15,
                       ),
                     ),
@@ -1279,8 +1277,8 @@ class CountdownTimerState extends State<CountdownTimer>
 
 // ============================================================
 // WIDGET: RANKING LEADERBOARD (Tabla de posiciones)
-// Uso pedagógico: Gamificación que motiva a los estudiantes
-// mostrando su posición relativa en tiempo real.
+// Uso pedag?gico: Gamificaci?n que motiva a los estudiantes
+// mostrando su posici?n relativa en tiempo real.
 // ============================================================
 
 class RankingEntry {
@@ -1337,13 +1335,13 @@ class LeaderboardWidget extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.amber.withOpacity(0.15),
-            Colors.orange.withOpacity(0.05),
+            Colors.amber.withValues(alpha: 0.15),
+            Colors.orange.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.amber.withOpacity(0.3),
+          color: Colors.amber.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -1382,9 +1380,9 @@ class LeaderboardWidget extends StatelessWidget {
     };
     
     final positionEmojis = {
-      1: '🥇',
-      2: '🥈',
-      3: '🥉',
+      1: '??',
+      2: '??',
+      3: '??',
     };
     
     final color = positionColors[entry.position] ?? Colors.white54;
@@ -1395,8 +1393,8 @@ class LeaderboardWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: entry.isCurrentUser 
-            ? Colors.amber.withOpacity(0.2)
-            : Colors.white.withOpacity(0.05),
+            ? Colors.amber.withValues(alpha: 0.2)
+            : Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: entry.isCurrentUser 
             ? Border.all(color: Colors.amber, width: 2)
@@ -1426,7 +1424,7 @@ class LeaderboardWidget extends StatelessWidget {
           // Name
           Expanded(
             child: Text(
-              entry.isCurrentUser ? '${entry.name} (Tú)' : entry.name,
+              entry.isCurrentUser ? '${entry.name} (T?)' : entry.name,
               style: TextStyle(
                 color: entry.isCurrentUser ? Colors.amber : Colors.white,
                 fontWeight: entry.isCurrentUser ? FontWeight.bold : FontWeight.normal,
@@ -1440,7 +1438,7 @@ class LeaderboardWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -1460,8 +1458,8 @@ class LeaderboardWidget extends StatelessWidget {
 
 // ============================================================
 // WIDGET: BONUS INDICATOR (Indicador de bonus por velocidad)
-// Uso pedagógico: Muestra el bonus que el estudiante puede
-// ganar si responde rápido.
+// Uso pedag?gico: Muestra el bonus que el estudiante puede
+// ganar si responde r?pido.
 // ============================================================
 
 class SpeedBonusIndicator extends StatelessWidget {
@@ -1489,10 +1487,10 @@ class SpeedBonusIndicator extends StatelessWidget {
   double get totalPoints => basePoints * bonusMultiplier;
   
   String get bonusLabel {
-    if (bonusMultiplier >= 1.5) return '🔥 ¡SÚPER RÁPIDO!';
-    if (bonusMultiplier >= 1.3) return '⚡ ¡Muy rápido!';
-    if (bonusMultiplier >= 1.2) return '✨ ¡Rápido!';
-    if (bonusMultiplier >= 1.1) return '👍 Buen tiempo';
+    if (bonusMultiplier >= 1.5) return '?? ?S?PER R?PIDO!';
+    if (bonusMultiplier >= 1.3) return '? ?Muy r?pido!';
+    if (bonusMultiplier >= 1.2) return '? ?R?pido!';
+    if (bonusMultiplier >= 1.1) return '?? Buen tiempo';
     return '';
   }
 
@@ -1509,10 +1507,10 @@ class SpeedBonusIndicator extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color.withOpacity(0.3), color.withOpacity(0.1)],
+            colors: [color.withValues(alpha: 0.3), color.withValues(alpha: 0.1)],
           ),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.5)),
+          border: Border.all(color: color.withValues(alpha: 0.5)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -11,11 +11,6 @@ const _imgCorazon = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc
 const _imgAdoracion = 'https://images.unsplash.com/photo-1445445290350-18a3b86e0b5a?w=800';
 const _imgInvitacion = 'https://images.unsplash.com/photo-1473172707857-f9e276582ab6?w=800';
 const _imgJob = 'https://images.unsplash.com/photo-1500099817043-86d46000d58f?w=800';
-const _imgSalmos = 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=800';
-const _imgProverbios = 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800';
-const _imgEclesiastes = 'https://images.unsplash.com/photo-1485841890310-6a055c88698a?w=800';
-const _imgCantares = 'https://images.unsplash.com/photo-1518621736915-f3b1c41bfd00?w=800';
-const _imgParalelismo = 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800';
 
 final unit1Session = ClassSession(
   id: 'session_1',

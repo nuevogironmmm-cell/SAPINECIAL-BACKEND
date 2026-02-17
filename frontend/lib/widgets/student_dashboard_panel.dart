@@ -1,5 +1,4 @@
-ï»¿import 'package:flutter/material.dart';
-import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/student_model.dart';
 import '../services/teacher_service.dart';
@@ -9,9 +8,9 @@ import '../utils/animations.dart';
 /// 
 /// Muestra en tiempo real:
 /// - Lista de estudiantes conectados
-/// - Estado de cada estudiante (conectado, respondiÃ³, no respondiÃ³)
+/// - Estado de cada estudiante (conectado, respondió, no respondió)
 /// - Porcentaje acumulado por estudiante
-/// - ClasificaciÃ³n con Ã­cono
+/// - Clasificación con ícono
 /// - Conteo general (respondieron / faltan)
 class StudentDashboardPanel extends StatefulWidget {
   final ClassDashboardSummary? summary;
@@ -19,7 +18,7 @@ class StudentDashboardPanel extends StatefulWidget {
   final VoidCallback? onRefresh;
   final VoidCallback? onClose;
   final Function(String studentId)? onStudentTap;
-  final bool isEmbedded; // Para cuando estÃ¡ dentro de un modal
+  final bool isEmbedded; // Para cuando está dentro de un modal
   
   const StudentDashboardPanel({
     super.key,
@@ -63,11 +62,11 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
     Widget content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Header (solo si no estÃ¡ embebido)
+        // Header (solo si no está embebido)
         if (!widget.isEmbedded)
           _buildHeader(theme, summary),
         
-        // EstadÃ­sticas rÃ¡pidas
+        // Estadísticas rápidas
         if (summary != null)
           _buildQuickStats(theme, summary),
         
@@ -80,7 +79,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
       ],
     );
     
-    // Si estÃ¡ embebido, solo devolver el contenido
+    // Si está embebido, solo devolver el contenido
     if (widget.isEmbedded) {
       return content;
     }
@@ -88,10 +87,10 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
     // Si no, envolverlo en el contenedor decorado
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.3),
+        color: Colors.black.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.2),
+          color: theme.colorScheme.primary.withValues(alpha: 0.2),
         ),
       ),
       child: content,
@@ -102,7 +101,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withOpacity(0.1),
+        color: theme.colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Row(
@@ -162,7 +161,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
           ),
         ),
       ),
@@ -182,7 +181,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
           Container(
             width: 1,
             height: 40,
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
           ),
           
           // Faltan
@@ -199,7 +198,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
           Container(
             width: 1,
             height: 40,
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
           ),
           
           // Porcentaje de respuesta
@@ -243,7 +242,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withValues(alpha: 0.5),
             fontSize: 11,
           ),
         ),
@@ -332,7 +331,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
       case StudentConnectionStatus.responded:
         statusColor = Colors.green;
         statusIcon = Icons.check_circle;
-        statusText = 'RespondiÃ³';
+        statusText = 'Respondió';
         break;
       case StudentConnectionStatus.notResponded:
         statusColor = Colors.orange;
@@ -354,13 +353,13 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
       color: isDisconnected 
-          ? Colors.grey.withOpacity(0.1)
-          : Colors.white.withOpacity(0.05),
+          ? Colors.grey.withValues(alpha: 0.1)
+          : Colors.white.withValues(alpha: 0.05),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
           color: isResponded 
-              ? Colors.green.withOpacity(0.3)
+              ? Colors.green.withValues(alpha: 0.3)
               : Colors.transparent,
         ),
       ),
@@ -373,7 +372,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              // PosiciÃ³n/Avatar
+              // Posición/Avatar
               Container(
                 width: 40,
                 height: 40,
@@ -383,7 +382,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
                         ? [Colors.grey, Colors.grey.shade700]
                         : [
                             theme.colorScheme.primary,
-                            theme.colorScheme.primary.withOpacity(0.7),
+                            theme.colorScheme.primary.withValues(alpha: 0.7),
                           ],
                   ),
                   borderRadius: BorderRadius.circular(10),
@@ -452,11 +451,11 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                             decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.2),
+                              color: Colors.orange.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              'ðŸ”¥ ${student.consecutiveCorrect}',
+                              '?? ${student.consecutiveCorrect}',
                               style: const TextStyle(
                                 fontSize: 10,
                                 color: Colors.orange,
@@ -470,7 +469,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
                 ),
               ),
               
-              // Porcentaje y ClasificaciÃ³n
+              // Porcentaje y Clasificación
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -501,7 +500,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
                       borderRadius: BorderRadius.circular(2),
                       child: LinearProgressIndicator(
                         value: student.accumulatedPercentage / 100,
-                        backgroundColor: Colors.white.withOpacity(0.1),
+                        backgroundColor: Colors.white.withValues(alpha: 0.1),
                         valueColor: AlwaysStoppedAnimation(
                           _getPercentageColor(student.accumulatedPercentage),
                         ),
@@ -511,7 +510,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
                 ],
               ),
               
-              // BotÃ³n de eliminar (Kick)
+              // Botón de eliminar (Kick)
               IconButton(
                 icon: const Icon(Icons.delete_outline, color: Colors.white38, size: 20),
                 onPressed: () => _confirmKickStudent(context, student),
@@ -530,9 +529,9 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text('Â¿Eliminar estudiante?', style: TextStyle(color: Colors.white)),
+        title: const Text('¿Eliminar estudiante?', style: TextStyle(color: Colors.white)),
         content: Text(
-          'Â¿Seguro que deseas eliminar a ${student.name}?\nSe desconectarÃ¡ su sesiÃ³n inmediatamente.',
+          '¿Seguro que deseas eliminar a ${student.name}?\nSe desconectará su sesión inmediatamente.',
           style: const TextStyle(color: Colors.white70)
         ),
         actions: [
@@ -564,7 +563,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
   }
 }
 
-/// Widget compacto para mostrar resumen de estudiantes en la barra de navegaciÃ³n
+/// Widget compacto para mostrar resumen de estudiantes en la barra de navegación
 class StudentSummaryBadge extends StatelessWidget {
   final int connectedCount;
   final int respondedCount;
@@ -584,10 +583,10 @@ class StudentSummaryBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.3),
+        color: Colors.black.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.3),
+          color: theme.colorScheme.primary.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -630,7 +629,7 @@ class StudentSummaryBadge extends StatelessWidget {
   }
 }
 
-/// Widget para mostrar notificaciÃ³n de nuevo estudiante
+/// Widget para mostrar notificación de nuevo estudiante
 class StudentJoinedNotification extends StatelessWidget {
   final String studentName;
   final VoidCallback? onDismiss;
@@ -648,11 +647,11 @@ class StudentJoinedNotification extends StatelessWidget {
         margin: const EdgeInsets.all(8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.green.withOpacity(0.9),
+          color: Colors.green.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.green.withOpacity(0.3),
+              color: Colors.green.withValues(alpha: 0.3),
               blurRadius: 10,
               spreadRadius: 2,
             ),

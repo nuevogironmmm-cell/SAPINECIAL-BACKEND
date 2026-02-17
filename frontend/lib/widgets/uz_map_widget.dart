@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:math' as math;
 
 /// Widget interactivo de mapa para mostrar la ubicaci?n de Uz
 /// Dise?o profesional y din?mico para presentaciones educativas
@@ -79,7 +78,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
             ],
           ),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.amber.withOpacity(0.3), width: 2),
+          border: Border.all(color: Colors.amber.withValues(alpha: 0.3), width: 2),
           boxShadow: [
             BoxShadow(
               color: Colors.black38,
@@ -96,8 +95,8 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.amber.withOpacity(0.2),
-                    Colors.orange.withOpacity(0.1),
+                    Colors.amber.withValues(alpha: 0.2),
+                    Colors.orange.withValues(alpha: 0.1),
                   ],
                 ),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
@@ -213,7 +212,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               width: constraints.maxWidth * 0.15,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade900.withOpacity(0.4),
+                  color: Colors.blue.shade900.withValues(alpha: 0.4),
                   borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
                 ),
                 child: Center(
@@ -260,7 +259,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.blue.shade400,
-                      Colors.blue.shade700.withOpacity(0.3),
+                      Colors.blue.shade700.withValues(alpha: 0.3),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(2),
@@ -308,9 +307,9 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               height: constraints.maxHeight * 0.25,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.cyan.shade900.withOpacity(0.5),
+                  color: Colors.cyan.shade900.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.cyan.withOpacity(0.3)),
+                  border: Border.all(color: Colors.cyan.withValues(alpha: 0.3)),
                 ),
                 child: Center(
                   child: RotatedBox(
@@ -388,8 +387,8 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                       colors: [
-                        Colors.orange.shade900.withOpacity(0.2),
-                        Colors.orange.shade900.withOpacity(0.4),
+                        Colors.orange.shade900.withValues(alpha: 0.2),
+                        Colors.orange.shade900.withValues(alpha: 0.4),
                       ],
                     ),
                     borderRadius: const BorderRadius.only(
@@ -447,11 +446,11 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.9),
+                  color: Colors.amber.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.amber.withOpacity(0.5),
+                      color: Colors.amber.withValues(alpha: 0.5),
                       blurRadius: 10,
                       spreadRadius: 2,
                     ),
@@ -507,15 +506,15 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             decoration: BoxDecoration(
-              color: color.withOpacity(isSelected ? 0.35 : 0.15),
+              color: color.withValues(alpha: isSelected ? 0.35 : 0.15),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: color.withOpacity(isSelected ? 0.8 : 0.4),
+                color: color.withValues(alpha: isSelected ? 0.8 : 0.4),
                 width: isSelected ? 3 : 1,
               ),
               boxShadow: isMainLocation ? [
                 BoxShadow(
-                  color: color.withOpacity(0.4),
+                  color: color.withValues(alpha: 0.4),
                   blurRadius: 15,
                   spreadRadius: 2,
                 ),
@@ -541,7 +540,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
                     Text(
                       subtitle,
                       style: TextStyle(
-                        color: color.withOpacity(0.8),
+                        color: color.withValues(alpha: 0.8),
                         fontSize: isMainLocation ? 12 : 10,
                       ),
                     ),
@@ -578,7 +577,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
             color: color,
             shape: BoxShape.circle,
             boxShadow: [
-              BoxShadow(color: color.withOpacity(0.5), blurRadius: 4),
+              BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 4),
             ],
           ),
         ),
@@ -586,7 +585,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
         Text(
           name,
           style: TextStyle(
-            color: color.withOpacity(0.9),
+            color: color.withValues(alpha: 0.9),
             fontSize: 10,
             fontWeight: FontWeight.w500,
           ),
@@ -599,7 +598,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -612,10 +611,10 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               'EDOM (m?s probable)',
               Colors.amber,
               [
-                '• Suroeste de Jordania actual',
-                '• Sur del Mar Muerto',
-                '• Lamentaciones 4:21 lo confirma',
-                '• Regi?n rica en sabidur?a',
+                '? Suroeste de Jordania actual',
+                '? Sur del Mar Muerto',
+                '? Lamentaciones 4:21 lo confirma',
+                '? Regi?n rica en sabidur?a',
               ],
             ),
             const SizedBox(height: 16),
@@ -624,9 +623,9 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               'ARAM (Siria)',
               Colors.blue,
               [
-                '• Norte de Mesopotamia',
-                '• Uz, hijo de Aram (Gén 10:23)',
-                '• Rollos del Mar Muerto',
+                '? Norte de Mesopotamia',
+                '? Uz, hijo de Aram (Gén 10:23)',
+                '? Rollos del Mar Muerto',
               ],
             ),
             const SizedBox(height: 16),
@@ -635,10 +634,10 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               'Job fuera de Israel',
               Colors.green,
               [
-                '• No menciona la Ley de Moisés',
-                '• No habla del Templo',
-                '• Era sacerdote de su familia',
-                '• Atacado por sabeos y caldeos',
+                '? No menciona la Ley de Moisés',
+                '? No habla del Templo',
+                '? Era sacerdote de su familia',
+                '? Atacado por sabeos y caldeos',
               ],
             ),
           ],

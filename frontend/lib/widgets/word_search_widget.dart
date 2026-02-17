@@ -88,14 +88,14 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
   
   // Colores visuales
   final List<Color> _wordColors = [
-    Colors.redAccent.withOpacity(0.5),
-    Colors.blueAccent.withOpacity(0.5),
-    Colors.greenAccent.withOpacity(0.5),
-    Colors.orangeAccent.withOpacity(0.5),
-    Colors.purpleAccent.withOpacity(0.5),
-    Colors.tealAccent.withOpacity(0.5),
-    Colors.pinkAccent.withOpacity(0.5),
-    Colors.indigoAccent.withOpacity(0.5),
+    Colors.redAccent.withValues(alpha: 0.5),
+    Colors.blueAccent.withValues(alpha: 0.5),
+    Colors.greenAccent.withValues(alpha: 0.5),
+    Colors.orangeAccent.withValues(alpha: 0.5),
+    Colors.purpleAccent.withValues(alpha: 0.5),
+    Colors.tealAccent.withValues(alpha: 0.5),
+    Colors.pinkAccent.withValues(alpha: 0.5),
+    Colors.indigoAccent.withValues(alpha: 0.5),
   ];
   
   final Map<String, Color> _paintedCells = {}; // "x,y" -> Color
@@ -197,9 +197,9 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.1),
+                  color: Colors.amber.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   children: [
@@ -603,7 +603,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                   decoration: BoxDecoration(
                     color: Colors.black45,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
                     boxShadow: [
                       BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: 2),
                     ],
@@ -626,9 +626,9 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: isSelected 
-                                  ? Colors.white.withOpacity(0.3) 
+                                  ? Colors.white.withValues(alpha: 0.3) 
                                   : (isPainted ? _paintedCells[cellKey] : null),
-                              border: Border.all(color: Colors.white.withOpacity(0.1), width: 0.3),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 0.3),
                             ),
                             child: Text(
                               _grid[row][col],
@@ -646,6 +646,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                   ),
                 ),
               ),
+            ),
 
               // Overlay de Inicio
               if (!_isGameStarted && !widget.isReadOnly)
@@ -720,7 +721,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),
@@ -743,33 +744,41 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
             runSpacing: 10,
             children: _wordsToFind.map((word) {
               final isFound = _foundWords.contains(word);
-              return AnimatedContainer(
+              return AnimatedScale(
+                scale: isFound ? 1.1 : 1.0,
                 duration: const Duration(milliseconds: 300),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isFound ? Colors.green.withOpacity(0.2) : Colors.black26,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isFound ? Colors.green : Colors.white12,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      word,
-                      style: TextStyle(
-                        color: isFound ? Colors.green : Colors.white70,
-                        decoration: isFound ? TextDecoration.lineThrough : null,
-                        fontWeight: isFound ? FontWeight.bold : FontWeight.normal,
-                        fontSize: 13,
-                      ),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isFound ? Colors.green.withValues(alpha: 0.2) : Colors.black26,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isFound ? Colors.green : Colors.white12,
+                      width: isFound ? 2 : 1,
                     ),
-                    if (isFound) ...[
-                      const SizedBox(width: 6),
-                      const Icon(Icons.check, size: 14, color: Colors.green),
+                    boxShadow: isFound ? [
+                      BoxShadow(color: Colors.green.withValues(alpha: 0.4), blurRadius: 8, spreadRadius: 1)
+                    ] : null,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        word,
+                        style: TextStyle(
+                          color: isFound ? Colors.greenAccent : Colors.white70,
+                          decoration: isFound ? TextDecoration.lineThrough : null,
+                          fontWeight: isFound ? FontWeight.bold : FontWeight.normal,
+                          fontSize: isFound ? 14 : 13,
+                        ),
+                      ),
+                      if (isFound) ...[
+                        const SizedBox(width: 6),
+                        const Icon(Icons.check_circle, size: 16, color: Colors.greenAccent),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               );
             }).toList(),
@@ -807,16 +816,16 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: _hasSubmitted 
-              ? [Colors.green.withOpacity(0.2), Colors.green.withOpacity(0.1)]
+              ? [Colors.green.withValues(alpha: 0.2), Colors.green.withValues(alpha: 0.1)]
               : isComplete 
-                  ? [Colors.amber.withOpacity(0.3), Colors.orange.withOpacity(0.2)]
-                  : [Colors.blue.withOpacity(0.2), Colors.blue.withOpacity(0.1)],
+                  ? [Colors.amber.withValues(alpha: 0.3), Colors.orange.withValues(alpha: 0.2)]
+                  : [Colors.blue.withValues(alpha: 0.2), Colors.blue.withValues(alpha: 0.1)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _hasSubmitted ? Colors.green : isComplete ? Colors.amber : Colors.blue.withOpacity(0.5),
+          color: _hasSubmitted ? Colors.green : isComplete ? Colors.amber : Colors.blue.withValues(alpha: 0.5),
           width: 2,
         ),
       ),
@@ -861,11 +870,11 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                                 : [Colors.blue, Colors.blueAccent],
                           )
                         : null,
-                    color: canSubmit ? null : Colors.grey.withOpacity(0.3),
+                    color: canSubmit ? null : Colors.grey.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: canSubmit ? [
                       BoxShadow(
-                        color: (isComplete ? Colors.amber : Colors.blue).withOpacity(0.4),
+                        color: (isComplete ? Colors.amber : Colors.blue).withValues(alpha: 0.4),
                         blurRadius: 10,
                         spreadRadius: 2,
                       ),
@@ -959,14 +968,14 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.amber.withOpacity(0.15),
-            Colors.orange.withOpacity(0.1),
+            Colors.amber.withValues(alpha: 0.15),
+            Colors.orange.withValues(alpha: 0.1),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.amber.withOpacity(0.3)),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -1011,22 +1020,22 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: isFastest 
-                    ? Colors.amber.withOpacity(0.3)
+                    ? Colors.amber.withValues(alpha: 0.3)
                     : isTop3 
-                        ? _getPositionColor(index).withOpacity(0.2)
-                        : Colors.white.withOpacity(0.05),
+                        ? _getPositionColor(index).withValues(alpha: 0.2)
+                        : Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isFastest 
-                      ? Colors.amber.withOpacity(0.8)
+                      ? Colors.amber.withValues(alpha: 0.8)
                       : isTop3 
-                          ? _getPositionColor(index).withOpacity(0.5) 
+                          ? _getPositionColor(index).withValues(alpha: 0.5) 
                           : Colors.white10,
                   width: isFastest ? 3 : isTop3 ? 2 : 1,
                 ),
                 boxShadow: isFastest ? [
                   BoxShadow(
-                    color: Colors.amber.withOpacity(0.4),
+                    color: Colors.amber.withValues(alpha: 0.4),
                     blurRadius: 12,
                     spreadRadius: 2,
                   ),
@@ -1058,9 +1067,9 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                       boxShadow: [
                         BoxShadow(
                           color: isFastest 
-                              ? Colors.amber.withOpacity(0.6)
+                              ? Colors.amber.withValues(alpha: 0.6)
                               : isTop3 
-                                  ? _getPositionColor(index).withOpacity(0.5)
+                                  ? _getPositionColor(index).withValues(alpha: 0.5)
                                   : Colors.black26,
                           blurRadius: isFastest ? 12 : 8,
                           spreadRadius: isFastest ? 2 : 1,
@@ -1136,11 +1145,11 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       color: isFastest 
-                          ? Colors.redAccent.withOpacity(0.9)
+                          ? Colors.redAccent.withValues(alpha: 0.9)
                           : Colors.black38,
                       borderRadius: BorderRadius.circular(20),
                       border: isFastest ? Border.all(
-                        color: Colors.amber.withOpacity(0.8), 
+                        color: Colors.amber.withValues(alpha: 0.8), 
                         width: 2
                       ) : null,
                     ),

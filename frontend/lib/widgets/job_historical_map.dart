@@ -92,7 +92,7 @@ class _JobHistoricalMapState extends State<JobHistoricalMap>
         border: Border.all(color: const Color(0xFF8B7355), width: 6),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.7),
+            color: Colors.black.withValues(alpha: 0.7),
             blurRadius: 40,
             spreadRadius: 8,
           ),
@@ -166,14 +166,14 @@ class _JobHistoricalMapState extends State<JobHistoricalMap>
               borderRadius: BorderRadius.circular(70),
               gradient: RadialGradient(
                 colors: [
-                  const Color(0xFFFF6B35).withOpacity(0.5 * _glowAnimation.value),
-                  const Color(0xFFFF8C42).withOpacity(0.25 * _glowAnimation.value),
+                  const Color(0xFFFF6B35).withValues(alpha: 0.5 * _glowAnimation.value),
+                  const Color(0xFFFF8C42).withValues(alpha: 0.25 * _glowAnimation.value),
                   Colors.transparent,
                 ],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFF6B35).withOpacity(0.4 * _glowAnimation.value),
+                  color: const Color(0xFFFF6B35).withValues(alpha: 0.4 * _glowAnimation.value),
                   blurRadius: 50,
                   spreadRadius: 25,
                 ),
@@ -211,12 +211,12 @@ class _JobHistoricalMapState extends State<JobHistoricalMap>
                     border: Border.all(color: Colors.white, width: 3),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFFD700).withOpacity(_glowAnimation.value),
+                        color: const Color(0xFFFFD700).withValues(alpha: _glowAnimation.value),
                         blurRadius: 25,
                         spreadRadius: 8,
                       ),
                       BoxShadow(
-                        color: const Color(0xFFFF6B35).withOpacity(_glowAnimation.value * 0.5),
+                        color: const Color(0xFFFF6B35).withValues(alpha: _glowAnimation.value * 0.5),
                         blurRadius: 40,
                         spreadRadius: 15,
                       ),
@@ -321,7 +321,7 @@ class _JobHistoricalMapState extends State<JobHistoricalMap>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF3D2914).withOpacity(0.85),
+              color: const Color(0xFF3D2914).withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: const Color(0xFFD4AF37), width: 2),
             ),
@@ -383,7 +383,7 @@ class _JobHistoricalMapState extends State<JobHistoricalMap>
             'Desierto de Arabia',
             style: GoogleFonts.cormorantGaramond(
               fontSize: smallFontSize,
-              color: const Color(0xFF8B7355).withOpacity(0.8),
+              color: const Color(0xFF8B7355).withValues(alpha: 0.8),
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -421,7 +421,7 @@ class _JobHistoricalMapState extends State<JobHistoricalMap>
             textAlign: TextAlign.center,
             style: GoogleFonts.cormorantGaramond(
               fontSize: smallFontSize,
-              color: const Color(0xFF8B7355).withOpacity(0.8),
+              color: const Color(0xFF8B7355).withValues(alpha: 0.8),
             ),
           ),
         ),
@@ -454,7 +454,7 @@ class _JobHistoricalMapState extends State<JobHistoricalMap>
         letterSpacing: 2,
         shadows: [
           Shadow(
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withValues(alpha: 0.5),
             blurRadius: 2,
             offset: const Offset(1, 1),
           ),
@@ -504,8 +504,8 @@ class _JobHistoricalMapState extends State<JobHistoricalMap>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFF3D2914).withOpacity(0.95),
-              const Color(0xFF3D2914).withOpacity(0.7),
+              const Color(0xFF3D2914).withValues(alpha: 0.95),
+              const Color(0xFF3D2914).withValues(alpha: 0.7),
               Colors.transparent,
             ],
           ),
@@ -562,7 +562,7 @@ class _JobHistoricalMapState extends State<JobHistoricalMap>
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5E6D3).withOpacity(0.95),
+          color: const Color(0xFFF5E6D3).withValues(alpha: 0.95),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: const Color(0xFF8B7355), width: 2),
         ),
@@ -684,7 +684,7 @@ class _ParchmentBackgroundPainter extends CustomPainter {
     
     // Textura de pergamino
     final texturePaint = Paint()
-      ..color = const Color(0xFF8B7355).withOpacity(0.05)
+      ..color = const Color(0xFF8B7355).withValues(alpha: 0.05)
       ..style = PaintingStyle.fill;
     
     final random = math.Random(42);
@@ -702,7 +702,7 @@ class _ParchmentBackgroundPainter extends CustomPainter {
         radius: 0.9,
         colors: [
           Colors.transparent,
-          const Color(0xFF8B7355).withOpacity(0.15),
+          const Color(0xFF8B7355).withValues(alpha: 0.15),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
     
@@ -722,7 +722,7 @@ class _MapGeographyPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // Mar Mediterraneo
     final seaPaint = Paint()
-      ..color = const Color(0xFF6BA3D6).withOpacity(0.6)
+      ..color = const Color(0xFF6BA3D6).withValues(alpha: 0.6)
       ..style = PaintingStyle.fill;
     
     final seaPath = Path();
@@ -734,7 +734,7 @@ class _MapGeographyPainter extends CustomPainter {
     
     // Mar Muerto
     final deadSeaPaint = Paint()
-      ..color = const Color(0xFF4A7BA7).withOpacity(0.7)
+      ..color = const Color(0xFF4A7BA7).withValues(alpha: 0.7)
       ..style = PaintingStyle.fill;
     
     canvas.drawOval(
@@ -758,7 +758,7 @@ class _MapGeographyPainter extends CustomPainter {
     
     // Region de Uz (destacada)
     final uzPaint = Paint()
-      ..color = const Color(0xFFE07B39).withOpacity(0.35)
+      ..color = const Color(0xFFE07B39).withValues(alpha: 0.35)
       ..style = PaintingStyle.fill;
     
     final uzPath = Path();
@@ -778,7 +778,7 @@ class _MapGeographyPainter extends CustomPainter {
     
     // Desierto (textura)
     final desertPaint = Paint()
-      ..color = const Color(0xFFDAA520).withOpacity(0.2)
+      ..color = const Color(0xFFDAA520).withValues(alpha: 0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     
@@ -799,7 +799,7 @@ class _MapGeographyPainter extends CustomPainter {
     
     // Montanas (simbolos)
     final mountainPaint = Paint()
-      ..color = const Color(0xFF8B7355).withOpacity(0.6)
+      ..color = const Color(0xFF8B7355).withValues(alpha: 0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     
@@ -810,7 +810,7 @@ class _MapGeographyPainter extends CustomPainter {
     
     // Rio Eufrates
     final riverPaint = Paint()
-      ..color = const Color(0xFF4A7BA7).withOpacity(0.5)
+      ..color = const Color(0xFF4A7BA7).withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3;
     
@@ -822,7 +822,7 @@ class _MapGeographyPainter extends CustomPainter {
     
     // Rutas comerciales (lineas punteadas estaticas)
     final routePaint = Paint()
-      ..color = const Color(0xFF5D4E37).withOpacity(0.4)
+      ..color = const Color(0xFF5D4E37).withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     
@@ -906,7 +906,7 @@ class _TradeRoutesPainter extends CustomPainter {
         final y = start.dy + (end.dy - start.dy) * phase;
         final opacity = math.sin(phase * math.pi);
         
-        paint.color = const Color(0xFFD4AF37).withOpacity(0.3 + 0.5 * opacity);
+        paint.color = const Color(0xFFD4AF37).withValues(alpha: 0.3 + 0.5 * opacity);
         canvas.drawCircle(Offset(x, y), dotSize * (0.6 + 0.4 * opacity), paint);
       }
     }

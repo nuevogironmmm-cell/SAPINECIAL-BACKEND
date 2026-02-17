@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:math' as math;
 
 /// =============================================================================
 /// L?NEA DE TIEMPO HIST?RICA DE JOB - ANIMACI?N DOCUMENTAL
@@ -185,12 +184,12 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFD4AF37).withOpacity(0.3),
+          color: const Color(0xFFD4AF37).withValues(alpha: 0.3),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 30,
             spreadRadius: 5,
           ),
@@ -221,13 +220,13 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF2A2318).withOpacity(0.9),
-            const Color(0xFF1A1510).withOpacity(0.8),
+            const Color(0xFF2A2318).withValues(alpha: 0.9),
+            const Color(0xFF1A1510).withValues(alpha: 0.8),
           ],
         ),
         border: Border(
           bottom: BorderSide(
-            color: const Color(0xFFD4AF37).withOpacity(0.4),
+            color: const Color(0xFFD4AF37).withValues(alpha: 0.4),
             width: 2,
           ),
         ),
@@ -317,7 +316,7 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
           borderRadius: BorderRadius.circular(3),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -340,13 +339,13 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
           gradient: LinearGradient(
             colors: [
               const Color(0xFFD4AF37),
-              const Color(0xFFD4AF37).withOpacity(0.7),
+              const Color(0xFFD4AF37).withValues(alpha: 0.7),
             ],
           ),
           borderRadius: BorderRadius.circular(3),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFD4AF37).withOpacity(0.5),
+              color: const Color(0xFFD4AF37).withValues(alpha: 0.5),
               blurRadius: 8,
               spreadRadius: 1,
             ),
@@ -421,17 +420,17 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
                       gradient: RadialGradient(
                         colors: [
                           milestone.color,
-                          milestone.color.withOpacity(0.7),
+                          milestone.color.withValues(alpha: 0.7),
                         ],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: milestone.color.withOpacity(_glowAnimation.value),
+                          color: milestone.color.withValues(alpha: _glowAnimation.value),
                           blurRadius: 25,
                           spreadRadius: 8,
                         ),
                         BoxShadow(
-                          color: milestone.color.withOpacity(_glowAnimation.value * 0.5),
+                          color: milestone.color.withValues(alpha: _glowAnimation.value * 0.5),
                           blurRadius: 40,
                           spreadRadius: 15,
                         ),
@@ -451,7 +450,7 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: milestone.color.withOpacity(0.2),
+                    color: milestone.color.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: milestone.color),
                   ),
@@ -469,7 +468,7 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
                         milestone.subtitle,
                         style: GoogleFonts.cormorantGaramond(
                           fontSize: widget.isProjectorMode ? 11 : 10,
-                          color: milestone.color.withOpacity(0.8),
+                          color: milestone.color.withValues(alpha: 0.8),
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -516,15 +515,15 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
           height: widget.isProjectorMode ? 45 : 40,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: milestone.color.withOpacity(0.2),
+            color: milestone.color.withValues(alpha: 0.2),
             border: Border.all(
-              color: milestone.color.withOpacity(0.6),
+              color: milestone.color.withValues(alpha: 0.6),
               width: 2,
             ),
           ),
           child: Icon(
             milestone.icon,
-            color: milestone.color.withOpacity(0.8),
+            color: milestone.color.withValues(alpha: 0.8),
             size: widget.isProjectorMode ? 20 : 18,
           ),
         ),
@@ -536,7 +535,7 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
           milestone.title,
           style: GoogleFonts.cinzel(
             fontSize: widget.isProjectorMode ? 11 : 10,
-            color: milestone.color.withOpacity(0.9),
+            color: milestone.color.withValues(alpha: 0.9),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -545,7 +544,7 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
           milestone.subtitle,
           style: GoogleFonts.cormorantGaramond(
             fontSize: widget.isProjectorMode ? 9 : 8,
-            color: const Color(0xFFBFA67A).withOpacity(0.7),
+            color: const Color(0xFFBFA67A).withValues(alpha: 0.7),
             fontStyle: FontStyle.italic,
           ),
         ),
@@ -556,7 +555,7 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.2),
+              color: Colors.red.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
@@ -593,17 +592,17 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isHighlighted ? color.withOpacity(0.15) : Colors.transparent,
+        color: isHighlighted ? color.withValues(alpha: 0.15) : Colors.transparent,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: color.withOpacity(isHighlighted ? 0.5 : 0.2),
+          color: color.withValues(alpha: isHighlighted ? 0.5 : 0.2),
         ),
       ),
       child: Text(
         text,
         style: GoogleFonts.cinzel(
           fontSize: widget.isProjectorMode ? 10 : 9,
-          color: color.withOpacity(isHighlighted ? 1.0 : 0.6),
+          color: color.withValues(alpha: isHighlighted ? 1.0 : 0.6),
           letterSpacing: 1,
           fontWeight: isHighlighted ? FontWeight.bold : FontWeight.normal,
         ),
@@ -633,10 +632,10 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2318).withOpacity(0.5),
+        color: const Color(0xFF2A2318).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: const Color(0xFFD4AF37).withOpacity(0.2),
+          color: const Color(0xFFD4AF37).withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -644,7 +643,7 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
         children: [
           Icon(
             icon,
-            color: const Color(0xFFD4AF37).withOpacity(0.7),
+            color: const Color(0xFFD4AF37).withValues(alpha: 0.7),
             size: widget.isProjectorMode ? 20 : 16,
           ),
           const SizedBox(width: 8),
@@ -664,7 +663,7 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
                 subtitle,
                 style: GoogleFonts.cormorantGaramond(
                   fontSize: widget.isProjectorMode ? 10 : 8,
-                  color: const Color(0xFFBFA67A).withOpacity(0.7),
+                  color: const Color(0xFFBFA67A).withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -683,13 +682,13 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF1A1510).withOpacity(0.8),
-            const Color(0xFF2A2318).withOpacity(0.9),
+            const Color(0xFF1A1510).withValues(alpha: 0.8),
+            const Color(0xFF2A2318).withValues(alpha: 0.9),
           ],
         ),
         border: Border(
           top: BorderSide(
-            color: const Color(0xFFD4AF37).withOpacity(0.3),
+            color: const Color(0xFFD4AF37).withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -702,7 +701,7 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
             children: [
               Icon(
                 Icons.info_outline,
-                color: const Color(0xFFBFA67A).withOpacity(0.5),
+                color: const Color(0xFFBFA67A).withValues(alpha: 0.5),
                 size: 14,
               ),
               const SizedBox(width: 8),
@@ -710,7 +709,7 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
                 'Sacrificios familiares | Sin sacerdocio lev?tico',
                 style: GoogleFonts.cormorantGaramond(
                   fontSize: widget.isProjectorMode ? 11 : 10,
-                  color: const Color(0xFFBFA67A).withOpacity(0.6),
+                  color: const Color(0xFFBFA67A).withValues(alpha: 0.6),
                   fontStyle: FontStyle.italic,
                 ),
               ),
@@ -730,7 +729,7 @@ class _JobHistoricalTimelineState extends State<JobHistoricalTimeline>
             },
             icon: Icon(
               Icons.replay,
-              color: const Color(0xFFD4AF37).withOpacity(0.7),
+              color: const Color(0xFFD4AF37).withValues(alpha: 0.7),
               size: 20,
             ),
             tooltip: 'Reproducir animaci?n',

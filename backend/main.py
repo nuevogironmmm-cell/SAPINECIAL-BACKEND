@@ -576,6 +576,47 @@ class StudentManager:
             except (ConnectionError, RuntimeError) as e:
                 print(f"[ERROR] Error enviando a {student.name}: {e}")
 
+    def calculate_accumulated_percentage(self, student: StudentData, activities: Dict[str, ActivityData]) -> float:
+        """Calcula el porcentaje acumulado basado en respuestas y valor de actividades"""
+        total_possible = 0.0
+        total_earned = 0.0
+        
+        # Iterar sobre todas las actividades registradas en el estado
+        for activity in activities.values():
+            # Sumar al total posible solo si la actividad est? cerrada o el estudiante ya respondi?
+            # Ojo: Para ser justos, deber?amos sumar todo lo que ya se ha jugado.
+            # Estrategia: Sumar puntos de actividades donde el estudiante tiene respuesta
+            
+            if student.has_responded(activity.id):
+                total_possible += activity.percentage_value
+                response = student.responses.get(activity.id, {})
+                
+                # Si es correcta, sumar puntos
+                if response.get("is_correct", False):
+                    total_earned += activity.percentage_value
+                
+                # Si hubo un valor parcial asignado (caso raro, pero posible)
+                elif response.get("percentage_value", 0) > 0:
+                     # Esto asume que percentage_value en la respuesta es lo ganado
+                     pass 
+
+        # Evitar divisi?n por cero
+        if total_possible == 0:
+            return 0.0
+            
+        # Calcular porcentaje sobre 100
+        # Ejemplo: Si respondi? 2 actividades de 10 ptos c/u (Total 20)
+        # Y acert? 1 (10 ptos). Resultado: (10/20) * 100 = 50%
+        # Pero el requerimiento suele ser "acumulado" como suma de puntos. 
+        # Si el sistema es "Puntos ganados", retornamos total_earned.
+        # Si es "Promedio de rendimiento", usamos la f?rmula.
+        # Basado en get_classification, parece ser un acumulado absoluto o relativo a un total fijo.
+        
+        # ASUMCI?N: El acumulado es simplemente la suma de puntos ganados.
+        # Si el usuario quiere porcentaje de curso, ser?a (total_earned / total_course_points) * 100.
+        # Por ahora, retornamos la suma de puntos ganados como "porcentaje acumulado" (si cada act vale puntos porcentuales)
+        return total_earned
+
 student_manager = StudentManager()
 
 # ============================================================
@@ -1190,6 +1231,45 @@ async def student_websocket(websocket: WebSocket):
                 words_found = int(payload.get("wordsFound", 0))
                 total_words = int(payload.get("totalWords", 0))
 
+                # Buscar la actividad para saber cu?ntos puntos vale
+                activity = state.get_activity(activity_id)
+                points_value = 10.0 # Default
+                if activity:
+                    points_value = activity.percentage_value
+
+                # Calcular puntos ganados (proporcional o todo/nada)
+                # En Sopa de letras, si encontr? todas, gana los puntos.
+                # Si encontr? menos, podr?amos dar parciales. 
+                # Asumiremos: Si words_found == total_words -> Puntos completos.
+                is_completed = (words_found >= total_words and total_words > 0)
+                points_earned = points_value if is_completed else 0.0
+                
+                # IMPORTANTE: Registrar la respuesta para que cuente en la nota
+                student.add_response(
+                    activity_id=activity_id,
+                    answer="completed" if is_completed else "incomplete",
+                    is_correct=is_completed,
+                    percentage_value=points_value, # Valor de la actividad
+                    response_time_ms=time_seconds * 1000
+                )
+
+                # Recalcular acumulado
+                student.accumulated_percentage = student_manager.calculate_accumulated_percentage(
+                    student, state.activities
+                )
+
+                # Enviar confirmaci?n de RESPUESTA (para que el frontend muestre resultados)
+                await websocket.send_text(json.dumps({
+                    "type": "ANSWER_RECEIVED",
+                    "data": {
+                        "activityId": activity_id,
+                        "isCorrect": is_completed,
+                        "pointsEarned": points_earned,
+                        "accumulatedPercentage": student.accumulated_percentage,
+                        "motivationalMessage": student.motivational_message,
+                    }
+                }))
+
                 await teacher_manager.broadcast_to_teachers({
                     "type": "WORD_SEARCH_RESULT",
                     "data": {
@@ -1199,6 +1279,7 @@ async def student_websocket(websocket: WebSocket):
                         "timeSeconds": time_seconds,
                         "wordsFound": words_found,
                         "totalWords": total_words,
+                        "pointsEarned": points_earned, # Nuevo campo
                     }
                 })
                 

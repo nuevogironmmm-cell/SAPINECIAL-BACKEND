@@ -3,7 +3,6 @@
 /// Sistema de identificación sin cuentas, basado en sesión temporal
 /// Maneja actividades, respuestas, reflexiones, puntaje y MEDALLAS
 
-import 'dart:convert';
 
 // ============================================================
 // ESTADO DE CONEXIÓN DEL ESTUDIANTE

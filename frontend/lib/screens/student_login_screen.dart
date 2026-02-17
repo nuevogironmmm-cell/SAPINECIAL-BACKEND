@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/student_service.dart';
 import '../utils/animations.dart';
@@ -7,10 +7,10 @@ import 'student_main_screen.dart';
 /// Pantalla de login para estudiantes
 /// 
 /// Permite al estudiante ingresar su nombre para identificarse.
-/// No requiere cuenta ni contraseña.
+/// No requiere cuenta ni contrase?a.
 /// Valida:
-/// - Mínimo 3 caracteres
-/// - Máximo 50 caracteres
+/// - M?nimo 3 caracteres
+/// - M?ximo 50 caracteres
 /// - Nombre no duplicado en la clase actual
 class StudentLoginScreen extends StatefulWidget {
   const StudentLoginScreen({super.key});
@@ -36,7 +36,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
   void initState() {
     super.initState();
     
-    // Animación del logo
+    // Animaci?n del logo
     _logoController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -46,7 +46,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
     );
     _logoController.forward();
     
-    // Intentar reconexión automática
+    // Intentar reconexi?n autom?tica
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tryAutoReconnect();
     });
@@ -71,7 +71,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
     if (!connected) {
       setState(() {
         _isConnecting = false;
-        _errorMessage = 'No se pudo conectar al servidor. Verifica tu conexión.';
+        _errorMessage = 'No se pudo conectar al servidor. Verifica tu conexi?n.';
       });
       return;
     }
@@ -135,7 +135,6 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
     
     return Scaffold(
       body: Container(
@@ -145,7 +144,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
             end: Alignment.bottomRight,
             colors: [
               theme.colorScheme.surface,
-              theme.colorScheme.surface.withOpacity(0.8),
+              theme.colorScheme.surface.withValues(alpha: 0.8),
               const Color(0xFF1a1a2e),
             ],
           ),
@@ -169,13 +168,13 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                           gradient: LinearGradient(
                             colors: [
                               theme.colorScheme.primary,
-                              theme.colorScheme.primary.withOpacity(0.7),
+                              theme.colorScheme.primary.withValues(alpha: 0.7),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(30),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.primary.withOpacity(0.3),
+                              color: theme.colorScheme.primary.withValues(alpha: 0.3),
                               blurRadius: 30,
                               spreadRadius: 5,
                             ),
@@ -191,7 +190,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                     
                     const SizedBox(height: 32),
                     
-                    // Título
+                    // T?tulo
                     FadeInSlide(
                       duration: const Duration(milliseconds: 600),
                       child: Text(
@@ -220,7 +219,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                     
                     const SizedBox(height: 48),
                     
-                    // Estado de conexión
+                    // Estado de conexi?n
                     if (_isConnecting)
                       FadeInSlide(
                         child: Column(
@@ -252,9 +251,9 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                         child: Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
+                            color: Colors.red.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.red.withOpacity(0.3)),
+                            border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                           ),
                           child: Row(
                             children: [
@@ -274,24 +273,24 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                     
                     const SizedBox(height: 48),
                     
-                    // Información adicional
+                    // Informaci?n adicional
                     FadeInSlide(
                       delay: const Duration(milliseconds: 600),
                       duration: const Duration(milliseconds: 600),
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withValues(alpha: 0.1),
                           ),
                         ),
                         child: Column(
                           children: [
                             Icon(
                               Icons.info_outline,
-                              color: theme.colorScheme.primary.withOpacity(0.7),
+                              color: theme.colorScheme.primary.withValues(alpha: 0.7),
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -334,13 +333,13 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
             ),
             decoration: InputDecoration(
               labelText: 'Tu nombre',
-              hintText: 'Ej: Juan P�rez',
+              hintText: 'Ej: Juan P?rez',
               prefixIcon: Icon(
                 Icons.person_outline,
                 color: theme.colorScheme.primary,
               ),
               filled: true,
-              fillColor: Colors.white.withOpacity(0.05),
+              fillColor: Colors.white.withValues(alpha: 0.05),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide.none,
@@ -348,7 +347,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                 ),
               ),
               focusedBorder: OutlineInputBorder(
@@ -365,7 +364,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                 ),
               ),
               labelStyle: const TextStyle(color: Colors.white70),
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -395,13 +394,13 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                   gradient: LinearGradient(
                     colors: [
                       theme.colorScheme.primary,
-                      theme.colorScheme.primary.withOpacity(0.8),
+                      theme.colorScheme.primary.withValues(alpha: 0.8),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(0.3),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
