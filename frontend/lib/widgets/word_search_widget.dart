@@ -545,7 +545,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                       ],
                     ),
                     Text(
-                      'Encontradas: ${_foundWords.length} / ${_wordsToFind.length} (v2.1)',
+                      'Encontradas: ${_foundWords.length} / ${_wordsToFind.length} (v3.0)',
                       style: GoogleFonts.oswald(
                         fontSize: 18,
                         color: Colors.amber,
@@ -573,26 +573,131 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                 ),
               )
             else
-              ...[
-                // Grid FIJO arriba - sin scroll
-                _buildGridSection(constraints),
-                const SizedBox(height: 12),
-                // Lista de palabras en scroll INDEPENDIENTE
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
-                      children: [
-                        _buildWordListSection(),
-                        const SizedBox(height: 20),
-                      ],
+              Expanded(
+                child: Stack(
+                  children: [
+                    // Grid Centrado
+                    Positioned.fill(
+                      child: Center(
+                        child: SingleChildScrollView(
+                           child: _buildGridSection(constraints),
+                        ),
+                      ),
                     ),
-                  ),
+                    
+                    // Botón Flotante para ver palabras / enviar
+                    Positioned(
+                      bottom: 20,
+                      right: 20,
+                      child: FloatingActionButton.extended(
+                        onPressed: _showWordListModal,
+                        label: const Text('📝 VER PALABRAS', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+                        icon: const Icon(Icons.assignment),
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.black,
+                        elevation: 8,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
           ],
         );
       },
+    );
+  }
+
+  void _showWordListModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E1E1E),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Header modal
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                   Text(
+                    'Palabras a buscar',
+                    style: GoogleFonts.oswald(
+                      fontSize: 22,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white70),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(color: Colors.white10),
+            // Lista scrollable
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    _buildWordListSection(),
+                    const SizedBox(height: 32),
+                    // Mensaje si ya terminó
+                    if (_foundWords.length == _wordsToFind.length)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.emoji_events, color: Colors.amber),
+                            const SizedBox(width: 12),
+                            Expanded(child: Text(
+                              '¡Has encontrado todas las palabras! Envía tu resultado.',
+                              style: TextStyle(color: Colors.amber.shade100),
+                            )),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 100), // Espacio extra
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
