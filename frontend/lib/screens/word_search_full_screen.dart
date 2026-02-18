@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/word_search_widget.dart';
@@ -71,7 +71,7 @@ class WordSearchFullScreen extends StatelessWidget {
           onCompleted: onCompleted,
           onSubmitResult: (name, time, wordsFound) {
             onSubmitResult(name, time, wordsFound);
-            // Salir despu�s de enviar
+            // Salir después de enviar
             Navigator.pop(context);
           },
         ),

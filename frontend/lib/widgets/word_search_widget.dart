@@ -57,13 +57,13 @@ class WordSearchRanking {
   double get percentage => totalWords > 0 ? (wordsFound / totalWords) * 100 : 0;
   String get formattedTime => '${(timeSeconds ~/ 60).toString().padLeft(2, '0')}:${(timeSeconds % 60).toString().padLeft(2, '0')}';
   
-  // Medalla seg?n posici?n
+  // Medalla según posición
   static String getMedal(int position) {
     switch (position) {
-      case 0: return '??'; // Primer lugar - Corona dorada
-      case 1: return '??'; // Segundo lugar
-      case 2: return '??'; // Tercer lugar
-      default: return '?';
+      case 0: return '👑'; // Primer lugar - Corona dorada
+      case 1: return '🥈'; // Segundo lugar
+      case 2: return '🥉'; // Tercer lugar
+      default: return '⭐';
     }
   }
 }
@@ -195,7 +195,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
               ),
               const SizedBox(width: 10),
               Text(
-                success ? '?Felicidades!' : 'Tiempo Terminado',
+                success ? '¡Felicidades!' : 'Tiempo Terminado',
                 style: GoogleFonts.oswald(color: Colors.white, fontSize: 24),
               ),
             ],
@@ -205,7 +205,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
             children: [
               Text(
                 success 
-                  ? 'Has encontrado todas las palabras y demostrado sabidur?a.'
+                  ? 'Has encontrado todas las palabras y demostrado sabiduría.'
                   : 'Se acab? el tiempo. ?Sigue practicando tu agudeza visual!',
                 style: const TextStyle(color: Colors.white70),
               ),
@@ -226,8 +226,8 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                     const SizedBox(height: 4),
                     Text(
                       success 
-                        ? '"Bien hecho, sigue creciendo en sabidur?a y gracia."' 
-                        : '"El principio de la sabidur?a es el temor de Jehov?."',
+                        ? '"Bien hecho, sigue creciendo en sabiduría y gracia."' 
+                        : '"El principio de la sabiduría es el temor de Jehov?."',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.merriweather(
                         color: Colors.amber.shade200,
@@ -573,19 +573,23 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                 ),
               )
             else
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  child: Column(
-                    children: [
-                      _buildGridSection(constraints),
-                      const SizedBox(height: 16),
-                      _buildWordListSection(),
-                      const SizedBox(height: 20),
-                    ],
+              ...[
+                // Grid FIJO arriba - sin scroll
+                _buildGridSection(constraints),
+                const SizedBox(height: 12),
+                // Lista de palabras en scroll INDEPENDIENTE
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      children: [
+                        _buildWordListSection(),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+              ],
           ],
         );
       },
@@ -595,10 +599,10 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
   Widget _buildGridSection(BoxConstraints constraints) {
     return LayoutBuilder(
       builder: (context, gridConstraints) {
-        // Calcular tama?o cuadrado
-        // En m?vil (dentro de scroll), limitar el grid para dejar espacio a la lista de palabras
+        // Calcular tamaño cuadrado
+        // En móvil, limitar el grid para dejar espacio a la lista de palabras
         final screenHeight = MediaQuery.of(context).size.height;
-        final maxGridSize = screenHeight * 0.55; // M?ximo 55% de la pantalla
+        final maxGridSize = screenHeight * 0.55; // Máximo 55% de la pantalla
         final baseSize = min(gridConstraints.maxWidth, gridConstraints.maxHeight > 300 ? gridConstraints.maxHeight : 500.0);
         final size = min(baseSize, maxGridSize);
         final cellSize = size / widget.gridSize;
@@ -606,15 +610,9 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
         return Center(
           child: Stack(
             children: [
-              // La Cuadr?cula
-              Listener(
-                onPointerDown: (_) {
-                  // Evitar que el parent (SingleChildScrollView) robe el gesto de scroll
-                  // cuando el usuario toca la cuadr?cula
-                  Scrollable.of(context).position.context.notificationContext?.findRenderObject()?.markNeedsLayout();
-                  // Esta acci?n es critica para que el scroll no se active mientras se juega
-                },
-                child: RawGestureDetector(
+              // La Cuadrícula
+              // Cuadrícula con gestos de selección
+              RawGestureDetector(
                   gestures: {
                     EagerGestureRecognizer: GestureRecognizerFactoryWithHandlers<EagerGestureRecognizer>(
                       () => EagerGestureRecognizer(),
@@ -664,7 +662,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                               style: GoogleFonts.robotoMono(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: cellSize * 0.75, // Aumentado de 0.6 a 0.75 para mejor visibilidad m?vil
+                                fontSize: cellSize * 0.75, // Aumentado de 0.6 a 0.75 para mejor visibilidad móvil
                                 shadows: [Shadow(color: Colors.black, blurRadius: 2)],
                               ),
                             ),
@@ -675,7 +673,6 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                   ),
                 ),
               ),
-            ),
 
               // Overlay de Inicio
               if (!_isGameStarted && !widget.isReadOnly)
@@ -696,7 +693,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                         ),
                         const SizedBox(height: 10),
                         const Text(
-                          'Encuentra las palabras de sabidur?a',
+                          'Encuentra las palabras de sabiduría',
                           style: TextStyle(color: Colors.white70),
                         ),
                         const SizedBox(height: 30),
@@ -814,7 +811,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
           ),
           
           // ============================================================
-          // BOT?N DE ENVIAR RESULTADO (solo para estudiantes)
+          // BOTÓN DE ENVIAR RESULTADO (solo para estudiantes)
           // ============================================================
           if (_isGameStarted && widget.studentName != null && widget.onSubmitResult != null) ...[
             const SizedBox(height: 24),
@@ -822,7 +819,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
           ],
           
           // ============================================================
-          // RANKING DE GANADORES ORDENADO POR TIEMPO (si est? disponible)
+          // RANKING DE GANADORES ORDENADO POR TIEMPO (si está disponible)
           // ============================================================
           if (widget.ranking != null && widget.ranking!.isNotEmpty) ...[
             const SizedBox(height: 24),
@@ -834,7 +831,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
   }
   
   // ============================================================
-  // BOT?N DE ENVIAR RESULTADO
+  // BOTÓN DE ENVIAR RESULTADO
   // ============================================================
   Widget _buildSubmitButton() {
     final canSubmit = _foundWords.isNotEmpty && !_hasSubmitted;
@@ -861,14 +858,14 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
       child: Column(
         children: [
           if (_hasSubmitted) ...[
-            // Mensaje de confirmaci?n
+            // Mensaje de confirmación
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.check_circle, color: Colors.green, size: 28),
                 const SizedBox(width: 10),
                 Text(
-                  '?Resultado enviado!',
+                  '¡Resultado enviado!',
                   style: GoogleFonts.oswald(
                     color: Colors.green,
                     fontSize: 18,
@@ -883,7 +880,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
               style: const TextStyle(color: Colors.white70),
             ),
           ] else ...[
-            // Bot?n de enviar
+            // Botón de enviar
             Material(
               color: Colors.transparent,
               child: InkWell(
@@ -919,7 +916,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        isComplete ? '?? ?ENVIAR RESULTADO!' : 'Enviar progreso',
+                        isComplete ? '🏆 ¡ENVIAR RESULTADO!' : 'Enviar progreso',
                         style: GoogleFonts.oswald(
                           color: canSubmit ? Colors.white : Colors.white38,
                           fontSize: 16,
@@ -973,7 +970,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                '?Tu resultado fue enviado al docente!',
+                '¡Tu resultado fue enviado al docente!',
                 style: GoogleFonts.oswald(color: Colors.white, fontSize: 16),
               ),
             ),
@@ -1028,7 +1025,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
           ),
           const SizedBox(height: 8),
           Text(
-            '?? El m?s r?pido gana la corona ??',
+            '🏆 El más rápido gana la corona 👑',
             style: TextStyle(
               color: Colors.amber.shade200,
               fontSize: 12,
@@ -1072,7 +1069,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
               ),
               child: Row(
                 children: [
-                  // Medalla o posici?n con efecto especial para el m?s r?pido
+                  // Medalla o posición con efecto especial para el m?s r?pido
                   Container(
                     width: 50,
                     height: 50,
@@ -1106,7 +1103,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                       ],
                     ),
                     child: isFastest 
-                        ? const Text('??', style: TextStyle(fontSize: 28))
+                        ? const Text('🏆', style: TextStyle(fontSize: 28))
                         : Text(
                             WordSearchRanking.getMedal(index),
                             style: TextStyle(fontSize: isTop3 ? 24 : 18),
@@ -1156,7 +1153,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                         if (isFastest) ...[
                           const SizedBox(height: 2),
                           Text(
-                            '?? ?R?CORD DE VELOCIDAD! ??',
+                            '🚀 ¡RÉCORD DE VELOCIDAD! 🚀',
                             style: TextStyle(
                               color: Colors.redAccent,
                               fontSize: 10,
