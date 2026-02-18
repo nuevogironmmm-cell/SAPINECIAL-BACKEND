@@ -100768,7 +100768,7 @@ $1(a){return new B.vi(new B.aDI(this.a,this.b,this.c),null)},
 $S:613}
 B.aDI.prototype={
 $2(a,b){var s=null,r=B.ab(20),q=B.a_(a).ax.b.F(0.3),p=t.p,o=B.az(B.b([B.bK(A.kT,B.a_(a).ax.b,s,s,s),A.bf,A.aZu],p),A.H,A.I,A.K,0),n=this.c,m=this.a,l=m.a,k=B.dK(s,s,s,B.bK(l?A.a_L:A.kX,A.aW,s,s,s),s,s,new B.aDE(m,b),s,s,s,s),j=B.ab(12),i=B.a_(a).ax.b.F(0.3),h=B.ab(12),g=B.a_(a).ax.b.F(0.3),f=B.ab(12),e=B.a_(a),d=this.b
-l=B.b([A.aZe,A.dc,B.aOe(s,A.he,!0,s,!0,A.ag,s,B.aYc(),n,s,s,s,s,s,2,B.agH(s,new B.fb(4,j,new B.b1(i,1,A.aa,-1)),s,s,s,s,s,s,!0,new B.fb(4,h,new B.b1(g,1,A.aa,-1)),s,s,s,s,s,A.B.F(0.05),!0,s,s,s,s,new B.fb(4,f,new B.b1(e.ax.b,2,A.aa,-1)),s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,A.th,"Contrase\ufffda",!0,!0,s,A.a0h,s,s,s,s,s,s,k,s,s,s,s,s),A.bn,!0,s,!0,s,!1,s,A.fz,s,s,s,s,s,s,s,s,1,s,s,l,"\u2022",s,s,s,new B.aDF(m,d,n,a,b),s,!1,s,s,!1,s,!0,s,A.dl,s,s,s,s,s,s,s,s,s,s,s,A.eN,!0,A.cp,s,A.N2,s,s,s,s)],p)
+l=B.b([A.aZf,A.dc,B.aOe(s,A.he,!0,s,!0,A.ag,s,B.aYc(),n,s,s,s,s,s,2,B.agH(s,new B.fb(4,j,new B.b1(i,1,A.aa,-1)),s,s,s,s,s,s,!0,new B.fb(4,h,new B.b1(g,1,A.aa,-1)),s,s,s,s,s,A.B.F(0.05),!0,s,s,s,s,new B.fb(4,f,new B.b1(e.ax.b,2,A.aa,-1)),s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,s,A.th,"Contrase\ufffda",!0,!0,s,A.a0h,s,s,s,s,s,s,k,s,s,s,s,s),A.bn,!0,s,!0,s,!1,s,A.fz,s,s,s,s,s,s,s,s,1,s,s,l,"\u2022",s,s,s,new B.aDF(m,d,n,a,b),s,!1,s,s,!1,s,!0,s,A.dl,s,s,s,s,s,s,s,s,s,s,s,A.eN,!0,A.cp,s,A.N2,s,s,s,s)],p)
 k=m.b
 if(k!=null)A.l.K(l,B.b([A.cn,B.I(k,s,s,s,A.aWQ,s,s)],p))
 l=B.aT(l,A.H,A.I,A.aw)
@@ -101488,14 +101488,14 @@ if(!i.x&&!i.y)m.push(B.aOc(A.a17,A.aYW,new B.aFs(i),h))
 o=B.b([B.az(m,A.H,A.I,A.K,0)],l)
 if(i.y){p=A.a7.F(0.1)
 n=B.ab(12)
-A.l.K(o,B.b([A.bG,B.a5(h,B.az(B.b([A.a0Y,A.bf,B.cu(B.I("Reflexi?n enviada al docente",h,h,h,B.bg(h,h,A.fR,h,h,h,h,h,h,h,h,h,h,h,h,h,h,!0,h,h,h,h,h,h,h,h),h,h),1),B.lB(!1,A.aZj,h,h,h,h,h,h,new B.aFt(i),h,h)],l),A.H,A.I,A.K,0),A.E,h,h,new B.a6(p,h,h,n,h,h,A.O),h,h,h,A.bM,h,h,h)],l))}else if(i.x){n=B.bg(h,h,A.B.F(0.3),h,h,h,h,h,h,h,h,h,h,h,h,h,h,!0,h,h,h,h,h,h,h,h)
+A.l.K(o,B.b([A.bG,B.a5(h,B.az(B.b([A.a0Y,A.bf,B.cu(B.I("Reflexi?n enviada al docente",h,h,h,B.bg(h,h,A.fR,h,h,h,h,h,h,h,h,h,h,h,h,h,h,!0,h,h,h,h,h,h,h,h),h,h),1),B.lB(!1,A.aZk,h,h,h,h,h,h,new B.aFt(i),h,h)],l),A.H,A.I,A.K,0),A.E,h,h,new B.a6(p,h,h,n,h,h,A.O),h,h,h,A.bM,h,h,h)],l))}else if(i.x){n=B.bg(h,h,A.B.F(0.3),h,h,h,h,h,h,h,h,h,h,h,h,h,h,!0,h,h,h,h,h,h,h,h)
 m=A.B.F(0.05)
 n=B.aOe(h,A.he,!1,h,!0,A.ag,h,B.aYc(),i.d,h,h,h,h,h,2,B.agH(h,new B.fb(4,B.ab(16),A.X),h,h,h,h,h,h,!0,new B.fb(4,B.ab(16),new B.b1(A.B.F(0.1),1,A.aa,-1)),h,h,h,h,h,m,!0,h,h,h,h,new B.fb(4,B.ab(16),new B.b1(p,1,A.aa,-1)),h,h,h,h,h,h,h,h,n,"?Qu\ufffd aprendiste hoy? ?Qu\ufffd te llam? la atenci?n?",h,h,h,h,h,h,h,h,h,!0,!0,h,h,h,h,h,h,h,h,h,h,h,h,h,h),A.bn,!0,h,!0,h,!1,h,A.fz,h,h,h,h,h,h,h,h,4,h,h,!1,"\u2022",h,h,h,h,h,!1,h,h,!1,h,!0,h,A.dl,h,h,h,h,h,h,h,h,h,h,h,A.eN,!0,A.cp,h,A.N2,h,h,h,h)
 m=B.lB(!1,A.Np,h,h,h,h,h,h,new B.aFu(i),h,h)
 k=i.Q
 j=k?h:i.gaoB()
 k=k?A.aSE:A.a0J
-A.l.K(o,B.b([A.bG,n,A.cn,B.az(B.b([m,A.bf,B.aRS(k,A.aZ7,j,B.QW(h,h,p,h,h,h,h,h,h,A.B,h,h,h,h,h,h,h,h,h,h))],l),A.H,A.j8,A.K,0)],l))}else{p=n.Q
+A.l.K(o,B.b([A.bG,n,A.cn,B.az(B.b([m,A.bf,B.aRS(k,A.aZ8,j,B.QW(h,h,p,h,h,h,h,h,h,A.B,h,h,h,h,h,h,h,h,h,h))],l),A.H,A.j8,A.K,0)],l))}else{p=n.Q
 A.l.K(o,B.b([A.cn,B.I("Comparte tus pensamientos sobre la clase.\nEl docente podr? leer tu reflexi?n.",h,h,h,p==null?h:p.bq(A.aW),h,h)],l))}return B.eD(A.cH,B.a5(h,B.aT(o,A.aQ,A.I,A.K),A.E,h,h,new B.a6(g,h,q,r,h,h,A.O),h,h,h,A.dV,h,h,h),A.bj,A.bj)},
 aar(a){var s,r,q,p,o,n,m=null,l=this.c
 l.toString
@@ -102377,8 +102377,8 @@ B.aGw.prototype={
 $1(a){return a.fa()},
 $S:180}
 B.aGz.prototype={
-$1(a){var s=null,r=t.p,q=B.oq(B.aT(B.b([A.aZ6,A.t4,B.a5(s,B.I(J.d2(this.a),s,s,s,A.aWo,s,s),A.E,A.v_,s,s,s,s,s,A.fV,s,s,s)],r),A.aQ,A.I,A.aw),s,s,s,A.b5)
-return B.BT(B.b([B.lB(!1,A.aZb,s,s,s,s,s,s,new B.aGu(a),s,s)],r),s,q,s,A.aYV)},
+$1(a){var s=null,r=t.p,q=B.oq(B.aT(B.b([A.aZ7,A.t4,B.a5(s,B.I(J.d2(this.a),s,s,s,A.aWo,s,s),A.E,A.v_,s,s,s,s,s,A.fV,s,s,s)],r),A.aQ,A.I,A.aw),s,s,s,A.b5)
+return B.BT(B.b([B.lB(!1,A.aZc,s,s,s,s,s,s,new B.aGu(a),s,s)],r),s,q,s,A.aYV)},
 $S:77}
 B.aGu.prototype={
 $0(){return B.cW(this.a,!1).el()},
@@ -102930,7 +102930,7 @@ B.BE(!0,new B.av7(s),s,t.z)},
 $S:0}
 B.av7.prototype={
 $1(a){var s=null
-return B.BT(B.b([B.lB(!1,A.Np,s,s,s,s,s,s,new B.av5(a),s,s),B.lB(!1,A.aYX,s,s,s,s,s,s,new B.av6(a,this.a),s,s)],t.p),s,A.aZ_,s,A.aZl)},
+return B.BT(B.b([B.lB(!1,A.Np,s,s,s,s,s,s,new B.av5(a),s,s),B.lB(!1,A.aYX,s,s,s,s,s,s,new B.av6(a,this.a),s,s)],t.p),s,A.aZ_,s,A.aZ4)},
 $S:77}
 B.av5.prototype={
 $0(){B.cW(this.a,!1).fu(null)
@@ -105288,7 +105288,7 @@ o=B.az(B.b([n,A.aK,B.I(o,l,l,l,B.Oc().$3$color$fontSize$fontWeight(k.Q<60?A.dG:A
 n=k.f.a
 m=k.e
 m===$&&B.a()
-r.push(B.a5(l,B.az(B.b([o,B.I("Encontradas: "+n+" / "+m.length,l,l,l,B.dt().$2$color$fontSize(A.af,18),l,l)],s),A.H,A.fo,A.K,0),A.E,l,l,new B.a6(A.i5,l,p,q,l,l,A.O),l,l,A.f6,A.vO,l,l,l))
+r.push(B.a5(l,B.az(B.b([o,B.I("Encontradas: "+n+" / "+m.length+" (v2.1)",l,l,l,B.dt().$2$color$fontSize(A.af,18),l,l)],s),A.H,A.fo,A.K,0),A.E,l,l,new B.a6(A.i5,l,p,q,l,l,A.O),l,l,A.f6,A.vO,l,l,l))
 if(b.b>800)r.push(B.cu(B.az(B.b([B.cu(k.Ps(b),3),A.aSC,B.cu(B.oq(k.PD(),l,l,l,A.b5),1)],s),A.aQ,A.I,A.K,0),1))
 else A.l.K(r,B.b([k.Ps(b),A.cn,B.cu(B.oq(B.aT(B.b([k.PD(),A.dc],s),A.H,A.I,A.K),l,l,A.Ph,A.b5),1)],s))
 return B.aT(r,A.f5,A.I,A.K)},
@@ -105296,7 +105296,7 @@ $S:709}
 B.aJ6.prototype={
 $2(a,b){var s,r,q,p,o,n,m,l=null,k=B.cp(a,l,t.w).w,j=b.d
 j=j>300?j:500
-s=Math.min(Math.min(b.b,j),k.a.b*0.55)
+s=Math.min(Math.min(b.b,j),k.a.b*0.5)
 k=this.a
 j=k.a.d
 r=B.af([A.b_4,new B.d4(new B.aJ3(),new B.aJ4(k,s),t.It)],t.u,t.xR)
@@ -105311,7 +105311,7 @@ r=B.b([new B.jE(B.a5(l,B.fg(A.c6,j,A.ag,A.bZ),A.E,l,l,new B.a6(A.oG,l,p,q,o,l,A.
 j=!k.r
 if(j)k.a.toString
 if(j){j=B.ab(16)
-r.push(B.ano(0,B.a5(l,B.aT(B.b([A.a0c,A.dc,B.I("Sopa de Letras",l,l,l,B.hy().$3$color$fontSize$fontWeight(A.B,32,A.V),l,l),A.t4,A.aYO,A.Mu,B.aRS(A.a0o,A.aZ5,k.gaoo(),B.QW(l,l,A.af,l,l,l,l,l,l,A.T,l,l,A.Vp,l,l,l,l,l,A.Nj,l))],n),A.H,A.aY,A.K),A.E,l,l,new B.a6(A.aM,l,l,j,l,l,A.O),l,l,l,l,l,l,l)))}if(k.w){k.a.toString
+r.push(B.ano(0,B.a5(l,B.aT(B.b([A.a0c,A.dc,B.I("Sopa de Letras",l,l,l,B.hy().$3$color$fontSize$fontWeight(A.B,32,A.V),l,l),A.t4,A.aYO,A.Mu,B.aRS(A.a0o,A.aZ6,k.gaoo(),B.QW(l,l,A.af,l,l,l,l,l,l,A.T,l,l,A.Vp,l,l,l,l,l,A.Nj,l))],n),A.H,A.aY,A.K),A.E,l,l,new B.a6(A.aM,l,l,j,l,l,A.O),l,l,l,l,l,l,l)))}if(k.w){k.a.toString
 k=k.Q<=0}else k=!1
 if(k){k=B.ab(16)
 r.push(B.ano(0,B.a5(l,B.dF(B.a5(l,A.aZp,A.E,l,l,new B.a6(A.dG,l,l,B.ab(20),l,l,A.O),l,l,l,A.vO,l,l,l),l,l),A.E,l,l,new B.a6(A.aL,l,l,k,l,l,A.O),l,l,l,l,l,l,l)))}return B.dF(B.fg(A.c6,r,A.ag,A.bZ),l,l)},
@@ -110653,12 +110653,12 @@ A.TK=new B.m(0.9411764705882353,0.7529411764705882,0.7529411764705882,0.75294117
 A.vq=new B.m(1,0.803921568627451,0.4980392156862745,0.19607843137254902,A.t)
 A.aQ=new B.te(0,"start")
 A.Nc=new B.q(!0,A.a6,null,null,null,null,14,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)
-A.aZc=new B.bv("Esta acci\ufffdn eliminar\ufffd:",null,A.Nc,null,null,null,null,null,null)
+A.aZd=new B.bv("Esta acci\ufffdn eliminar\ufffd:",null,A.Nc,null,null,null,null,null,null)
 A.cn=new B.df(null,12,null,null)
 A.hE=new B.q(!0,A.cb,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)
-A.aZd=new B.bv("\ufffd Todas las respuestas de estudiantes",null,A.hE,null,null,null,null,null,null)
+A.aZe=new B.bv("\ufffd Todas las respuestas de estudiantes",null,A.hE,null,null,null,null,null,null)
 A.aZ0=new B.bv("\ufffd Todo el progreso acumulado",null,A.hE,null,null,null,null,null,null)
-A.aZa=new B.bv("\ufffd Todas las lecciones completadas",null,A.hE,null,null,null,null,null,null)
+A.aZb=new B.bv("\ufffd Todas las lecciones completadas",null,A.hE,null,null,null,null,null,null)
 A.aZ2=new B.bv("\ufffd Todos los logros obtenidos",null,A.hE,null,null,null,null,null,null)
 A.S5=new B.m(1,1,0.9529411764705882,0.8784313725490196,A.t)
 A.T7=new B.m(1,1,0.8784313725490196,0.6980392156862745,A.t)
@@ -110669,8 +110669,8 @@ A.aMB=new B.bF([50,A.S5,100,A.T7,200,A.TO,300,A.i_,400,A.i7,500,A.SZ,600,A.Th,70
 A.aS=new B.hL(A.aMB,1,1,0.596078431372549,0,A.t)
 A.V=new B.i6(6,700)
 A.aV1=new B.q(!0,A.aS,null,null,null,null,null,A.V,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)
-A.aZ4=new B.bv("\ufffdEst\ufffds seguro de continuar?",null,A.aV1,null,null,null,null,null,null)
-A.aID=s([A.aZc,A.cn,A.aZd,A.aZ0,A.aZa,A.aZ2,A.bG,A.aZ4],t.p)
+A.aZ5=new B.bv("\ufffdEst\ufffds seguro de continuar?",null,A.aV1,null,null,null,null,null,null)
+A.aID=s([A.aZd,A.cn,A.aZe,A.aZ0,A.aZb,A.aZ2,A.bG,A.aZ5],t.p)
 A.TR=new B.ji(A.b5,A.I,A.aw,A.aQ,null,A.bJ,null,0,A.aID,null)
 A.TT=new B.pw(!1)
 A.dT=new B.pw(!0)
@@ -116327,8 +116327,8 @@ A.aJp=s([A.a05,A.aK,A.aZz],t.p)
 A.aQB=new B.fM(A.bi,A.I,A.K,A.H,null,A.bJ,null,0,A.aJp,null)
 A.aPK=new B.ll("resetAll",A.aQB,null,t.wI)
 A.a0A=new B.bb(A.kT,18,A.cb,null,null)
-A.aZi=new B.bv("Cerrar TODAS las actividades",null,A.hE,null,null,null,null,null,null)
-A.aKD=s([A.a0A,A.aK,A.aZi],t.p)
+A.aZj=new B.bv("Cerrar TODAS las actividades",null,A.hE,null,null,null,null,null,null)
+A.aKD=s([A.a0A,A.aK,A.aZj],t.p)
 A.aQy=new B.fM(A.bi,A.I,A.K,A.H,null,A.bJ,null,0,A.aKD,null)
 A.aPL=new B.ll("lockAll",A.aQy,null,t.wI)
 A.aPM=new B.yC(null,null,null,null,null,null,null,null,null,null,null,null,null)
@@ -116394,10 +116394,10 @@ A.jg=new B.lq(null,null)
 A.a0w=new B.bb(A.cx,28,A.B,null,null)
 A.bf=new B.df(12,null,null,null)
 A.nt=new B.q(!0,null,null,null,null,null,16,A.V,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)
-A.aZ9=new B.bv("? ?Respuesta enviada!",null,A.nt,null,null,null,null,null,null)
+A.aZa=new B.bv("? ?Respuesta enviada!",null,A.nt,null,null,null,null,null,null)
 A.jA=new B.q(!0,null,null,null,null,null,12,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null)
-A.aZk=new B.bv("Tu respuesta ha sido registrada correctamente",null,A.jA,null,null,null,null,null,null)
-A.aIQ=s([A.aZ9,A.aZk],t.p)
+A.aZl=new B.bv("Tu respuesta ha sido registrada correctamente",null,A.jA,null,null,null,null,null,null)
+A.aIQ=s([A.aZa,A.aZl],t.p)
 A.TS=new B.ji(A.b5,A.I,A.aw,A.aQ,null,A.bJ,null,0,A.aIQ,null)
 A.ZY=new B.DH(1,A.pT,A.TS,null)
 A.aJz=s([A.a0w,A.bf,A.ZY],t.p)
@@ -116696,8 +116696,8 @@ A.aSM=new B.zh(null,null,null,null,null,null,null,null,null,null,null,null,null,
 A.aZ1=new B.bv("La reflexi?n debe tener al menos 10 caracteres",null,null,null,null,null,null,null,null)
 A.aSN=new B.hp(A.aZ1,A.aS,null,null,null,null,null,null,null,null,null,null,null,A.dk,!1,null,null,null,A.ag,null)
 A.a0L=new B.bb(A.wC,null,A.B,null,null)
-A.aZ8=new B.bv("Actividad bloqueada para estudiantes",null,null,null,null,null,null,null,null)
-A.aJv=s([A.a0L,A.aK,A.aZ8],t.p)
+A.aZ9=new B.bv("Actividad bloqueada para estudiantes",null,null,null,null,null,null,null,null)
+A.aJv=s([A.a0L,A.aK,A.aZ9],t.p)
 A.aQA=new B.fM(A.bi,A.I,A.K,A.H,null,A.bJ,null,0,A.aJv,null)
 A.aSO=new B.hp(A.aQA,A.aS,null,null,null,null,null,null,null,null,null,null,null,A.eh,!1,null,null,null,A.ag,null)
 A.a04=new B.bb(A.q2,null,A.B,null,null)
@@ -116707,18 +116707,18 @@ A.aQw=new B.fM(A.bi,A.I,A.K,A.H,null,A.bJ,null,0,A.aki,null)
 A.aSP=new B.hp(A.aQw,A.a7,null,null,null,null,null,null,null,null,null,null,null,A.im,!1,null,null,null,A.ag,null)
 A.aYR=new B.bv("El servicio de exportaci\ufffdn fall\ufffd (sin detalles)",null,null,null,null,null,null,null,null)
 A.aSQ=new B.hp(A.aYR,A.cb,null,null,null,null,null,null,null,null,null,null,null,A.dk,!1,null,null,null,A.ag,null)
-A.aZg=new B.bv("No hay estudiantes para exportar",null,null,null,null,null,null,null,null)
-A.aSR=new B.hp(A.aZg,A.aS,null,null,null,null,null,null,null,null,null,null,null,A.dk,!1,null,null,null,A.ag,null)
-A.aZh=new B.bv("?Reflexi?n enviada correctamente!",null,null,null,null,null,null,null,null)
-A.aSS=new B.hp(A.aZh,A.a7,null,null,null,null,null,null,null,null,null,null,null,A.dk,!1,null,null,null,A.ag,null)
+A.aZh=new B.bv("No hay estudiantes para exportar",null,null,null,null,null,null,null,null)
+A.aSR=new B.hp(A.aZh,A.aS,null,null,null,null,null,null,null,null,null,null,null,A.dk,!1,null,null,null,A.ag,null)
+A.aZi=new B.bv("?Reflexi?n enviada correctamente!",null,null,null,null,null,null,null,null)
+A.aSS=new B.hp(A.aZi,A.a7,null,null,null,null,null,null,null,null,null,null,null,A.dk,!1,null,null,null,A.ag,null)
 A.aZv=new B.bv("\ufffdExcel exportado exitosamente!",null,null,null,null,null,null,null,null)
 A.aIH=s([A.wP,A.aK,A.aZv],t.p)
 A.aQv=new B.fM(A.bi,A.I,A.K,A.H,null,A.bJ,null,0,A.aIH,null)
 A.aST=new B.hp(A.aQv,A.a7,null,null,null,null,null,null,null,null,null,null,null,A.dk,!1,null,null,null,A.ag,null)
 A.aYY=new B.bv("Actualizando...",null,null,null,null,null,null,null,null)
 A.aSU=new B.hp(A.aYY,null,null,null,null,null,null,null,A.e3,null,null,null,null,A.eg,!1,null,null,null,A.ag,null)
-A.aZf=new B.bv("No hay actividad en esta diapositiva",null,null,null,null,null,null,null,null)
-A.aSV=new B.hp(A.aZf,A.aS,null,null,null,null,null,null,null,null,null,null,null,A.dk,!1,null,null,null,A.ag,null)
+A.aZg=new B.bv("No hay actividad en esta diapositiva",null,null,null,null,null,null,null,null)
+A.aSV=new B.hp(A.aZg,A.aS,null,null,null,null,null,null,null,null,null,null,null,A.dk,!1,null,null,null,A.ag,null)
 A.a03=new B.bb(A.kT,null,A.B,null,null)
 A.aYU=new B.bv("Todas las actividades han sido cerradas",null,null,null,null,null,null,null,null)
 A.aJD=s([A.a03,A.aK,A.aYU],t.p)
@@ -117135,18 +117135,18 @@ A.aYT=new B.bv("Encuentra todas las palabras ocultas para ganar.",null,A.fw,A.bh
 A.aYV=new B.bv("Error de Exportaci\ufffdn",null,null,null,null,null,null,null,null)
 A.aYW=new B.bv("Escribir",null,null,null,null,null,null,null,null)
 A.aYX=new B.bv("Salir",null,null,null,null,null,null,null,null)
-A.aZ_=new B.bv("Si sales ahora, se guardar? tu progreso pero el tiempo seguir? corriendo.",null,null,null,null,null,null,null,null)
+A.aZ_=new B.bv("Si sales ahora, se guardar\xe1 tu progreso pero el tiempo seguir\xe1 corriendo.",null,null,null,null,null,null,null,null)
 A.aZ3=new B.bv("? Error al enviar",null,A.nt,null,null,null,null,null,null)
+A.aZ4=new B.bv("\xbfSalir?",null,null,null,null,null,null,null,null)
 A.No=new B.bv("??",null,A.Ni,null,null,null,null,null,null)
-A.aZ5=new B.bv("Iniciar Juego",null,null,null,null,null,null,null,null)
-A.aZ6=new B.bv("Ocurri\ufffd un error inesperado al generar el Excel:",null,null,null,null,null,null,null,null)
-A.aZ7=new B.bv("Enviar",null,null,null,null,null,null,null,null)
+A.aZ6=new B.bv("Iniciar Juego",null,null,null,null,null,null,null,null)
+A.aZ7=new B.bv("Ocurri\ufffd un error inesperado al generar el Excel:",null,null,null,null,null,null,null,null)
+A.aZ8=new B.bv("Enviar",null,null,null,null,null,null,null,null)
 A.Np=new B.bv("Cancelar",null,null,null,null,null,null,null,null)
-A.aZb=new B.bv("Cerrar",null,null,null,null,null,null,null,null)
+A.aZc=new B.bv("Cerrar",null,null,null,null,null,null,null,null)
 A.Nq=new B.bv("Cancelar",null,A.th,null,null,null,null,null,null)
-A.aZe=new B.bv("Ingresa la contrase\ufffda para acceder al panel del docente",null,A.Nc,null,null,null,null,null,null)
-A.aZj=new B.bv("Escribir otra",null,null,null,null,null,null,null,null)
-A.aZl=new B.bv("?Salir?",null,null,null,null,null,null,null,null)
+A.aZf=new B.bv("Ingresa la contrase\ufffda para acceder al panel del docente",null,A.Nc,null,null,null,null,null,null)
+A.aZk=new B.bv("Escribir otra",null,null,null,null,null,null,null,null)
 A.aZn=new B.bv("??",null,A.Ng,null,null,null,null,null,null)
 A.aZo=new B.bv("?? ?Nueva actividad!",null,A.nt,null,null,null,null,null,null)
 A.aZp=new B.bv("TIEMPO FINALIZADO",null,A.jz,null,null,null,null,null,null)

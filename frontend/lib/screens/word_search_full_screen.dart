@@ -41,8 +41,8 @@ class WordSearchFullScreen extends StatelessWidget {
               showDialog(
                 context: context,
                 builder: (c) => AlertDialog(
-                  title: const Text('?Salir?'),
-                  content: const Text('Si sales ahora, se guardar? tu progreso pero el tiempo seguir? corriendo.'),
+                  title: const Text('¿Salir?'),
+                  content: const Text('Si sales ahora, se guardará tu progreso pero el tiempo seguirá corriendo.'),
                   actions: [
                     TextButton(child: const Text('Cancelar'), onPressed: () => Navigator.pop(c)),
                     TextButton(child: const Text('Salir'), onPressed: () {

@@ -545,7 +545,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                       ],
                     ),
                     Text(
-                      'Encontradas: ${_foundWords.length} / ${_wordsToFind.length}',
+                      'Encontradas: ${_foundWords.length} / ${_wordsToFind.length} (v2.1)',
                       style: GoogleFonts.oswald(
                         fontSize: 18,
                         color: Colors.amber,
@@ -602,7 +602,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
         // Calcular tamaño cuadrado
         // En móvil, limitar el grid para dejar espacio a la lista de palabras
         final screenHeight = MediaQuery.of(context).size.height;
-        final maxGridSize = screenHeight * 0.55; // Máximo 55% de la pantalla
+        final maxGridSize = screenHeight * 0.50; // Máximo 50% de la pantalla (v2.1)
         final baseSize = min(gridConstraints.maxWidth, gridConstraints.maxHeight > 300 ? gridConstraints.maxHeight : 500.0);
         final size = min(baseSize, maxGridSize);
         final cellSize = size / widget.gridSize;
