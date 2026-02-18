@@ -100,6 +100,25 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
   
   final Map<String, Color> _paintedCells = {}; // "x,y" -> Color
 
+  // Mapa de acentos para mostrar las palabras correctamente en espa?ol
+  static const Map<String, String> _accentMap = {
+    'SATANAS': 'SATAN?S',
+    'SABIDURIA': 'SABIDUR?A',
+    'RESTAURACION': 'RESTAURACI?N',
+    'PROLOGO': 'PR?LOGO',
+    'EPILOGO': 'EP?LOGO',
+    'ELIU': 'ELI?',
+    'SINONIMICO': 'SINON?MICO',
+    'ANTITETICO': 'ANTIT?TICO',
+    'SINTETICO': 'SINT?TICO',
+    'CLIMATICO': 'CLIM?TICO',
+    'ECLESIASTES': 'ECLESIAST?S',
+    'ENSENANZA': 'ENSE?ANZA',
+  };
+
+  /// Devuelve el nombre con tildes para mostrar al usuario
+  String _displayWord(String word) => _accentMap[word] ?? word;
+
   @override
   void initState() {
     super.initState();
@@ -554,12 +573,18 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                 ),
               )
             else
-              Column(
-                children: [
-                  _buildGridSection(constraints),
-                  const SizedBox(height: 30),
-                  _buildWordListSection(),
-                ],
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  child: Column(
+                    children: [
+                      _buildGridSection(constraints),
+                      const SizedBox(height: 16),
+                      _buildWordListSection(),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
               ),
           ],
         );
@@ -765,7 +790,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        word,
+                        _displayWord(word),
                         style: TextStyle(
                           color: isFound ? Colors.greenAccent : Colors.white70,
                           decoration: isFound ? TextDecoration.lineThrough : null,
