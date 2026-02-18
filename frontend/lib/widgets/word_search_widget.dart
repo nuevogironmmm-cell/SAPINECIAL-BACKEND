@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math';
@@ -10,7 +10,7 @@ class WordSearchWidget extends StatefulWidget {
   final Function(List<String> foundWords) onWordFound;
   final Function(bool completed) onCompleted;
   final bool isReadOnly;
-  final int timeLimitSeconds; // Por defecto 300 (5 min)
+  final int timeLimitSeconds; // Por defecto 600 (10 min)
   final String? studentName; // Nombre del estudiante (para ranking)
   final Function(String name, int timeSeconds, int wordsFound)? onSubmitResult; // Callback al enviar
   final List<WordSearchRanking>? ranking; // Ranking de ganadores
@@ -25,7 +25,7 @@ class WordSearchWidget extends StatefulWidget {
     required this.onWordFound,
     required this.onCompleted,
     this.isReadOnly = false,
-    this.timeLimitSeconds = 300,
+    this.timeLimitSeconds = 600,
     this.studentName,
     this.onSubmitResult,
     this.ranking,
@@ -102,18 +102,18 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
 
   // Mapa de acentos para mostrar las palabras correctamente en espa?ol
   static const Map<String, String> _accentMap = {
-    'SATANAS': 'SATAN?S',
-    'SABIDURIA': 'SABIDUR?A',
-    'RESTAURACION': 'RESTAURACI?N',
-    'PROLOGO': 'PR?LOGO',
-    'EPILOGO': 'EP?LOGO',
-    'ELIU': 'ELI?',
-    'SINONIMICO': 'SINON?MICO',
-    'ANTITETICO': 'ANTIT?TICO',
-    'SINTETICO': 'SINT?TICO',
-    'CLIMATICO': 'CLIM?TICO',
-    'ECLESIASTES': 'ECLESIAST?S',
-    'ENSENANZA': 'ENSE?ANZA',
+    'SATANAS': 'SATANÁS',
+    'SABIDURIA': 'SABIDURÍA',
+    'RESTAURACION': 'RESTAURACIÓN',
+    'PROLOGO': 'PRÓLOGO',
+    'EPILOGO': 'EPÍLOGO',
+    'ELIU': 'ELIÚ',
+    'SINONIMICO': 'SINONÍMICO',
+    'ANTITETICO': 'ANTITÉTICO',
+    'SINTETICO': 'SINTÉTICO',
+    'CLIMATICO': 'CLIMÁTICO',
+    'ECLESIASTES': 'ECLESIASTÉS',
+    'ENSENANZA': 'ENSEÑANZA',
   };
 
   /// Devuelve el nombre con tildes para mostrar al usuario
@@ -521,7 +521,7 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
             if (!widget.isReadOnly)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                margin: const EdgeInsets.only(bottom: 20),
+                margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
                   color: Colors.black26,
                   borderRadius: BorderRadius.circular(50),
@@ -596,7 +596,11 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
     return LayoutBuilder(
       builder: (context, gridConstraints) {
         // Calcular tama?o cuadrado
-        final size = min(gridConstraints.maxWidth, gridConstraints.maxHeight > 300 ? gridConstraints.maxHeight : 500.0);
+        // En m?vil (dentro de scroll), limitar el grid para dejar espacio a la lista de palabras
+        final screenHeight = MediaQuery.of(context).size.height;
+        final maxGridSize = screenHeight * 0.55; // M?ximo 55% de la pantalla
+        final baseSize = min(gridConstraints.maxWidth, gridConstraints.maxHeight > 300 ? gridConstraints.maxHeight : 500.0);
+        final size = min(baseSize, maxGridSize);
         final cellSize = size / widget.gridSize;
 
         return Center(
@@ -930,8 +934,8 @@ class _WordSearchWidgetState extends State<WordSearchWidget> {
             const SizedBox(height: 10),
             Text(
               isComplete 
-                  ? '?Completaste todo! Env?a tu resultado para el ranking'
-                  : 'Encuentra m?s palabras para mejorar tu posici?n',
+                  ? '¡Completaste todo! Envía tu resultado para el ranking'
+                  : 'Encuentra más palabras para mejorar tu posición',
               style: TextStyle(
                 color: isComplete ? Colors.amber.shade200 : Colors.white54,
                 fontSize: 12,

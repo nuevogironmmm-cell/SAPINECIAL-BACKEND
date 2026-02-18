@@ -71,7 +71,7 @@ class WordSearchFullScreen extends StatelessWidget {
           onCompleted: onCompleted,
           onSubmitResult: (name, time, wordsFound) {
             onSubmitResult(name, time, wordsFound);
-            // Salir despuÃ©s de enviar
+            // Salir después de enviar
             Navigator.pop(context);
           },
         ),
