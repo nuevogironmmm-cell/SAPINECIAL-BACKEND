@@ -58,6 +58,9 @@ class StudentActivityType(str, Enum):
     TRUE_FALSE = "trueFalse"
     SHORT_ANSWER = "shortAnswer"
     WORD_SEARCH = "wordSearch"
+    DISCOVER_PSALM_TYPE = "discoverPsalmType"
+    WRITE_PSALM = "writePsalm"
+    PROVERBS_ACTIVITIES = "proverbsActivities"
 
 class StudentClassification(str, Enum):
     WINNER = "winner"
@@ -100,19 +103,19 @@ def get_classification_icon(classification: StudentClassification) -> str:
 def get_motivational_message(percentage: float) -> str:
     """Obtiene mensaje motivacional para estudiante"""
     if percentage >= 100:
-        return "?Excelente! Dominaste el tema ??"
+        return "?Excelente! Dominaste el tema"
     elif percentage >= 90:
-        return "Muy buen trabajo, casi perfecto ??"
+        return "Muy buen trabajo, casi perfecto"
     elif percentage >= 80:
-        return "Vas muy bien, sigue as? ??"
+        return "Vas muy bien, sigue as?"
     elif percentage >= 70:
-        return "Buen avance, puedes mejorar ??"
+        return "Buen avance, puedes mejorar"
     elif percentage >= 60:
-        return "Buen intento, sigue practicando ??"
-    return "??nimo, cada clase es una nueva oportunidad! ??"
+        return "Buen intento, sigue practicando"
+    return "?nimo, cada clase es una nueva oportunidad"
 
 # ============================================================
-# Configuraci?n DE SEGURIDAD
+# Configuraci?n de seguridad
 # ============================================================
 
 TEACHER_ACCESS_TOKEN = "profesor2026"
@@ -594,11 +597,11 @@ class StudentManager:
                 # Si es correcta, sumar puntos
                 if response.get("is_correct", False):
                     total_earned += activity.percentage_value
-                
+
                 # Si hubo un valor parcial asignado (caso raro, pero posible)
                 elif response.get("percentage_value", 0) > 0:
-                     # Esto asume que percentage_value en la respuesta es lo ganado
-                     pass 
+                    # Esto asume que percentage_value en la respuesta es lo ganado
+                    pass
 
         # Evitar divisi?n por cero
         if total_possible == 0:
@@ -849,7 +852,7 @@ async def handle_teacher_action(websocket: WebSocket, message: Dict):
             # Enviar a estudiantes (sin respuesta correcta)
             await student_manager.broadcast_to_students({
                 "type": "ACTIVITY_UNLOCKED",
-                "data": activity.to_student_dict()
+                "data": {"activity": activity.to_student_dict()}
             })
             
             # Actualizar dashboard
