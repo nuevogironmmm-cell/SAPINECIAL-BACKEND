@@ -24,6 +24,9 @@ enum StudentActivityType {
   trueFalse,        // Verdadero / Falso
   shortAnswer,      // Respuesta corta
   wordSearch,       // Sopa de letras
+  discoverPsalmType, // Descubre el Tipo de Salmo
+  writePsalm,       // Escribe tu Salmo
+  proverbsActivities, // Dinámicas de Proverbios
 }
 
 // ============================================================

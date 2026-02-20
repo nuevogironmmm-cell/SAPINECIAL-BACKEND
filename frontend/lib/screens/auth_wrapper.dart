@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import 'auth_login_screen.dart';
 
-/// Widget wrapper que protege rutas y gestiona autenticaci?n
-/// Muestra el login si no hay sesi?n activa
+/// Widget wrapper que protege rutas y gestiona autenticación
+/// Muestra el login si no hay sesión activa
 class AuthWrapper extends StatefulWidget {
   final Widget child;
   
@@ -21,7 +21,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   void initState() {
     super.initState();
-    // Inicializar el servicio de autenticaci?n
+    // Inicializar el servicio de autenticación
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AuthService>().initialize();
     });
@@ -36,7 +36,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
       return const _LoadingScreen();
     }
 
-    // Si no est? logueado, mostrar pantalla de login
+    // Si no está logueado, mostrar pantalla de login
     if (!authService.isLoggedIn) {
       return const AuthLoginScreen();
     }
@@ -46,7 +46,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   }
 }
 
-/// Pantalla de carga mientras se verifica la sesi?n
+/// Pantalla de carga mientras se verifica la sesión
 class _LoadingScreen extends StatelessWidget {
   const _LoadingScreen();
 
@@ -128,7 +128,7 @@ class _LoadingScreen extends StatelessWidget {
               const SizedBox(height: 16),
               
               Text(
-                'Verificando sesi?n...',
+                'Verificando sesión...',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: Colors.white54,
                 ),
@@ -141,7 +141,7 @@ class _LoadingScreen extends StatelessWidget {
   }
 }
 
-/// Bot?n de cerrar sesi?n reutilizable
+/// Botón de cerrar sesión reutilizable
 class LogoutButton extends StatelessWidget {
   final bool showText;
   final Color? iconColor;
@@ -164,7 +164,7 @@ class LogoutButton extends StatelessWidget {
           color: iconColor ?? Colors.white70,
         ),
         label: Text(
-          'Cerrar Sesi?n',
+          'Cerrar Sesión',
           style: TextStyle(color: iconColor ?? Colors.white70),
         ),
       );
@@ -176,7 +176,7 @@ class LogoutButton extends StatelessWidget {
         Icons.logout_rounded,
         color: iconColor ?? Colors.white70,
       ),
-      tooltip: 'Cerrar Sesi?n',
+      tooltip: 'Cerrar Sesión',
     );
   }
 
@@ -190,11 +190,11 @@ class LogoutButton extends StatelessWidget {
           children: [
             Icon(Icons.logout_rounded, color: Colors.orange),
             SizedBox(width: 12),
-            Text('Cerrar Sesi?n', style: TextStyle(color: Colors.white)),
+            Text('Cerrar Sesión', style: TextStyle(color: Colors.white)),
           ],
         ),
         content: Text(
-          '?Est?s seguro de que deseas cerrar sesi?n?\n\nUsuario: ${authService.currentUser?.nombre}',
+          '?Estás seguro de que deseas cerrar sesión?\n\nUsuario: ${authService.currentUser?.nombre ?? ""}',
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
@@ -208,7 +208,7 @@ class LogoutButton extends StatelessWidget {
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Cerrar Sesi?n'),
+            child: const Text('Cerrar Sesión'),
           ),
         ],
       ),
@@ -220,7 +220,7 @@ class LogoutButton extends StatelessWidget {
   }
 }
 
-/// Widget que muestra informaci?n del usuario actual
+/// Widget que muestra información del usuario actual
 class UserInfoBadge extends StatelessWidget {
   const UserInfoBadge({super.key});
 

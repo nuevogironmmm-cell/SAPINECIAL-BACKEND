@@ -8,9 +8,9 @@ import '../utils/animations.dart';
 /// 
 /// Muestra en tiempo real:
 /// - Lista de estudiantes conectados
-/// - Estado de cada estudiante (conectado, respondió, no respondió)
+/// - Estado de cada estudiante (conectado, respondiÃ³, no respondiÃ³)
 /// - Porcentaje acumulado por estudiante
-/// - Clasificación con ícono
+/// - ClasificaciÃ³n con Ã­cono
 /// - Conteo general (respondieron / faltan)
 class StudentDashboardPanel extends StatefulWidget {
   final ClassDashboardSummary? summary;
@@ -18,7 +18,7 @@ class StudentDashboardPanel extends StatefulWidget {
   final VoidCallback? onRefresh;
   final VoidCallback? onClose;
   final Function(String studentId)? onStudentTap;
-  final bool isEmbedded; // Para cuando está dentro de un modal
+  final bool isEmbedded; // Para cuando estÃ¡ dentro de un modal
   
   const StudentDashboardPanel({
     super.key,
@@ -62,11 +62,11 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
     Widget content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Header (solo si no está embebido)
+        // Header (solo si no estÃ¡ embebido)
         if (!widget.isEmbedded)
           _buildHeader(theme, summary),
         
-        // Estadísticas rápidas
+        // EstadÃ­sticas rÃ¡pidas
         if (summary != null)
           _buildQuickStats(theme, summary),
         
@@ -79,7 +79,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
       ],
     );
     
-    // Si está embebido, solo devolver el contenido
+    // Si estÃ¡ embebido, solo devolver el contenido
     if (widget.isEmbedded) {
       return content;
     }
@@ -331,7 +331,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
       case StudentConnectionStatus.responded:
         statusColor = Colors.green;
         statusIcon = Icons.check_circle;
-        statusText = 'Respondió';
+        statusText = 'Respondi?';
         break;
       case StudentConnectionStatus.notResponded:
         statusColor = Colors.orange;
@@ -372,7 +372,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              // Posición/Avatar
+              // PosiciÃ³n/Avatar
               Container(
                 width: 40,
                 height: 40,
@@ -469,7 +469,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
                 ),
               ),
               
-              // Porcentaje y Clasificación
+              // Porcentaje y ClasificaciÃ³n
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -510,7 +510,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
                 ],
               ),
               
-              // Botón de eliminar (Kick)
+              // BotÃ³n de eliminar (Kick)
               IconButton(
                 icon: const Icon(Icons.delete_outline, color: Colors.white38, size: 20),
                 onPressed: () => _confirmKickStudent(context, student),
@@ -529,9 +529,9 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text('¿Eliminar estudiante?', style: TextStyle(color: Colors.white)),
+        title: const Text('?Eliminar estudiante?', style: TextStyle(color: Colors.white)),
         content: Text(
-          '¿Seguro que deseas eliminar a ${student.name}?\nSe desconectará su sesión inmediatamente.',
+          'Â¿Seguro que deseas eliminar a ${student.name}?\nSe desconectarÃ¡ su sesiÃ³n inmediatamente.',
           style: const TextStyle(color: Colors.white70)
         ),
         actions: [
@@ -563,7 +563,7 @@ class _StudentDashboardPanelState extends State<StudentDashboardPanel>
   }
 }
 
-/// Widget compacto para mostrar resumen de estudiantes en la barra de navegación
+/// Widget compacto para mostrar resumen de estudiantes en la barra de navegaciÃ³n
 class StudentSummaryBadge extends StatelessWidget {
   final int connectedCount;
   final int respondedCount;
@@ -629,7 +629,7 @@ class StudentSummaryBadge extends StatelessWidget {
   }
 }
 
-/// Widget para mostrar notificación de nuevo estudiante
+/// Widget para mostrar notificaciÃ³n de nuevo estudiante
 class StudentJoinedNotification extends StatelessWidget {
   final String studentName;
   final VoidCallback? onDismiss;
@@ -666,7 +666,7 @@ class StudentJoinedNotification extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              '$studentName se uni? a la clase',
+              '$studentName se uniÃ³ a la clase',
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,

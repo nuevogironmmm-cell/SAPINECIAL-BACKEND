@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 /// Servicio profesional para exportar resultados a Excel
-/// Genera reportes con formato ejecutivo, gr?ficos de datos y an?lisis completo
+/// Genera reportes con formato ejecutivo, gráficos de datos y análisis completo
 class ExportService {
   
   // ============================================================
@@ -105,32 +105,32 @@ class ExportService {
     required BuildContext context,
   }) async {
     try {
-      debugPrint('Iniciando exportaci?n Excel con ${students.length} estudiantes');
+      debugPrint('Iniciando exportación Excel con ${students.length} estudiantes');
       
       final excel = Excel.createExcel();
       
       // 1. PORTADA Y RESUMEN EJECUTIVO
-      final coverSheet = excel['?? Resumen Ejecutivo'];
+      final coverSheet = excel['Resumen Ejecutivo'];
       _createCoverSheet(coverSheet, students, sessionTitle);
       
       // 2. RANKING DE ESTUDIANTES
-      final rankingSheet = excel['?? Ranking'];
+      final rankingSheet = excel['Ranking'];
       _createRankingSheet(rankingSheet, students);
       
       // 3. DETALLE INDIVIDUAL
-      final detailSheet = excel['?? Detalle Individual'];
+      final detailSheet = excel['Detalle Individual'];
       _createDetailSheet(detailSheet, students);
       
-      // 4. AN?LISIS ESTAD?STICO
-      final statsSheet = excel['?? An?lisis Estad?stico'];
+      // 4. ANÁLISIS ESTADÍSTICO
+      final statsSheet = excel['Análisis Estadístico'];
       _createStatsSheet(statsSheet, students);
       
       // 5. HISTORIAL DE RESPUESTAS
-      final historySheet = excel['?? Historial Respuestas'];
+      final historySheet = excel['Historial Respuestas'];
       _createHistorySheet(historySheet, students);
       
       // 6. HOJA DE MEDALLAS Y LOGROS
-      final medalsSheet = excel['?? Logros y Medallas'];
+      final medalsSheet = excel['Logros y Medallas'];
       _createMedalsSheet(medalsSheet, students);
       
       // Eliminar la hoja por defecto
@@ -188,13 +188,13 @@ class ExportService {
     final aprobados = percentages.where((p) => p >= 60).length;
     final tasaAprobacion = students.isEmpty ? 0.0 : (aprobados / students.length) * 100;
     
-    // T?TULO PRINCIPAL
+    // TÍTULO PRINCIPAL
     sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('F3'));
     final titleCell = sheet.cell(CellIndex.indexByString('A1'));
-    titleCell.value = TextCellValue('REPORTE DE EVALUACI?N');
+    titleCell.value = TextCellValue('REPORTE DE EVALUACIÓN');
     titleCell.cellStyle = _titleStyle;
     
-    // SUBT?TULO - NOMBRE DEL CURSO
+    // SUBTÍTULO - NOMBRE DEL CURSO
     sheet.merge(CellIndex.indexByString('A4'), CellIndex.indexByString('F4'));
     final subtitleCell = sheet.cell(CellIndex.indexByString('A4'));
     subtitleCell.value = TextCellValue(sessionTitle.toUpperCase());
@@ -205,12 +205,12 @@ class ExportService {
       horizontalAlign: HorizontalAlign.Center,
     );
     
-    // INFORMACI?N DEL REPORTE
+    // INFORMACIÓN DEL REPORTE
     final now = DateTime.now();
     final dateFormatted = DateFormat('EEEE, d \'de\' MMMM \'de\' yyyy', 'es').format(now);
     final timeFormatted = DateFormat('HH:mm').format(now);
     
-    sheet.cell(CellIndex.indexByString('A6')).value = TextCellValue('Fecha de generaci?n:');
+    sheet.cell(CellIndex.indexByString('A6')).value = TextCellValue('Fecha de generación:');
     sheet.cell(CellIndex.indexByString('A6')).cellStyle = _subtitleStyle;
     sheet.cell(CellIndex.indexByString('B6')).value = TextCellValue(dateFormatted);
     
@@ -218,19 +218,19 @@ class ExportService {
     sheet.cell(CellIndex.indexByString('A7')).cellStyle = _subtitleStyle;
     sheet.cell(CellIndex.indexByString('B7')).value = TextCellValue(timeFormatted);
     
-    // M?TRICAS PRINCIPALES - DASHBOARD
+    // MÉTRICAS PRINCIPALES - DASHBOARD
     sheet.merge(CellIndex.indexByString('A9'), CellIndex.indexByString('F9'));
     final metricsTitle = sheet.cell(CellIndex.indexByString('A9'));
-    metricsTitle.value = TextCellValue('M?TRICAS PRINCIPALES');
+    metricsTitle.value = TextCellValue('MÉTRICAS PRINCIPALES');
     metricsTitle.cellStyle = _headerStyle;
     
     // Fila de mtricas
     final metrics = [
       ['Total Estudiantes', students.length.toString()],
       ['Promedio General', '${avg.toStringAsFixed(1)}%'],
-      ['Puntaje M?ximo', '${max.toStringAsFixed(1)}%'],
-      ['Puntaje M?nimo', '${min.toStringAsFixed(1)}%'],
-      ['Tasa Aprobaci?n', '${tasaAprobacion.toStringAsFixed(1)}%'],
+      ['Puntaje Máximo', '${max.toStringAsFixed(1)}%'],
+      ['Puntaje Mínimo', '${min.toStringAsFixed(1)}%'],
+      ['Tasa Aprobación', '${tasaAprobacion.toStringAsFixed(1)}%'],
       ['Aprobados/Total', '$aprobados/${students.length}'],
     ];
     
@@ -251,13 +251,13 @@ class ExportService {
       );
     }
     
-    // DISTRIBUCI?N POR NIVELES
+    // DISTRIBUCIÓN POR NIVELES
     sheet.merge(CellIndex.indexByString('A14'), CellIndex.indexByString('F14'));
     final distTitle = sheet.cell(CellIndex.indexByString('A14'));
-    distTitle.value = TextCellValue('DISTRIBUCI?N POR NIVEL DE DESEMPE?O');
+    distTitle.value = TextCellValue('DISTRIBUCIÓN POR NIVEL DE DESEMPEÑO');
     distTitle.cellStyle = _headerStyle;
     
-    // Calcular distribuci?n
+    // Calcular distribución
     int excelentes = 0, muyBuenos = 0, buenos = 0, regulares = 0, bajos = 0;
     for (final p in percentages) {
       if (p >= 90) excelentes++;
@@ -268,14 +268,14 @@ class ExportService {
     }
     
     final distribution = [
-      ['? Excelente', '90-100%', excelentes, ExcelColor.fromHexString('#1B5E20')],
-      ['?? Muy Bueno', '80-89%', muyBuenos, ExcelColor.fromHexString('#2E7D32')],
-      ['?? Bueno', '70-79%', buenos, ExcelColor.fromHexString('#558B2F')],
-      ['?? Regular', '60-69%', regulares, ExcelColor.fromHexString('#F57C00')],
-      ['?? En Progreso', '0-59%', bajos, ExcelColor.fromHexString('#C62828')],
+      ['Excelente', '90-100%', excelentes, ExcelColor.fromHexString('#1B5E20')],
+      ['Muy Bueno', '80-89%', muyBuenos, ExcelColor.fromHexString('#2E7D32')],
+      ['Bueno', '70-79%', buenos, ExcelColor.fromHexString('#558B2F')],
+      ['Regular', '60-69%', regulares, ExcelColor.fromHexString('#F57C00')],
+      ['En Progreso', '0-59%', bajos, ExcelColor.fromHexString('#C62828')],
     ];
     
-    // Encabezados de distribuci?n
+    // Encabezados de distribución
     final distHeaders = ['Nivel', 'Rango', 'Cantidad', 'Porcentaje', 'Barra Visual'];
     for (var i = 0; i < distHeaders.length; i++) {
       final cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 15));
@@ -283,7 +283,7 @@ class ExportService {
       cell.cellStyle = _subHeaderStyle;
     }
     
-    // Datos de distribuci?n
+    // Datos de distribución
     for (var i = 0; i < distribution.length; i++) {
       final rowIdx = 16 + i;
       final count = distribution[i][2] as int;
@@ -311,7 +311,7 @@ class ExportService {
     // NOTA AL PIE
     sheet.merge(CellIndex.indexByString('A23'), CellIndex.indexByString('F23'));
     final footerCell = sheet.cell(CellIndex.indexByString('A23'));
-    footerCell.value = TextCellValue('Generado autom?ticamente por Sistema de Evaluaci?n - Literatura Sapiencial');
+    footerCell.value = TextCellValue('Generado automáticamente por Sistema de Evaluación - Literatura Sapiencial');
     footerCell.cellStyle = CellStyle(
       italic: true,
       fontSize: 9,
@@ -332,10 +332,10 @@ class ExportService {
   // HOJA 2: RANKING DE ESTUDIANTES
   // ============================================================
   static void _createRankingSheet(Sheet sheet, List<Map<String, dynamic>> students) {
-    // T?tulo
+    // Título
     sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('G2'));
     final titleCell = sheet.cell(CellIndex.indexByString('A1'));
-    titleCell.value = TextCellValue('?? RANKING DE ESTUDIANTES');
+    titleCell.value = TextCellValue('RANKING DE ESTUDIANTES');
     titleCell.cellStyle = _titleStyle;
     
     // Ordenar por porcentaje descendente
@@ -344,7 +344,7 @@ class ExportService {
         ((b['percentage'] ?? 0.0) as double).compareTo((a['percentage'] ?? 0.0) as double));
     
     // Encabezados
-    final headers = ['Posici?n', 'Estudiante', 'Puntaje', 'Nivel', 'Medalla', 'Respuestas', 'Estado'];
+    final headers = ['Posición', 'Estudiante', 'Puntaje', 'Nivel', 'Medalla', 'Respuestas', 'Estado'];
     for (var i = 0; i < headers.length; i++) {
       final cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 4));
       cell.value = TextCellValue(headers[i]);
@@ -359,14 +359,14 @@ class ExportService {
       final responses = student['responses'] as Map<String, dynamic>? ?? {};
       final correctCount = responses.values.where((r) => r['isCorrect'] == true).length;
       
-      // Medalla seg?n posici?n
+      // Medalla según posición
       String medal = '';
       if (i == 0) medal = '??';
       else if (i == 1) medal = '??';
       else if (i == 2) medal = '??';
       else if (i < 10) medal = '??';
       
-      // Posici?n
+      // Posición
       final posCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIdx));
       posCell.value = TextCellValue('#${i + 1}');
       posCell.cellStyle = CellStyle(
@@ -416,7 +416,7 @@ class ExportService {
     }
     
     // Ajustar anchos
-    sheet.setColumnWidth(0, 10);  // Posici?n
+    sheet.setColumnWidth(0, 10);  // Posición
     sheet.setColumnWidth(1, 28);  // Estudiante
     sheet.setColumnWidth(2, 12);  // Puntaje
     sheet.setColumnWidth(3, 15);  // Nivel
@@ -429,16 +429,16 @@ class ExportService {
   // HOJA 3: DETALLE INDIVIDUAL
   // ============================================================
   static void _createDetailSheet(Sheet sheet, List<Map<String, dynamic>> students) {
-    // T?tulo
+    // Título
     sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('H2'));
     final titleCell = sheet.cell(CellIndex.indexByString('A1'));
-    titleCell.value = TextCellValue('?? DETALLE INDIVIDUAL DE ESTUDIANTES');
+    titleCell.value = TextCellValue('DETALLE INDIVIDUAL DE ESTUDIANTES');
     titleCell.cellStyle = _titleStyle;
     
     // Encabezados
     final headers = [
       'N', 'Nombre Completo', 'Puntaje Final', 'Correctas', 'Incorrectas', 
-      'Tasa Acierto', 'Tiempo Prom.', '?ltima Actividad'
+      'Tasa Acierto', 'Tiempo Prom.', 'última Actividad'
     ];
     for (var i = 0; i < headers.length; i++) {
       final cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 4));
@@ -500,7 +500,7 @@ class ExportService {
       sheet.cell(CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIdx))
           .cellStyle = _dataStyleCenter;
       
-      // ?ltima actividad
+      // última actividad
       sheet.cell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIdx))
           .value = TextCellValue(_formatDateTime(student['lastActivity']));
       sheet.cell(CellIndex.indexByColumnRow(columnIndex: 7, rowIndex: rowIdx))
@@ -519,16 +519,16 @@ class ExportService {
   }
   
   // ============================================================
-  // HOJA 4: AN?LISIS ESTAD?STICO
+  // HOJA 4: ANÁLISIS ESTADÍSTICO
   // ============================================================
   static void _createStatsSheet(Sheet sheet, List<Map<String, dynamic>> students) {
-    // T?tulo
+    // Título
     sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('D2'));
     final titleCell = sheet.cell(CellIndex.indexByString('A1'));
-    titleCell.value = TextCellValue('?? AN?LISIS ESTAD?STICO COMPLETO');
+    titleCell.value = TextCellValue('ANÁLISIS ESTADÍSTICO COMPLETO');
     titleCell.cellStyle = _titleStyle;
     
-    // Calcular estad?sticas avanzadas
+    // Calcular estadísticas avanzadas
     final percentages = students.map((s) => (s['percentage'] ?? 0.0) as double).toList();
     
     if (percentages.isEmpty) {
@@ -536,7 +536,7 @@ class ExportService {
       return;
     }
     
-    // Estad?sticas b?sicas
+    // Estadísticas básicas
     final avg = percentages.reduce((a, b) => a + b) / percentages.length;
     final max = percentages.reduce((a, b) => a > b ? a : b);
     final min = percentages.reduce((a, b) => a < b ? a : b);
@@ -547,7 +547,7 @@ class ExportService {
         ? (sortedPct[sortedPct.length ~/ 2 - 1] + sortedPct[sortedPct.length ~/ 2]) / 2
         : sortedPct[sortedPct.length ~/ 2];
     
-    // Desviaci?n est?ndar
+    // Desviación estándar
     final variance = percentages.map((p) => (p - avg) * (p - avg)).reduce((a, b) => a + b) / percentages.length;
     final stdDev = variance > 0 ? (variance as num).toDouble() : 0.0;
     final stdDevSqrt = stdDev > 0 ? _sqrt(stdDev) : 0.0;
@@ -555,17 +555,17 @@ class ExportService {
     // Rango
     final range = max - min;
     
-    // SECCI?N: Estad?sticas Descriptivas
+    // SECCIÓN: Estadísticas Descriptivas
     sheet.merge(CellIndex.indexByString('A4'), CellIndex.indexByString('B4'));
-    sheet.cell(CellIndex.indexByString('A4')).value = TextCellValue('ESTAD?STICAS DESCRIPTIVAS');
+    sheet.cell(CellIndex.indexByString('A4')).value = TextCellValue('ESTADÍSTICAS DESCRIPTIVAS');
     sheet.cell(CellIndex.indexByString('A4')).cellStyle = _headerStyle;
     
     final descriptiveStats = [
       ['Media (Promedio)', '${avg.toStringAsFixed(2)}%'],
       ['Mediana', '${median.toStringAsFixed(2)}%'],
-      ['Desviaci?n Est?ndar', '${stdDevSqrt.toStringAsFixed(2)}%'],
-      ['Valor M?ximo', '${max.toStringAsFixed(2)}%'],
-      ['Valor M?nimo', '${min.toStringAsFixed(2)}%'],
+      ['Desviación Estándar', '${stdDevSqrt.toStringAsFixed(2)}%'],
+      ['Valor Máximo', '${max.toStringAsFixed(2)}%'],
+      ['Valor Mínimo', '${min.toStringAsFixed(2)}%'],
       ['Rango', '${range.toStringAsFixed(2)}%'],
       ['Muestra (n)', '${students.length} estudiantes'],
     ];
@@ -580,7 +580,7 @@ class ExportService {
       cell2.cellStyle = CellStyle(bold: true, fontSize: 11);
     }
     
-    // SECCI?N: Indicadores de Rendimiento
+    // SECCIÓN: Indicadores de Rendimiento
     sheet.merge(CellIndex.indexByString('A14'), CellIndex.indexByString('B14'));
     sheet.cell(CellIndex.indexByString('A14')).value = TextCellValue('INDICADORES DE RENDIMIENTO');
     sheet.cell(CellIndex.indexByString('A14')).cellStyle = _headerStyle;
@@ -590,7 +590,7 @@ class ExportService {
     final enRiesgo = percentages.where((p) => p < 60).length;
     
     final kpis = [
-      ['Tasa de Aprobaci?n (?60%)', '${(aprobados / students.length * 100).toStringAsFixed(1)}%'],
+      ['Tasa de Aprobación (?60%)', '${(aprobados / students.length * 100).toStringAsFixed(1)}%'],
       ['Tasa de Excelencia (?90%)', '${(excelentes / students.length * 100).toStringAsFixed(1)}%'],
       ['Estudiantes en Riesgo (<60%)', '$enRiesgo (${(enRiesgo / students.length * 100).toStringAsFixed(1)}%)'],
       ['Brecha de Rendimiento', '${range.toStringAsFixed(1)}%'],
@@ -606,9 +606,9 @@ class ExportService {
           .value = TextCellValue(kpis[i][1]);
     }
     
-    // SECCI?N: An?lisis de Cuartiles
+    // SECCIÓN: Análisis de Cuartiles
     sheet.merge(CellIndex.indexByString('A21'), CellIndex.indexByString('B21'));
-    sheet.cell(CellIndex.indexByString('A21')).value = TextCellValue('AN?LISIS POR CUARTILES');
+    sheet.cell(CellIndex.indexByString('A21')).value = TextCellValue('ANÁLISIS POR CUARTILES');
     sheet.cell(CellIndex.indexByString('A21')).cellStyle = _headerStyle;
     
     final q1Idx = (sortedPct.length * 0.25).floor();
@@ -637,10 +637,10 @@ class ExportService {
   // HOJA 5: HISTORIAL DE RESPUESTAS
   // ============================================================
   static void _createHistorySheet(Sheet sheet, List<Map<String, dynamic>> students) {
-    // T?tulo
+    // Título
     sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('F2'));
     final titleCell = sheet.cell(CellIndex.indexByString('A1'));
-    titleCell.value = TextCellValue('?? HISTORIAL DETALLADO DE RESPUESTAS');
+    titleCell.value = TextCellValue('HISTORIAL DETALLADO DE RESPUESTAS');
     titleCell.cellStyle = _titleStyle;
     
     // Encabezados
@@ -687,7 +687,7 @@ class ExportService {
         
         // Correcta
         final correctCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIdx));
-        correctCell.value = TextCellValue(isCorrect ? '? S?' : '? No');
+        correctCell.value = TextCellValue(isCorrect ? 'S?' : 'No');
         correctCell.cellStyle = CellStyle(
           fontColorHex: isCorrect ? _accentGreen : _accentRed,
           bold: true,
@@ -723,10 +723,10 @@ class ExportService {
   // HOJA 6: LOGROS Y MEDALLAS
   // ============================================================
   static void _createMedalsSheet(Sheet sheet, List<Map<String, dynamic>> students) {
-    // T?tulo
+    // Título
     sheet.merge(CellIndex.indexByString('A1'), CellIndex.indexByString('E2'));
     final titleCell = sheet.cell(CellIndex.indexByString('A1'));
-    titleCell.value = TextCellValue('?? LOGROS Y MEDALLAS DE ESTUDIANTES');
+    titleCell.value = TextCellValue('LOGROS Y MEDALLAS DE ESTUDIANTES');
     titleCell.cellStyle = _titleStyle;
     
     // Encabezados
@@ -752,7 +752,7 @@ class ExportService {
       final medals = student['medals'] as List? ?? [];
       final streak = student['consecutiveCorrect'] as int? ?? 0;
       
-      // Posici?n
+      // Posición
       final posCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIdx));
       posCell.value = TextCellValue('${i + 1}');
       posCell.cellStyle = _dataStyleCenter;
@@ -774,7 +774,7 @@ class ExportService {
       
       // Racha
       final streakCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIdx));
-      streakCell.value = TextCellValue(streak > 0 ? '?? $streak' : '-');
+      streakCell.value = TextCellValue(streak > 0 ? '$streak' : '-');
       streakCell.cellStyle = _dataStyleCenter;
       
       // Lista de medallas
@@ -782,9 +782,9 @@ class ExportService {
       if (medals.isNotEmpty) {
         final medalsList = medals.map((m) {
           if (m is Map) {
-            return '${m['emoji'] ?? '??'} ${m['name'] ?? ''}';
+            return '${m['emoji'] ?? ''} ${m['name'] ?? ''}'.trim();
           }
-          return '??';
+          return '';
         }).join(', ');
         medalsStr = medalsList;
       }
@@ -795,12 +795,12 @@ class ExportService {
       rowIdx++;
     }
     
-    // Secci?n de resumen de medallas
+    // Sección de resumen de medallas
     rowIdx += 2;
     sheet.merge(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIdx),
                 CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIdx));
     final summaryTitleCell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIdx));
-    summaryTitleCell.value = TextCellValue('?? RESUMEN DE LOGROS');
+    summaryTitleCell.value = TextCellValue('RESUMEN DE LOGROS');
     summaryTitleCell.cellStyle = _subHeaderStyle;
     rowIdx += 2;
     
@@ -830,7 +830,7 @@ class ExportService {
       }
     } else {
       sheet.cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIdx))
-          .value = TextCellValue('No se han otorgado medallas en esta sesi?n');
+          .value = TextCellValue('No se han otorgado medallas en esta sesión');
     }
     
     // Ajustar anchos
@@ -856,9 +856,9 @@ class ExportService {
   static String _formatStatus(dynamic status) {
     if (status == null) return 'Desconocido';
     final s = status.toString().toLowerCase();
-    if (s.contains('connected') || s.contains('conectado')) return '?? Conectado';
-    if (s.contains('responded') || s.contains('respondido')) return '? Respondi?';
-    if (s.contains('idle') || s.contains('inactivo')) return '?? Inactivo';
+    if (s.contains('connected') || s.contains('conectado')) return 'Conectado';
+    if (s.contains('responded') || s.contains('respondido')) return 'Respondi?';
+    if (s.contains('idle') || s.contains('inactivo')) return 'Inactivo';
     return status.toString();
   }
   
@@ -899,7 +899,7 @@ class ExportService {
     }
   }
   
-  /// Calcula ra?z cuadrada simple
+  /// Calcula raíz cuadrada simple
   static double _sqrt(double value) {
     if (value <= 0) return 0;
     double guess = value / 2;

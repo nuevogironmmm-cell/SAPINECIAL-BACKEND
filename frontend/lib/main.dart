@@ -55,7 +55,7 @@ class SapiencialApp extends StatelessWidget {
   }
 }
 
-/// Pantalla de selección de rol (Docente / Estudiante)
+/// Pantalla de selecciÃ³n de rol (Docente / Estudiante)
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
 
@@ -104,7 +104,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
   }
   
   void _navigateToTeacher() {
-    // Mostrar diálogo de contraseña antes de entrar como docente
+    // Mostrar diÃ¡logo de contraseÃ±a antes de entrar como docente
     _showTeacherPasswordDialog();
   }
   
@@ -135,7 +135,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'Ingresa la contraseña para acceder al panel del docente',
+                  'Ingresa la contraseÃ±a para acceder al panel del docente',
                   style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 const SizedBox(height: 20),
@@ -145,7 +145,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                   autofocus: true,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText: 'Contraseña',
+                    labelText: 'ContraseÃ±a',
                     labelStyle: const TextStyle(color: Colors.white54),
                     prefixIcon: const Icon(Icons.key, color: Colors.white54),
                     suffixIcon: IconButton(
@@ -207,11 +207,11 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
   }
   
   void _verifyPassword(String password, BuildContext dialogContext, StateSetter setDialogState, Function(String?) setError) {
-    // Contraseña del docente (puedes cambiarla)
+    // ContraseÃ±a del docente (puedes cambiarla)
     const teacherPassword = 'sapiencial2026';
     
     if (password == teacherPassword) {
-      Navigator.pop(dialogContext); // Cerrar diálogo
+      Navigator.pop(dialogContext); // Cerrar diÃ¡logo
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) => 
@@ -235,7 +235,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
         ),
       );
     } else {
-      setError('Contraseña incorrecta');
+      setError('ContraseÃ±a incorrecta');
     }
   }
   
@@ -322,7 +322,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                   
                   const SizedBox(height: 40),
                   
-                  // Título
+                  // TÃ­tulo
                   FadeTransition(
                     opacity: _logoAnimation,
                     child: Column(
@@ -353,7 +353,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                   FadeTransition(
                     opacity: _cardsAnimation,
                     child: Text(
-                      '¿Cómo deseas ingresar?',
+                      'Â¿CÃ³mo deseas ingresar?',
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: Colors.white,
                       ),
@@ -362,7 +362,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                   
                   const SizedBox(height: 32),
                   
-                  // Tarjetas de selección
+                  // Tarjetas de selecciÃ³n
                   ScaleTransition(
                     scale: _cardsAnimation,
                     child: ConstrainedBox(
@@ -401,7 +401,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
                   
                   const SizedBox(height: 60),
                   
-                  // Versión
+                  // VersiÃ³n
                   FadeTransition(
                     opacity: _cardsAnimation,
                     child: Text(
@@ -452,7 +452,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
           ),
           child: Column(
             children: [
-              // Ícono
+              // Ãcono
               Container(
                 width: 80,
                 height: 80,
@@ -469,7 +469,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
               
               const SizedBox(height: 20),
               
-              // Título
+              // TÃ­tulo
               Text(
                 title,
                 style: theme.textTheme.titleLarge?.copyWith(
@@ -480,7 +480,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
               
               const SizedBox(height: 8),
               
-              // Descripción
+              // DescripciÃ³n
               Text(
                 description,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -491,7 +491,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen>
               
               const SizedBox(height: 20),
               
-              // Botón
+              // BotÃ³n
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,

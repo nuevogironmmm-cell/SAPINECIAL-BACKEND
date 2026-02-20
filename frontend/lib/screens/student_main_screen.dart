@@ -8,6 +8,9 @@ import '../models/student_model.dart';
 import '../utils/animations.dart';
 import 'student_login_screen.dart';
 import 'word_search_full_screen.dart'; // Import nuevo
+import '../widgets/discover_psalm_type_widget.dart';
+import '../widgets/write_psalm_widget.dart';
+import '../widgets/proverbs_activities_widget.dart';
 
 /// Pantalla principal del estudiante
 /// 
@@ -16,12 +19,12 @@ import 'word_search_full_screen.dart'; // Import nuevo
 /// - Actividad activa (si hay)
 /// - Porcentaje acumulado
 /// - Mensaje motivacional
-/// - Campo de reflexi?n
+/// - Campo de reflexión
 /// 
 /// NO muestra:
 /// - Ranking de otros
-/// - Respuestas correctas (hasta revelaci?n)
-/// - Clasificaci?n negativa
+/// - Respuestas correctas (hasta revelación)
+/// - Clasificación negativa
 class StudentMainScreen extends StatefulWidget {
   const StudentMainScreen({super.key});
 
@@ -34,7 +37,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   final _reflectionController = TextEditingController();
   final _scrollController = ScrollController();
   
-  // Estado para m?ltiples actividades
+  // Estado para múltiples actividades
   final Map<String, int?> _selectedAnswers = {}; // activityId -> selectedIndex
   final Map<String, bool> _submittingActivities = {}; // activityId -> isSubmitting
   final Map<String, DateTime> _activityStartTimes = {}; // activityId -> startTime
@@ -74,7 +77,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
       if (activity != null && activity.isActive) {
         setState(() {
           _selectedAnswer = null;
-          // Limpiar selecci?�n previa para asegurar que aparezca vac?�a
+          // Limpiar selecci?³n previa para asegurar que aparezca vac?­a
           if (activity.id != null) {
             _selectedAnswers.remove(activity.id);
           }
@@ -89,7 +92,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     // Escuchar resultados de respuestas (feedback inmediato)
     _answerResultSubscription = studentService.answerResultStream.listen(_onAnswerResult);
     
-    // Escuchar revelaci?n de respuestas
+    // Escuchar revelación de respuestas
     _answerRevealSubscription = studentService.answerRevealedStream.listen(_onAnswerRevealed);
     
     _progressController.forward();
@@ -111,13 +114,13 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // Cuando la app vuelve al primer plano, solicitar actualizaci?n de estado
+      // Cuando la app vuelve al primer plano, solicitar actualización de estado
       debugPrint("App resumed - Requesting state update");
       final studentService = context.read<StudentService>();
       if (studentService.isConnected) {
         studentService.requestStateUpdate();
       } else {
-        // Si no est? conectado, intentar reconectar
+        // Si no está conectado, intentar reconectar
         studentService.connect();
       }
     }
@@ -127,10 +130,10 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   /// Cuando llega una nueva actividad
   void _onNewActivity(StudentActivity activity) {
     if (!mounted) return;
-    // Vibraci?n para notificar
+    // Vibración para notificar
     HapticFeedback.mediumImpact();
     
-    // Mostrar notificaci?n
+    // Mostrar notificación
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -143,7 +146,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    '?? ?Nueva actividad!',
+                    '?Nueva actividad!',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   Text(
@@ -169,7 +172,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   /// Cuando se recibe resultado inmediato de la respuesta
   void _onAnswerResult(AnswerResult result) {
     if (!mounted) return;
-    // Vibraci?n de feedback
+    // Vibración de feedback
     if (result.isCorrect) {
       HapticFeedback.lightImpact();
     } else {
@@ -181,10 +184,10 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   /// Cuando el docente revela la respuesta correcta
   void _onAnswerRevealed(AnswerRevealEvent event) {
     if (!mounted) return;
-    // Vibraci?n de notificaci?n
+    // Vibración de notificación
     HapticFeedback.mediumImpact();
     
-    // Mostrar notificaci?n con resultado
+    // Mostrar notificación con resultado
     final wasCorrect = event.wasCorrect;
     
     ScaffoldMessenger.of(context).showSnackBar(
@@ -206,17 +209,17 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 children: [
                   Text(
                     wasCorrect == true
-                        ? '?? ?Respuesta correcta!'
+                        ? '?Respuesta correcta!'
                         : (wasCorrect == false
-                            ? '? Respuesta incorrecta'
-                            : '?? Respuesta revelada'),
+                            ? 'Respuesta incorrecta'
+                            : 'Respuesta revelada'),
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   Text(
                     wasCorrect == true
                         ? '?Excelente trabajo!'
                         : (wasCorrect == false
-                            ? 'La respuesta correcta era la opci?n ${_getLetterForIndex(event.correctIndex)}'
+                            ? 'La respuesta correcta era la opción ${_getLetterForIndex(event.correctIndex)}'
                             : 'No enviaste respuesta'),
                     style: const TextStyle(fontSize: 12),
                   ),
@@ -238,13 +241,13 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     setState(() {});
   }
   
-  /// Obtiene la letra correspondiente a un ?ndice de opci?n
+  /// Obtiene la letra correspondiente a un índice de opción
   String _getLetterForIndex(int index) {
     const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
     return index < letters.length ? letters[index] : '${index + 1}';
   }
   
-  /// Selecciona una respuesta para una actividad espec?fica
+  /// Selecciona una respuesta para una actividad específica
   void _selectAnswerForActivity(String activityId, int answerIndex) {
     setState(() {
       _selectedAnswers[activityId] = answerIndex;
@@ -253,7 +256,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     });
   }
   
-  /// Env?a la respuesta para una actividad espec?fica
+  /// Envía la respuesta para una actividad específica
   Future<void> _submitAnswerForActivity(String activityId, {int? overrideAnswer}) async {
     final selectedAnswer = overrideAnswer ?? _selectedAnswers[activityId];
     if (selectedAnswer == null) return;
@@ -279,7 +282,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     setState(() => _submittingActivities[activityId] = false);
     
     if (success) {
-      // Animaci?n de �xito
+      // Animación de éxito
       _progressController.reset();
       _progressController.forward();
       
@@ -295,7 +298,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '? ?Respuesta enviada!',
+                      '?Respuesta enviada!',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -332,7 +335,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      '? Error al enviar',
+                      'Error al enviar',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -383,7 +386,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     setState(() => _isSubmitting = false);
     
     if (success) {
-      // Animaci?n de �xito
+      // Animación de éxito
       _progressController.reset();
       _progressController.forward();
       
@@ -399,7 +402,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '? ?Respuesta enviada!',
+                      '?Respuesta enviada!',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -430,7 +433,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             children: [
               Icon(Icons.error_outline, color: Colors.white, size: 28),
               SizedBox(width: 12),
-              Text('? Error al enviar respuesta'),
+              Text('Error al enviar respuesta'),
             ],
           ),
           backgroundColor: Colors.red.shade700,
@@ -449,7 +452,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     if (content.length < 10) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('La reflexi?n debe tener al menos 10 caracteres'),
+          content: Text('La reflexión debe tener al menos 10 caracteres'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -461,7 +464,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     setState(() => _isSubmitting = true);
     
     final success = await studentService.submitReflection(
-      'reflexi?n de clase',
+      'reflexión de clase',
       content,
     );
     
@@ -476,7 +479,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('?Reflexi?n enviada correctamente!'),
+          content: Text('?Reflexión enviada correctamente!'),
           backgroundColor: Colors.green,
         ),
       );
@@ -551,14 +554,14 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                           
                           const SizedBox(height: 24),
                           
-                          // Secci?n de reflexi?n
+                          // Sección de reflexión
                           _buildReflectionSection(),
                         ],
                       ),
                     ),
                   ),
                   
-                  // Footer con conexi?n
+                  // Footer con conexión
                   _buildConnectionStatus(studentService),
                 ],
               ),
@@ -627,7 +630,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                   ),
                 ),
                 Text(
-                  service.isConnected ? 'En l?nea' : 'Desconectado',
+                  service.isConnected ? 'En línea' : 'Desconectado',
                   style: TextStyle(
                     color: service.isConnected ? Colors.greenAccent : Colors.redAccent,
                     fontSize: 12,
@@ -637,13 +640,13 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             ),
           ),
           
-          // Bot?n de actualizar manual
+          // Botón de actualizar manual
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white70),
             onPressed: () {
-              // Feedback t?ctil
+              // Feedback táctil
               HapticFeedback.lightImpact();
-              // Solicitar actualizaci?n
+              // Solicitar actualización
               if (service.isConnected) {
                  service.requestStateUpdate();
                  ScaffoldMessenger.of(context).showSnackBar(
@@ -665,7 +668,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
               }
             },
           ),
-          // Bot?n de salir
+          // Botón de salir
           IconButton(
             onPressed: _logout,
             icon: const Icon(Icons.logout_rounded),
@@ -750,7 +753,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
               textAlign: TextAlign.center,
             ),
             
-            // SECCI?N DE MEDALLAS
+            // SECCIÓN DE MEDALLAS
             if (medals.isNotEmpty) ...[
               const SizedBox(height: 20),
               const Divider(color: Colors.white24),
@@ -769,7 +772,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     
     return Column(
       children: [
-        // T?tulo
+        // Título
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -857,7 +860,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     );
   }
   
-  /// Obtiene los colores de gradiente seg?n el tipo de medalla
+  /// Obtiene los colores de gradiente según el tipo de medalla
   List<Color> _getMedalColors(MedalType type) {
     switch (type) {
       case MedalType.gold:
@@ -954,9 +957,9 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   
   /// Muestra la actividad actual o el resumen de resultados
   /// 
-  /// REGLAS DE VISUALIZACI?N SECUENCIAL:
-  /// - Solo se muestra UNA lecci?n activa a la vez
-  /// - La siguiente lecci?n se habilita solo al completar la actual correctamente
+  /// REGLAS DE VISUALIZACIÓN SECUENCIAL:
+  /// - Solo se muestra UNA lección activa a la vez
+  /// - La siguiente lección se habilita solo al completar la actual correctamente
   /// - Las lecciones completadas se muestran como cerradas
   Widget _buildCurrentActivitySection(StudentService studentService, List<StudentActivity> activities) {
     final theme = Theme.of(context);
@@ -965,7 +968,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     final pendingActivities = activities.where((a) => !studentService.hasRespondedActivity(a.id)).toList();
     final completedActivities = activities.where((a) => studentService.hasRespondedActivity(a.id)).toList();
     
-    // Calcular cu?ntas correctas hubo para desbloqueo secuencial
+    // Calcular cuántas correctas hubo para desbloqueo secuencial
     int correctCount = 0;
     for (final activity in completedActivities) {
       final result = studentService.getAnswerResult(activity.id);
@@ -974,7 +977,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
       }
     }
     
-    // Si todas las actividades est?n completadas, mostrar mensaje de logro final
+    // Si todas las actividades están completadas, mostrar mensaje de logro final
     if (pendingActivities.isEmpty && completedActivities.isNotEmpty) {
       return _buildFinalAchievement(studentService, completedActivities);
     }
@@ -1012,7 +1015,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                     Icon(Icons.school_rounded, color: theme.colorScheme.primary, size: 22),
                     const SizedBox(width: 8),
                     Text(
-                      'Lecci?n $activityNumber de $totalActivities',
+                      'Lección $activityNumber de $totalActivities',
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.bold,
@@ -1031,7 +1034,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                     
                     return Row(
                       children: [
-                        // C?rculo de paso
+                        // Círculo de paso
                         Container(
                           width: 28,
                           height: 28,
@@ -1060,7 +1063,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                                       )),
                           ),
                         ),
-                        // L?nea conectora (excepto ?ltimo)
+                        // Línea conectora (excepto último)
                         if (index < totalActivities - 1)
                           Container(
                             width: 20,
@@ -1075,8 +1078,8 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 // Mensaje de progreso
                 Text(
                   completedActivities.isEmpty
-                      ? '?Comienza tu primera lecci?n!'
-                      : '${completedActivities.length} completadas � ${pendingActivities.length} pendientes',
+                      ? '?Comienza tu primera lección!'
+                      : '${completedActivities.length} completadas • ${pendingActivities.length} pendientes',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: Colors.white54,
                   ),
@@ -1154,7 +1157,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Lecci?n ${index + 1}',
+                      'Lección ${index + 1}',
                       style: TextStyle(
                         color: isCorrect ? Colors.green.shade300 : Colors.orange.shade300,
                         fontSize: 12,
@@ -1175,7 +1178,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   Widget _buildFinalAchievement(StudentService studentService, List<StudentActivity> completedActivities) {
     final theme = Theme.of(context);
     
-    // Calcular estad?sticas finales
+    // Calcular estadísticas finales
     int correctCount = 0;
     double totalPoints = 0;
     
@@ -1201,7 +1204,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     
     if (percentage >= 100) {
       achievementEmoji = '??';
-      achievementTitle = '?PERFECCI?N ABSOLUTA!';
+      achievementTitle = '?PERFECCIÓN ABSOLUTA!';
       achievementMessage = 'Has completado todas las lecciones sin errores. ?Eres un maestro!';
       accentColor = Colors.amber;
     } else if (percentage >= 80) {
@@ -1212,7 +1215,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     } else if (percentage >= 60) {
       achievementEmoji = '??';
       achievementTitle = '?FELICITACIONES!';
-      achievementMessage = 'Has completado todas las lecciones con buen desempe?o.';
+      achievementMessage = 'Has completado todas las lecciones con buen desempeño.';
       accentColor = Colors.blue;
     } else {
       achievementEmoji = '??';
@@ -1223,7 +1226,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     
     return Stack(
       children: [
-        // ?? CONFETI DE CELEBRACI?N (si logro alto)
+        // ?? CONFETI DE CELEBRACIÓN (si logro alto)
         FullScreenConfetti(
           trigger: percentage >= 60, // Solo si aprob?
           particleCount: percentage >= 100 ? 150 : (percentage >= 80 ? 100 : 50),
@@ -1264,7 +1267,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 ),
                 const SizedBox(height: 20),
                 
-                // T?tulo del logro
+                // Título del logro
                 Text(
                   achievementTitle,
                   style: theme.textTheme.headlineSmall?.copyWith(
@@ -1286,7 +1289,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 ),
                 const SizedBox(height: 32),
             
-            // Estad?sticas finales
+            // Estadísticas finales
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -1320,7 +1323,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Precisi?n Final',
+                    'Precisión final',
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: Colors.white70,
                     ),
@@ -1389,7 +1392,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     ); // Cierra Stack
   }
   
-  /// Widget para estad?sticas del logro final
+  /// Widget para estadísticas del logro final
   Widget _buildAchievementStat({
     required IconData icon,
     required Color color,
@@ -1502,7 +1505,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             
             const SizedBox(height: 20),
             
-            // T?tulo de la actividad (si existe)
+            // Título de la actividad (si existe)
             if (activity.title != null && activity.title!.isNotEmpty) ...[
               Text(
                 activity.title!,
@@ -1514,7 +1517,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
               const SizedBox(height: 12),
             ],
             
-            // Cita b?blica / Contenido del slide (si existe)
+            // Cita bíblica / Contenido del slide (si existe)
             if (activity.slideContent != null && activity.slideContent!.isNotEmpty) ...[
               Container(
                 width: double.infinity,
@@ -1539,7 +1542,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                         height: 1.4,
                       ),
                     ),
-                    // Referencia b?blica (si existe)
+                    // Referencia bíblica (si existe)
                     if (activity.biblicalReference != null && activity.biblicalReference!.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text(
@@ -1567,7 +1570,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             
             const SizedBox(height: 24),
 
-            // CONTENIDO DE LA ACTIVIDAD SEG?N TIPO
+            // CONTENIDO DE LA ACTIVIDAD SEGÚN TIPO
             if (activity.type == StudentActivityType.wordSearch)
               Container(
                 width: double.infinity,
@@ -1612,7 +1615,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                                studentName: studentName,
                                isReadOnly: hasResponded,
                                onWordFound: (foundWords) {
-                                 // Feedback h?ptico opcional
+                                 // Feedback hóptico opcional
                                },
                                onProgress: (wordsFound, totalWords, elapsedSeconds) {
                                   studentService.sendWordSearchProgress(
@@ -1654,6 +1657,13 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                   ],
                 ),
               )
+            // ============================================================
+            // ACTIVIDADES ESPECIALES: Salmos y Proverbios
+            // ============================================================
+            else if (activity.type == StudentActivityType.discoverPsalmType ||
+                     activity.type == StudentActivityType.writePsalm ||
+                     activity.type == StudentActivityType.proverbsActivities)
+              _buildSpecialActivityLauncher(activity, hasResponded)
             else if (!hasResponded)
               ...activity.options.asMap().entries.map((entry) {
                 final index = entry.key;
@@ -1679,7 +1689,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
               // NUEVO: Feedback detallado de la respuesta
               _buildAnswerFeedback(context, activity),
             
-            // Bot?n de enviar
+            // Botón de enviar
             if (!hasResponded && _selectedAnswers[activity.id] != null) ...[
               const SizedBox(height: 20),
               SizedBox(
@@ -1766,7 +1776,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
           ),
           child: Row(
             children: [
-              // Letra de opci?n
+              // Letra de opción
               Container(
                 width: 40,
                 height: 40,
@@ -1790,7 +1800,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
               
               const SizedBox(width: 16),
               
-              // Texto de opci?n
+              // Texto de opción
               Expanded(
                 child: Text(
                   text,
@@ -1801,7 +1811,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 ),
               ),
               
-              // Indicador de selecci?n
+              // Indicador de selección
               if (isSelected)
                 Icon(
                   Icons.check_circle,
@@ -1814,13 +1824,124 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     );
   }
   
+  // ============================================================
+  // LANZADOR DE ACTIVIDADES ESPECIALES (Salmos / Proverbios)
+  // ============================================================
+  Widget _buildSpecialActivityLauncher(StudentActivity activity, bool hasResponded) {
+    // Configurar icono, titulo y color segun tipo
+    IconData actIcon;
+    String actTitle;
+    String actDesc;
+    Color actColor;
+    Widget Function() widgetBuilder;
+
+    switch (activity.type) {
+      case StudentActivityType.discoverPsalmType:
+        actIcon = Icons.quiz;
+        actTitle = 'Descubre el Tipo de Salmo';
+        actDesc = 'Identifica si es un salmo de alabanza, lamento o imprecatorio.';
+        actColor = Colors.deepPurple;
+        widgetBuilder = () => const DiscoverPsalmTypeWidget(isTeacher: false);
+        break;
+      case StudentActivityType.writePsalm:
+        actIcon = Icons.edit_note;
+        actTitle = 'Escribe tu Salmo';
+        actDesc = 'Expresa tu creatividad escribiendo un salmo personal.';
+        actColor = Colors.teal;
+        widgetBuilder = () => const WritePsalmWidget(isTeacher: false);
+        break;
+      case StudentActivityType.proverbsActivities:
+        actIcon = Icons.psychology;
+        actTitle = 'Proverbios Interactivos';
+        actDesc = 'Participa en las actividades interactivas de Proverbios.';
+        actColor = Colors.orange;
+        widgetBuilder = () => const ProverbsActivitiesWidget(isTeacher: false);
+        break;
+      default:
+        actIcon = Icons.play_arrow;
+        actTitle = 'Actividad';
+        actDesc = '';
+        actColor = Colors.blue;
+        widgetBuilder = () => const SizedBox();
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: actColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: actColor.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        children: [
+          Icon(actIcon, size: 48, color: actColor),
+          const SizedBox(height: 16),
+          Text(
+            actTitle,
+            style: GoogleFonts.oswald(fontSize: 24, color: Colors.white),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            actDesc,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: actColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Scaffold(
+                    backgroundColor: const Color(0xFF0A192F),
+                    appBar: AppBar(
+                      title: Text(actTitle, style: GoogleFonts.oswald()),
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                    ),
+                    body: SafeArea(
+                      child: widgetBuilder(),
+                    ),
+                  ),
+                ),
+              ).then((_) {
+                // Al regresar, marcar como respondida si no lo estaba
+                if (!hasResponded) {
+                  _submitAnswerForActivity(activity.id, overrideAnswer: 0);
+                }
+              });
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(hasResponded ? Icons.visibility : Icons.play_arrow),
+                const SizedBox(width: 8),
+                Text(
+                  hasResponded ? 'Ver Actividad' : 'Iniciar Actividad',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Construye el feedback visual de la respuesta enviada
   Widget _buildAnswerFeedback(BuildContext context, StudentActivity activity) {
     final theme = Theme.of(context);
     final studentService = context.read<StudentService>();
     final answerResult = studentService.getAnswerResult(activity.id);
     
-    // Si a?n no hay resultado (esperando confirmaci?n del servidor)
+    // Si aún no hay resultado (esperando confirmación del servidor)
     if (answerResult == null) {
       return Container(
         padding: const EdgeInsets.all(20),
@@ -1885,7 +2006,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isCorrect ? '?? ?Correcto!' : '? Incorrecto',
+                        isCorrect ? '?Correcto!' : 'Incorrecto',
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: isCorrect ? Colors.green : Colors.red,
                           fontWeight: FontWeight.bold,
@@ -1894,7 +2015,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                       Text(
                         isCorrect 
                             ? '?Excelente trabajo! +${answerResult.pointsEarned.toStringAsFixed(0)}%'
-                            : 'La respuesta correcta era la opci?n ${_getLetterForIndex(correctIndex)}',
+                            : 'La respuesta correcta era la opción ${_getLetterForIndex(correctIndex)}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.white70,
                         ),
@@ -1941,7 +2062,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Texto de la opci?n
+                    // Texto de la opción
                     Expanded(
                       child: Text(
                         '${_getLetterForIndex(index)}. $option',
@@ -1956,7 +2077,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                         ),
                       ),
                     ),
-                    // Badge de selecci?n
+                    // Badge de selección
                     if (wasSelected)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1980,7 +2101,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
       );
     }
     
-    // Si envi? respuesta pero a?n NO se revel? (estado intermedio)
+    // Si envió respuesta pero aún no se reveló (estado intermedio)
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1997,14 +2118,14 @@ class _StudentMainScreenState extends State<StudentMainScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '? ?Respuesta enviada!',
+                  '?Respuesta enviada!',
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: Colors.amber,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  'Seleccionaste opci?n ${_getLetterForIndex(answerResult.selectedIndex)}. '
+                  'Seleccionaste opción ${_getLetterForIndex(answerResult.selectedIndex)}. '
                   'Espera a que el docente revele la respuesta correcta.',
                   style: theme.textTheme.bodySmall?.copyWith(color: Colors.white54),
                 ),
@@ -2052,7 +2173,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             const SizedBox(height: 8),
             
             Text(
-              'El docente a?n no ha habilitado\nuna actividad para responder.',
+              'El docente aún no ha habilitado\nuna actividad para responder.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: Colors.white54,
               ),
@@ -2140,7 +2261,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Mi reflexi?n',
+                  'Mi reflexión',
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -2172,7 +2293,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Reflexi?n enviada al docente',
+                        'Reflexión enviada al docente',
                         style: TextStyle(color: Colors.green.shade300),
                       ),
                     ),
@@ -2197,7 +2318,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 maxLines: 4,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: '?Qu� aprendiste hoy? ?Qu� te llam? la atenci?n?',
+                  hintText: '?Qué aprendiste hoy? ?Qué te llam? la atención?',
                   hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.05),
@@ -2254,7 +2375,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
             ] else ...[
               const SizedBox(height: 12),
               Text(
-                'Comparte tus pensamientos sobre la clase.\nEl docente podr? leer tu reflexi?n.',
+                'Comparte tus pensamientos sobre la clase.\nEl docente podrá leer tu reflexión.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: Colors.white54,
                 ),
@@ -2303,17 +2424,17 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     );
   }
   
-  /// ?? Temporizador de bonus para respuestas r?pidas
+  /// ?? Temporizador de bonus para respuestas rápidas
   Widget _buildBonusTimer(StudentActivity activity) {
     final theme = Theme.of(context);
     final startTime = _activityStartTimes[activity.id];
     
-    // Si a?n no hay tiempo de inicio, iniciarlo
+    // Si aún no hay tiempo de inicio, iniciarlo
     if (startTime == null) {
       _activityStartTimes[activity.id] = DateTime.now();
     }
     
-    // Tiempo l?mite para bonus: 30 segundos
+    // Tiempo límite para bonus: 30 segundos
     const bonusTimeLimit = 30;
     
     // Calcular tiempo restante basado en startTime
@@ -2328,16 +2449,16 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     Color bonusColor = Colors.grey;
     
     if (remainingSeconds > 20) {
-      bonusText = '?? ?BONUS x2!';
+      bonusText = '?BONUS x2!';
       bonusColor = Colors.orange;
     } else if (remainingSeconds > 10) {
-      bonusText = '? Bonus x1.5';
+      bonusText = 'Bonus x1.5';
       bonusColor = Colors.amber;
     } else if (remainingSeconds > 0) {
-      bonusText = '? Bonus x1.2';
+      bonusText = 'Bonus x1.2';
       bonusColor = Colors.yellow;
     } else {
-      bonusText = '? Sin bonus';
+      bonusText = 'Sin bonus';
       bonusColor = Colors.grey;
     }
     
@@ -2384,7 +2505,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 ),
                 if (hasBonus)
                   Text(
-                    '?Responde r?pido para puntos extra!',
+                    '?Responde rápido para puntos extra!',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: Colors.white54,
                     ),
@@ -2474,7 +2595,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
 
               return _buildRankingItem(
                 position: position,
-                name: data['name'] ?? 'An?nimo',
+                name: data['name'] ?? 'Anónimo',
                 percentage: percentage,
                 icon: data['icon'] ?? '??',
                 isCurrentUser: isCurrentUser,
@@ -2496,7 +2617,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   }) {
     final theme = Theme.of(context);
     
-    // Colores seg?n posici?n
+    // Colores según posición
     Color positionColor;
     String medal;
     switch (position) {
@@ -2531,7 +2652,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
       ),
       child: Row(
         children: [
-          // Posici?n con medalla
+          // Posición con medalla
           SizedBox(
             width: 40,
             child: Text(

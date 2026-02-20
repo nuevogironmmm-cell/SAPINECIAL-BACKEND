@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Widget interactivo de mapa para mostrar la ubicaci?n de Uz
-/// Dise?o profesional y din?mico para presentaciones educativas
+/// Widget interactivo de mapa para mostrar la ubicación de Uz
+/// Diseño profesional y dinámico para presentaciones educativas
 class UzMapWidget extends StatefulWidget {
   final bool isProjectorMode;
   
@@ -21,14 +21,14 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
   late Animation<double> _pulseAnimation;
   late Animation<double> _fadeAnimation;
   
-  // Estado de la regi?n seleccionada
+  // Estado de la región seleccionada
   String? _selectedRegion;
   
   @override
   void initState() {
     super.initState();
     
-    // Animaci?n de pulso para Uz
+    // Animación de pulso para Uz
     _pulseController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -38,7 +38,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
     
-    // Animaci?n de fade para las regiones
+    // Animación de fade para las regiones
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -89,7 +89,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
         ),
         child: Column(
           children: [
-            // T?tulo
+            // Título
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -133,7 +133,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
                       child: _buildMapVisualization(),
                     ),
                     const SizedBox(width: 20),
-                    // Panel de informaci?n
+                    // Panel de información
                     Expanded(
                       flex: 2,
                       child: _buildInfoPanel(fontSize),
@@ -204,7 +204,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               ),
             ),
             
-            // Mar Mediterr?neo (izquierda)
+            // Mar Mediterráneo (izquierda)
             Positioned(
               left: 0,
               top: constraints.maxHeight * 0.1,
@@ -219,7 +219,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
                   child: RotatedBox(
                     quarterTurns: 3,
                     child: Text(
-                      'MAR MEDITERR?NEO',
+                      'MAR MEDITERRÁNEO',
                       style: GoogleFonts.oswald(
                         color: Colors.blue.shade300,
                         fontSize: 11,
@@ -246,7 +246,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               onTap: () => _selectRegion('ARAM'),
             ),
             
-            // R?o ?ufrates (l?nea decorativa)
+            // Río Éufrates (línea decorativa)
             Positioned(
               right: constraints.maxWidth * 0.1,
               top: constraints.maxHeight * 0.05,
@@ -272,7 +272,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               child: RotatedBox(
                 quarterTurns: 1,
                 child: Text(
-                  '?ufrates',
+                  'Éufrates',
                   style: TextStyle(color: Colors.blue.shade300, fontSize: 10),
                 ),
               ),
@@ -292,11 +292,11 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               onTap: () => _selectRegion('ISRAEL'),
             ),
             
-            // Jerusal�n marker
+            // Jerusalén marker
             Positioned(
               left: constraints.maxWidth * 0.25,
               top: constraints.maxHeight * 0.45,
-              child: _buildCityMarker('Jerusal�n', Colors.green),
+              child: _buildCityMarker('Jerusalén', Colors.green),
             ),
             
             // Mar Muerto
@@ -326,13 +326,13 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               ),
             ),
             
-            // AM?N y MOAB
+            // AMÓN y MOAB
             _buildRegion(
               left: constraints.maxWidth * 0.48,
               top: constraints.maxHeight * 0.32,
               width: constraints.maxWidth * 0.18,
               height: constraints.maxHeight * 0.35,
-              name: 'AM?N\nMOAB',
+              name: 'AMÓN\nMOAB',
               subtitle: '',
               color: Colors.purple.shade300,
               isSelected: _selectedRegion == 'MOAB',
@@ -340,7 +340,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               onTap: () => _selectRegion('MOAB'),
             ),
             
-            // EDOM / UZ - Sur (DESTACADO con animaci?n)
+            // EDOM / UZ - Sur (DESTACADO con animación)
             AnimatedBuilder(
               animation: _pulseAnimation,
               builder: (context, child) {
@@ -427,7 +427,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               ),
             ),
             
-            // Flecha indicando direcci?n a Caldea
+            // Flecha indicando dirección a Caldea
             Positioned(
               right: constraints.maxWidth * 0.05,
               top: constraints.maxHeight * 0.15,
@@ -439,7 +439,7 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
               ),
             ),
             
-            // Indicador de "Uz est? aqu?" 
+            // Indicador de "Uz está aquí" 
             Positioned(
               left: constraints.maxWidth * 0.42,
               top: constraints.maxHeight * 0.58,
@@ -607,34 +607,34 @@ class _UzMapWidgetState extends State<UzMapWidget> with TickerProviderStateMixin
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildInfoSection(
-              'Ubicaci?n Principal',
-              'EDOM (m?s probable)',
+              'Ubicación Principal',
+              'EDOM (más probable)',
               Colors.amber,
               [
                 '? Suroeste de Jordania actual',
                 '? Sur del Mar Muerto',
                 '? Lamentaciones 4:21 lo confirma',
-                '? Regi?n rica en sabidur?a',
+                '? Región rica en sabiduría',
               ],
             ),
             const SizedBox(height: 16),
             _buildInfoSection(
-              'Teor?a Alternativa',
+              'Teoría Alternativa',
               'ARAM (Siria)',
               Colors.blue,
               [
                 '? Norte de Mesopotamia',
-                '? Uz, hijo de Aram (G�n 10:23)',
+                '? Uz, hijo de Aram (Gén 10:23)',
                 '? Rollos del Mar Muerto',
               ],
             ),
             const SizedBox(height: 16),
             _buildInfoSection(
-              '?Por qu� importa?',
+              '?Por qué importa?',
               'Job fuera de Israel',
               Colors.green,
               [
-                '? No menciona la Ley de Mois�s',
+                '? No menciona la Ley de Moisés',
                 '? No habla del Templo',
                 '? Era sacerdote de su familia',
                 '? Atacado por sabeos y caldeos',

@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-/// Configuraci?n de la aplicaci?n
+/// Configuración de la aplicación
 class AppConfig {
-  // Detectar si estamos en modo producci?n (web release)
+  // Detectar si estamos en modo producción (web release)
   static bool get isProduction => kReleaseMode || kIsWeb;
   
   // URLs del backend
@@ -12,11 +12,11 @@ class AppConfig {
   
   /// URL base del WebSocket
   static String get wsBaseUrl {
-    // En web SIEMPRE usar producci?n (Netlify se conecta a Render)
+    // En web SIEMPRE usar producción (Netlify se conecta a Render)
     if (kIsWeb) {
       return _productionBackendUrl;
     }
-    // En desktop/m?vil, depende del modo
+    // En desktop/móvil, depende del modo
     if (isProduction) {
       return _productionBackendUrl;
     }

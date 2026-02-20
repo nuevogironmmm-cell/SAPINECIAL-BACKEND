@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import '../config/app_config.dart';
 
 /// Servicio de conexión WebSocket con autenticación
 /// 
@@ -30,9 +31,9 @@ class WebSocketService extends ChangeNotifier {
   final _messageController = StreamController<Map<String, dynamic>>.broadcast();
   Stream<Map<String, dynamic>> get messageStream => _messageController.stream;
 
-  // URL del servidor (cambiar según entorno)
-  static const String _baseUrl = 'ws://localhost:8000/ws';
-  static const String _devUrl = 'ws://localhost:8000/ws-dev'; // Sin autenticación
+  // URL del servidor (centralizada en AppConfig)
+  String get _baseUrl => '${AppConfig.wsBaseUrl}/ws';
+  String get _devUrl => '${AppConfig.wsBaseUrl}/ws-dev'; // Sin autenticación
 
   /// Conecta al WebSocket con autenticación
   /// 

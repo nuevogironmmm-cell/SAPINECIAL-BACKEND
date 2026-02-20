@@ -1,4 +1,4 @@
-import 'dart:ui';
+Ôªøimport 'dart:ui';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -19,6 +19,13 @@ import '../widgets/uz_map_widget.dart';
 import '../widgets/job_historical_map.dart';
 import '../widgets/job_historical_timeline.dart';
 import 'unit_selection_screen.dart';
+import '../widgets/psalms_timeline_widget.dart';
+import '../widgets/psalms_authors_widget.dart';
+import '../widgets/imprecatory_psalms_widget.dart';
+import '../widgets/discover_psalm_type_widget.dart';
+import '../widgets/write_psalm_widget.dart';
+import '../widgets/proverbs_widget.dart';
+import '../widgets/proverbs_activities_widget.dart';
 
 class _WordSearchProgress {
   final String studentName;
@@ -72,7 +79,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   // ============================================================
   // ESTADO PARA ANIMACIONES EDUCATIVAS
   // ============================================================
-  bool _showCelebration = false;  // CelebraciÛn por respuesta correcta
+  bool _showCelebration = false;  // Celebraci√≥n por respuesta correcta
   bool _showShake = false;        // Sacudida por respuesta incorrecta
   bool _slideTransitionActive = false;
   int _slideDirection = 1; // 1 = siguiente, -1 = anterior
@@ -85,7 +92,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   // Mapa de actividades habilitadas por ID de slide
   final Map<String, bool> _enabledActivities = {};
   
-  // Controladores de animaciÛn
+  // Controladores de animaci√≥n
   late AnimationController _slideAnimController;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
@@ -103,7 +110,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       _connectTeacherService();
     });
     
-    // Inicializar controlador de animaciÛn para transiciones de slides
+    // Inicializar controlador de animaci√≥n para transiciones de slides
     _slideAnimController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
@@ -207,7 +214,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     }
   }
   
-  /// Verifica si una actividad especÌfica est· habilitada
+  /// Verifica si una actividad espec√≠fica est√° habilitada
   bool _isActivityEnabled(String slideId) {
     return _enabledActivities[slideId] ?? false;
   }
@@ -230,7 +237,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     _toggleActivityForSlide(currentSlide);
   }
   
-  /// Activa o desactiva una actividad especÌfica por su slide
+  /// Activa o desactiva una actividad espec√≠fica por su slide
   void _toggleActivityForSlide(Slide slide) {
     if (slide.type != SlideType.activity || slide.activity == null) return;
     
@@ -240,7 +247,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     final isCurrentlyEnabled = _enabledActivities[slideId] ?? false;
     
     if (!isCurrentlyEnabled) {
-      // Extraer solo "Actividad N" del tÌtulo para no revelar la respuesta
+      // Extraer solo "Actividad N" del t√≠tulo para no revelar la respuesta
       String safeTitle = slide.title;
       final activityMatch = RegExp(r'^(Actividad\s*\d+)').firstMatch(slide.title);
       if (activityMatch != null) {
@@ -260,13 +267,19 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 ? 'wordPuzzle' 
                 : activity.type == ActivityType.wordSearch
                     ? 'wordSearch'
-                    : 'multipleChoice',
-        title: safeTitle,  // TÌtulo sin revelar respuesta
-        slideContent: slide.content,  // Contenido (la cita bÌblica)
-        biblicalReference: slide.biblicalReference,  // Referencia bÌblica
+                    : activity.type == ActivityType.discoverPsalmType
+                        ? 'discoverPsalmType'
+                        : activity.type == ActivityType.writePsalm
+                            ? 'writePsalm'
+                            : activity.type == ActivityType.proverbsActivities
+                                ? 'proverbsActivities'
+                                : 'multipleChoice',
+        title: safeTitle,  // T√≠tulo sin revelar respuesta
+        slideContent: slide.content,  // Contenido (la cita b√≠blica)
+        biblicalReference: slide.biblicalReference,  // Referencia b√≠blica
       );
       
-      // PequeÒo delay para asegurar registro
+      // Peque√±o delay para asegurar registro
       Future.delayed(const Duration(milliseconds: 100), () {
         teacherService.unlockActivity(slideId);
       });
@@ -286,7 +299,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             children: [
               const Icon(Icons.check_circle, color: Colors.white),
               const SizedBox(width: 8),
-              Text('°$safeTitle habilitada para ${teacherService.connectedStudentsCount} estudiantes!'),
+              Text('¬°$safeTitle habilitada para ${teacherService.connectedStudentsCount} estudiantes!'),
             ],
           ),
           backgroundColor: Colors.green,
@@ -294,7 +307,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         ),
       );
     } else {
-      // Desactivar esta actividad especÌfica
+      // Desactivar esta actividad espec√≠fica
       teacherService.lockSpecificActivity(slideId);
       setState(() {
         _enabledActivities[slideId] = false;
@@ -339,9 +352,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     );
   }
   
-  /// Reinicia el progreso de TODOS los estudiantes (funciÛn de administrador)
+  /// Reinicia el progreso de TODOS los estudiantes (funci√≥n de administrador)
   void _resetAllStudentsProgress() {
-    // Mostrar di·logo de confirmaciÛn
+    // Mostrar di√°logo de confirmaci√≥n
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -362,17 +375,17 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Esta acciÛn eliminar·:',
+                'Esta acci√≥n eliminar√°:',
                 style: TextStyle(color: Colors.white70, fontSize: 14),
               ),
               SizedBox(height: 12),
-              Text('ï Todas las respuestas de estudiantes', style: TextStyle(color: Colors.red)),
-              Text('ï Todo el progreso acumulado', style: TextStyle(color: Colors.red)),
-              Text('ï Todas las lecciones completadas', style: TextStyle(color: Colors.red)),
-              Text('ï Todos los logros obtenidos', style: TextStyle(color: Colors.red)),
+              Text('‚Ä¢ Todas las respuestas de estudiantes', style: TextStyle(color: Colors.red)),
+              Text('‚Ä¢ Todo el progreso acumulado', style: TextStyle(color: Colors.red)),
+              Text('‚Ä¢ Todas las lecciones completadas', style: TextStyle(color: Colors.red)),
+              Text('‚Ä¢ Todos los logros obtenidos', style: TextStyle(color: Colors.red)),
               SizedBox(height: 16),
               Text(
-                'øEst·s seguro de continuar?',
+                '¬øEst√°s seguro de continuar?',
                 style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
               ),
             ],
@@ -390,7 +403,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 Navigator.pop(dialogContext);
                 _executeResetAllStudents();
               },
-              child: const Text('SÕ, REINICIAR TODO', style: TextStyle(color: Colors.white)),
+              child: const Text('S√ç, REINICIAR TODO', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -403,7 +416,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     final teacherService = context.read<TeacherService>();
     teacherService.resetAllStudentsProgress();
     
-    // Limpiar estado local tambiÈn
+    // Limpiar estado local tambi√©n
     setState(() {
       _activityEnabledForStudents = false;
       _enabledActivities.clear();
@@ -474,7 +487,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         'classificationIcon': s.classificationIcon,
       }).toList();
       
-      debugPrint("Iniciando exportaciÛn con ${exportData.length} registros");
+      debugPrint("Iniciando exportaci√≥n con ${exportData.length} registros");
 
       final success = await ExportService.exportStudentResults(
         students: exportData,
@@ -482,7 +495,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         context: context,
       );
       
-      // Cerrar di·logo de carga
+      // Cerrar di√°logo de carga
       if (mounted) Navigator.of(context).pop();
       
       if (mounted) {
@@ -493,17 +506,17 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 children: [
                   Icon(Icons.check_circle, color: Colors.white),
                   SizedBox(width: 8),
-                  Text('°Excel exportado exitosamente!'),
+                  Text('¬°Excel exportado exitosamente!'),
                 ],
               ),
               backgroundColor: Colors.green,
             ),
           );
         } else {
-          // El servicio devolviÛ false pero sin excepciÛn
+          // El servicio devolvi√≥ false pero sin excepci√≥n
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('El servicio de exportaciÛn fallÛ (sin detalles)'),
+              content: Text('El servicio de exportaci√≥n fall√≥ (sin detalles)'),
               backgroundColor: Colors.red,
             ),
           );
@@ -514,19 +527,19 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       debugPrint(stackTrace.toString());
       
       if (mounted) {
-        // Asegurar que se cierra el di·logo de carga si estaba abierto
+        // Asegurar que se cierra el di√°logo de carga si estaba abierto
         if (Navigator.canPop(context)) Navigator.of(context).pop();
 
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Error de ExportaciÛn'),
+            title: const Text('Error de Exportaci√≥n'),
             content: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('OcurriÛ un error inesperado al generar el Excel:'),
+                  const Text('Ocurri√≥ un error inesperado al generar el Excel:'),
                   const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.all(8),
@@ -595,7 +608,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         _initPuzzle();
       }
       
-      // Resetear estados de animaciÛn de celebraciÛn/error
+      // Resetear estados de animaci√≥n de celebraci√≥n/error
       _showCelebration = false;
       _showShake = false;
     });
@@ -730,14 +743,14 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         }
         _puzzleIsCorrect = isCorrect;
         
-        // Activar animaciÛn seg˙n resultado
+        // Activar animaci√≥n seg√∫n resultado
         if (isCorrect) {
           _showCelebration = true;
           _showShake = false;
         } else {
           _showShake = true;
           _showCelebration = false;
-          // Resetear shake despuÈs de la animaciÛn
+          // Resetear shake despu√©s de la animaci√≥n
           Future.delayed(const Duration(milliseconds: 600), () {
             if (mounted) setState(() => _showShake = false);
           });
@@ -756,7 +769,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       _puzzleIsCorrect = null;
       _showCelebration = false;
       _showShake = false;
-      // Resetear tambiÈn el estado de revelaciÛn para poder intentar de nuevo
+      // Resetear tambi√©n el estado de revelaci√≥n para poder intentar de nuevo
       if (currentSlide.activity != null) {
         currentSlide.activity!.isRevealed = false;
       }
@@ -826,14 +839,14 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     );
   }
 
-  // TamaÒos de fuente para modo proyector
-  double get _titleFontSize => _isProjectorMode ? 72 : 52;
-  double get _titleWithImageFontSize => _isProjectorMode ? 60 : 44;
-  double get _contentFontSize => _isProjectorMode ? 48 : 34;
-  double get _contentWithImageFontSize => _isProjectorMode ? 40 : 28;
-  double get _referenceFontSize => _isProjectorMode ? 36 : 24;
-  double get _questionFontSize => _isProjectorMode ? 44 : 32;
-  double get _optionFontSize => _isProjectorMode ? 36 : 24;
+  // Tama√±os de fuente para modo proyector (optimizado para 1920x1080 y 4K)
+  double get _titleFontSize => _isProjectorMode ? 90 : 60;
+  double get _titleWithImageFontSize => _isProjectorMode ? 76 : 52;
+  double get _contentFontSize => _isProjectorMode ? 60 : 42;
+  double get _contentWithImageFontSize => _isProjectorMode ? 52 : 36;
+  double get _referenceFontSize => _isProjectorMode ? 44 : 32;
+  double get _questionFontSize => _isProjectorMode ? 56 : 40;
+  double get _optionFontSize => _isProjectorMode ? 44 : 32;
 
   @override
   Widget build(BuildContext context) {
@@ -929,7 +942,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                       // CONTENIDO
                       _buildSlideContent(currentSlide),
                       
-                      // BARRA SUPERIOR DE HERRAMIENTAS - Responsive para mÛvil
+                      // BARRA SUPERIOR DE HERRAMIENTAS - Responsive para m√≥vil
                       Positioned(
                         top: isMobile ? 10 : 20,
                         left: isMobile ? 10 : null,
@@ -979,7 +992,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                                     tooltip: "Imprimir como PDF",
                                   ),
                                   PopupMenuButton<int>(
-                                    tooltip: "Ir a diapositiva especÌfica",
+                                    tooltip: "Ir a diapositiva espec√≠fica",
                                     icon: Icon(Icons.list, 
                                       color: Colors.white70,
                                       size: _isProjectorMode ? 28 : 24,
@@ -1006,7 +1019,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                                 ],
                               ),
                               Container(height: 20, width: 1, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 10)),
-                              // Botones de navegaciÛn con animaciÛn
+                              // Botones de navegaci√≥n con animaci√≥n
                               IconButton(
                                 onPressed: _prevSlide,
                                 icon: const Icon(Icons.arrow_back_ios, color: Colors.white70),
@@ -1063,7 +1076,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                           ),
                         ),
                       
-                      // LOGO / MARCA DE AGUA (si no est· en modo proyector o si se desea branding)
+                      // LOGO / MARCA DE AGUA (si no est√° en modo proyector o si se desea branding)
                       if (!_isProjectorMode)
                          Positioned(
                            bottom: 20,
@@ -1079,7 +1092,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               ],
             ),
             
-            // BotÛn flotante para mostrar sidebar en modo proyector
+            // Bot√≥n flotante para mostrar sidebar en modo proyector
             if (_isProjectorMode && !_showSidebar)
               Positioned(
                 left: 10,
@@ -1087,7 +1100,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 child: IconButton(
                   onPressed: () => setState(() => _showSidebar = true),
                   icon: const Icon(Icons.menu, color: Colors.white24, size: 28),
-                  tooltip: "Mostrar men˙ (S)",
+                  tooltip: "Mostrar men√∫ (S)",
                 ),
               ),
           ],
@@ -1117,13 +1130,21 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   }
 
   Widget _buildSlideContent(Slide slide) {
+    if (slide.id == 'salmos_timeline') { return const PsalmsTimelineWidget(); }
+    if (slide.id == 'salmos_authors_cinematic') { return const PsalmsAuthorsWidget(); }
+    if (slide.id == 'imprecatory_psalms') { return const ImprecatoryPsalmsWidget(); }
+    if (slide.id == 'discover_psalm_type') { return const DiscoverPsalmTypeWidget(); }
+    if (slide.id == 'write_psalm') { return const WritePsalmWidget(); }
+    if (slide.id == 'proverbios_portada') { return const ProverbsWidget(); }
+    if (slide.id == 'proverbios_actividades') { return const ProverbsActivitiesWidget(); }
+
     // Envolver en AnimatedSwitcher para transiciones suaves entre slides
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 400),
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
       transitionBuilder: (Widget child, Animation<double> animation) {
-        // TransiciÛn con fade y deslizamiento sutil
+        // Transici√≥n con fade y deslizamiento sutil
         final slideOffset = Tween<Offset>(
           begin: Offset(0.03 * _slideDirection, 0),
           end: Offset.zero,
@@ -1148,7 +1169,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Imagen con animaciÛn de entrada (si existe)
+                // Imagen con animaci√≥n de entrada (si existe)
                 if (slide.imageUrl != null) ...[
                   FadeInSlide(
                     duration: const Duration(milliseconds: 500),
@@ -1158,7 +1179,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                   const SizedBox(height: 30),
                 ],
 
-                // Icono animado seg˙n tipo (solo si no hay imagen)
+                // Icono animado seg√∫n tipo (solo si no hay imagen)
                 if (slide.type == SlideType.title && slide.imageUrl == null)
                   ScaleIn(
                     duration: const Duration(milliseconds: 400),
@@ -1172,7 +1193,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     ),
                   ),
                 
-                // TÌtulo con animaciÛn de entrada
+                // T√≠tulo con animaci√≥n de entrada
                 FadeInSlide(
                   duration: const Duration(milliseconds: 450),
                   delay: const Duration(milliseconds: 150),
@@ -1190,8 +1211,8 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 ),
                 SizedBox(height: _isProjectorMode ? 40 : 30),
                 
-                // Contenido Principal con animaciÛn
-                // Marcadores especiales para widgets din·micos
+                // Contenido Principal con animaci√≥n
+                // Marcadores especiales para widgets din√°micos
                 if (slide.content == '{{MAP_UZ}}')
                   FadeInSlide(
                     duration: const Duration(milliseconds: 500),
@@ -1232,7 +1253,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     ),
                   ),
 
-                // Referencia BÌblica con animaciÛn
+                // Referencia B√≠blica con animaci√≥n
                 if (slide.biblicalReference != null) ...[
                   SizedBox(height: _isProjectorMode ? 35 : 25),
                   ScaleIn(
@@ -1264,7 +1285,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 if (slide.type == SlideType.activity && slide.activity != null) ...[
                   SizedBox(height: _isProjectorMode ? 50 : 40),
                   
-                  // Pregunta con animaciÛn
+                  // Pregunta con animaci√≥n
                   FadeInSlide(
                     duration: const Duration(milliseconds: 450),
                     delay: const Duration(milliseconds: 300),
@@ -1345,7 +1366,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     // Calcular porcentaje de votos
     final votePercentage = totalVotes > 0 ? (voteCount / totalVotes * 100) : 0.0;
     
-    // Widget base de la opciÛn
+    // Widget base de la opci√≥n
     Widget optionWidget = Padding(
       padding: EdgeInsets.symmetric(vertical: _isProjectorMode ? 10.0 : 8.0),
       child: InkWell(
@@ -1387,7 +1408,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     child: Text(
                       String.fromCharCode(65 + index), // A, B, C...
                       style: GoogleFonts.oswald(
-                        fontSize: _isProjectorMode ? 24 : 20,
+                        fontSize: _isProjectorMode ? 30 : 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white
                       ),
@@ -1452,7 +1473,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                               Text(
                                 '(${votePercentage.toStringAsFixed(0)}%)',
                                 style: GoogleFonts.oswald(
-                                  fontSize: _isProjectorMode ? 16 : 12,
+                                  fontSize: _isProjectorMode ? 20 : 14,
                                   color: Colors.white70,
                                 ),
                               ),
@@ -1462,7 +1483,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                       ),
                     ),
                   ],
-                  // Indicadores de estudiantes con animaciÛn de entrada (modo local)
+                  // Indicadores de estudiantes con animaci√≥n de entrada (modo local)
                   if (studentsForThisOption.isNotEmpty)
                     Row(
                       children: studentsForThisOption.map((studentNum) {
@@ -1532,7 +1553,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       ),
     );
     
-    // Envolver con animaciÛn de celebraciÛn o sacudida seg˙n estado
+    // Envolver con animaci√≥n de celebraci√≥n o sacudida seg√∫n estado
     if (isCorrect) {
       return SuccessCelebration(
         celebrate: slide.activity!.isRevealed,
@@ -1551,7 +1572,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     // Widget principal del puzzle con animaciones de feedback
     Widget puzzleContent = Column(
       children: [
-        // ZONA DE CONSTRUCCION con animaciÛn de shake para errores
+        // ZONA DE CONSTRUCCION con animaci√≥n de shake para errores
         ShakeAnimation(
           shake: _showShake,
           child: AnimatedContainer(
@@ -1583,10 +1604,10 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             child: _puzzleSelectedWords.isEmpty 
                 ? Center(
                     child: Text(
-                      "Toca las palabras abajo para ordenar el versÌculo", 
+                      "Toca las palabras abajo para ordenar el vers√≠culo", 
                       style: TextStyle(
                         color: Colors.white38, 
-                        fontSize: _isProjectorMode ? 20 : 16
+                        fontSize: _isProjectorMode ? 28 : 18
                       )
                     )
                   )
@@ -1601,7 +1622,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         
         SizedBox(height: _isProjectorMode ? 40 : 30),
         
-        // BANCO DE PALABRAS con animaciÛn (si no est· revelado)
+        // BANCO DE PALABRAS con animaci√≥n (si no est√° revelado)
         if (!isRevealed)
           AnimatedOpacity(
             duration: const Duration(milliseconds: 300),
@@ -1645,7 +1666,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             ],
           )
         else
-          // Respuesta revelada con animaciÛn de celebraciÛn
+          // Respuesta revelada con animaci√≥n de celebraci√≥n
           ConfettiBurst(
             trigger: _showCelebration,
             child: Column(
@@ -1683,7 +1704,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                               "ORDEN CORRECTO:", 
                               style: TextStyle(
                                 color: Colors.greenAccent, 
-                                fontSize: _isProjectorMode ? 18 : 14,
+                                fontSize: _isProjectorMode ? 24 : 16,
                                 fontWeight: FontWeight.bold
                               )
                             ),
@@ -1719,7 +1740,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                             currentSlide.activity?.explanation ?? "",
                             textAlign: TextAlign.center,
                             style: GoogleFonts.merriweather(
-                              fontSize: _isProjectorMode ? 20 : 16, 
+                              fontSize: _isProjectorMode ? 28 : 18, 
                               color: Colors.white70, 
                               fontStyle: FontStyle.italic
                             )
@@ -1740,7 +1761,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             ),
           ),
 
-        // MENSAJE DE RESULTADO animado (ValidaciÛn manual)
+        // MENSAJE DE RESULTADO animado (Validaci√≥n manual)
         if (_puzzleIsCorrect != null && !isRevealed)
           AnimatedOpacity(
             duration: const Duration(milliseconds: 300),
@@ -1760,9 +1781,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      _puzzleIsCorrect! ? "°EXCELENTE! HAS ORDENADO EL VERSÕCULO." : "INT…NTALO DE NUEVO.",
+                      _puzzleIsCorrect! ? "¬°EXCELENTE! HAS ORDENADO EL VERS√çCULO." : "INT√âNTALO DE NUEVO.",
                       style: GoogleFonts.oswald(
-                        fontSize: 24,
+                        fontSize: 32,
                         color: _puzzleIsCorrect! ? Colors.green : Colors.orange,
                         fontWeight: FontWeight.bold
                       ),
@@ -1792,7 +1813,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       ),
       child: Column(
         children: [
-          // TÌtulo con instrucciones y selector de tiempo
+          // T√≠tulo con instrucciones y selector de tiempo
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -1825,10 +1846,10 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     const Icon(Icons.timer, color: Colors.white70, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'Tiempo lÌmite:',
+                      'Tiempo l√≠mite:',
                       style: TextStyle(
                         color: Colors.white70,
-                        fontSize: _isProjectorMode ? 16 : 14,
+                        fontSize: _isProjectorMode ? 22 : 16,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1869,7 +1890,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                                 style: TextStyle(
                                   color: isSelected ? Colors.black : Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: _isProjectorMode ? 16 : 14,
+                                  fontSize: _isProjectorMode ? 20 : 16,
                                 ),
                               ),
                             ),
@@ -1912,7 +1933,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                                 const Icon(Icons.emoji_events, color: Colors.white),
                                 const SizedBox(width: 12),
                                 Text(
-                                  '°Todas las palabras encontradas!',
+                                  '¬°Todas las palabras encontradas!',
                                   style: GoogleFonts.oswald(color: Colors.white, fontSize: 18),
                                 ),
                               ],
@@ -1956,7 +1977,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     'Los estudiantes pueden jugar desde sus dispositivos. El menor tiempo gana.',
                     style: TextStyle(
                       color: Colors.blue.shade200,
-                      fontSize: _isProjectorMode ? 16 : 14,
+                      fontSize: _isProjectorMode ? 22 : 16,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -1965,7 +1986,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             ),
           ),
           
-          // Si est· revelada, mostrar las palabras
+          // Si est√° revelada, mostrar las palabras
           if (isRevealed) ...[
             const SizedBox(height: 16),
             Container(
@@ -1986,7 +2007,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                         'PALABRAS DEL JUEGO:',
                         style: GoogleFonts.oswald(
                           color: Colors.green,
-                          fontSize: _isProjectorMode ? 20 : 16,
+                          fontSize: _isProjectorMode ? 26 : 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -2008,7 +2029,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                         word.toUpperCase(),
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: _isProjectorMode ? 14 : 12,
+                          fontSize: _isProjectorMode ? 18 : 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -2189,7 +2210,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     ),
                     child: Row(
                       children: [
-                        // PosiciÛn/Medalla
+                        // Posici√≥n/Medalla
                         Container(
                           width: 36,
                           height: 36,
@@ -2207,7 +2228,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                         ),
                         const SizedBox(width: 10),
                         
-                        // InformaciÛn del estudiante
+                        // Informaci√≥n del estudiante
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2283,7 +2304,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     }
   }
   
-  // MÈtodo para agregar un resultado al ranking (llamado desde WebSocket)
+  // M√©todo para agregar un resultado al ranking (llamado desde WebSocket)
   void addWordSearchResult(String studentName, int timeSeconds, int wordsFound, int totalWords) {
     setState(() {
       _wordSearchRanking.removeWhere((r) => r.studentName == studentName);
@@ -2295,11 +2316,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         completedAt: DateTime.now(),
       ));
       
-      // Ordenar solo por tiempo (m?s r?pido gana)
+      // Ordenar solo por tiempo (m√°s r√°pido gana)
       _wordSearchRanking.sort((a, b) => a.timeSeconds.compareTo(b.timeSeconds));
     });
     
-    // Mostrar notificaciÛn al docente
+    // Mostrar notificaci√≥n al docente
     final position = _wordSearchRanking.indexWhere((r) => r.studentName == studentName);
     final medal = position < 3 ? WordSearchRanking.getMedal(position) : '?';
     
@@ -2319,7 +2340,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '$studentName terminÛ la sopa de letras',
+                    '$studentName termin√≥ la sopa de letras',
                     style: GoogleFonts.oswald(color: Colors.white, fontSize: 16),
                   ),
                   Text(
@@ -2342,7 +2363,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     return '${min.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
   }
   
-  // Widget de botÛn animado reutilizable
+  // Widget de bot√≥n animado reutilizable
   Widget _buildAnimatedButton({
     required IconData icon,
     required String label,
@@ -2364,7 +2385,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             style: TextStyle(
               color: textColor,
               fontWeight: FontWeight.bold,
-              fontSize: _isProjectorMode ? 16 : 14,
+              fontSize: _isProjectorMode ? 22 : 16,
             ),
           ),
         ],
@@ -2394,7 +2415,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         child: Text(
           word,
           style: GoogleFonts.merriweather(
-            fontSize: _isProjectorMode ? 28 : 20,
+            fontSize: _isProjectorMode ? 36 : 24,
             color: isSelected ? Colors.black : Colors.white,
             fontWeight: FontWeight.bold
           ),
@@ -2404,7 +2425,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   }
   
   // ============================================================
-  // TOOLBAR PARA M”VIL
+  // TOOLBAR PARA M√ìVIL
   // ============================================================
   
   Widget _buildMobileToolbar(Slide currentSlide, ClassBlock currentBlock) {
@@ -2419,7 +2440,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // BotÛn Home (Volver a unidades)
+              // Bot√≥n Home (Volver a unidades)
               IconButton(
                 onPressed: () {
                   Navigator.of(context).pushReplacement(
@@ -2436,7 +2457,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               
               Container(height: 16, width: 1, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 4)),
               
-              // BotÛn Men˙ de Bloques (NAVEGACI”N)
+              // Bot√≥n Men√∫ de Bloques (NAVEGACI√ìN)
               IconButton(
                 onPressed: () => _showBlocksModal(),
                 icon: const Icon(
@@ -2452,7 +2473,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               // Separador
               Container(height: 16, width: 1, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 4)),
               
-              // NavegaciÛn de slides
+              // Navegaci√≥n de slides
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -2524,7 +2545,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     ],
                   ),
                   
-                  // BOT”N EXCEL VISIBLE DIRECTAMENTE
+                  // BOT√ìN EXCEL VISIBLE DIRECTAMENTE
                   IconButton(
                     onPressed: _exportToExcel,
                     icon: const Icon(Icons.table_chart, color: Colors.green, size: 20),
@@ -2547,7 +2568,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                       tooltip: 'Activar actividad',
                     ),
                     
-                  // Revelar respuesta (si es actividad y est· habilitada)
+                  // Revelar respuesta (si es actividad y est√° habilitada)
                   if (isActivity && isThisActivityEnabled)
                     IconButton(
                       onPressed: () {
@@ -2561,7 +2582,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                     ),
                   
                   
-                  // Men˙ adicional (opciones menos usadas)
+                  // Men√∫ adicional (opciones menos usadas)
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert, color: Colors.white70, size: 20),
                     padding: EdgeInsets.zero,
@@ -2635,7 +2656,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     );
   }
   
-  /// Muestra el selector de bloques en mÛvil
+  /// Muestra el selector de bloques en m√≥vil
   void _showBlocksModal() {
     showModalBottomSheet(
       context: context,
@@ -2712,7 +2733,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                           ),
                         ),
                         subtitle: Text(
-                          '$slideCount slides ï $activityCount actividades',
+                          '$slideCount slides ‚Ä¢ $activityCount actividades',
                           style: TextStyle(
                             color: Colors.white54,
                             fontSize: 12,
@@ -2740,7 +2761,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     );
   }
   
-  /// Muestra un selector de slides en mÛvil
+  /// Muestra un selector de slides en m√≥vil
   void _showSlideSelector(ClassBlock currentBlock) {
     showModalBottomSheet(
       context: context,
@@ -2815,7 +2836,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     );
   }
   
-  /// Muestra el panel de estudiantes como modal en mÛvil
+  /// Muestra el panel de estudiantes como modal en m√≥vil
   void _showStudentsModal(BuildContext context) {
     final teacherService = context.read<TeacherService>();
     
@@ -2869,7 +2890,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                         ),
                         Row(
                           children: [
-                            // BotÛn Excel
+                            // Bot√≥n Excel
                             IconButton(
                               onPressed: () {
                                 Navigator.pop(context);
@@ -2921,7 +2942,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // BotÛn para ver panel de estudiantes
+            // Bot√≥n para ver panel de estudiantes
             Stack(
               children: [
                 IconButton(
@@ -2956,7 +2977,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               ],
             ),
             
-            // BOT”N EXPORTAR EXCEL - Siempre visible
+            // BOT√ìN EXPORTAR EXCEL - Siempre visible
             IconButton(
               onPressed: _exportToExcel,
               icon: Icon(
@@ -2968,7 +2989,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
             ),
             
             // =====================================================
-            // BOT”N DE REINICIO DE PROGRESO (ADMINISTRADOR)
+            // BOT√ìN DE REINICIO DE PROGRESO (ADMINISTRADOR)
             // =====================================================
             PopupMenuButton<String>(
               icon: Icon(
@@ -3043,7 +3064,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
               ],
             ),
             
-            // BotÛn para activar/desactivar actividad (solo si es actividad)
+            // Bot√≥n para activar/desactivar actividad (solo si es actividad)
             if (isActivity) ...[
               const SizedBox(width: 4),
               AnimatedContainer(
@@ -3103,7 +3124,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: _isProjectorMode ? 14 : 12,
+                          fontSize: _isProjectorMode ? 18 : 14,
                         ),
                       ),
                     ],
@@ -3111,7 +3132,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                 ),
               ],
               
-              // BotÛn para revelar respuesta a estudiantes
+              // Bot√≥n para revelar respuesta a estudiantes
               if (_activityEnabledForStudents) ...[
                 const SizedBox(width: 4),
                 IconButton(
@@ -3134,3 +3155,10 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     );
   }
 }
+
+
+
+
+
+
+

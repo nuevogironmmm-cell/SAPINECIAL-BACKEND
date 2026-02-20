@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Modelo de usuario para el sistema de autenticaci?n
+/// Modelo de usuario para el sistema de autenticación
 class UserModel {
   final String id;
   final String username;
@@ -27,14 +27,14 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
     id: json['id'] ?? '',
     username: json['username'] ?? '',
-    password: '', // No almacenamos la contrase?a
+    password: '', // No almacenamos la contraseña
     nombre: json['nombre'] ?? '',
     rol: json['rol'] ?? 'estudiante',
   );
 }
 
-/// Servicio de autenticaci?n local para modo pruebas
-/// NO usar en producci?n - Solo para pruebas de flujo
+/// Servicio de autenticación local para modo pruebas
+/// NO usar en producción - Solo para pruebas de flujo
 class AuthService extends ChangeNotifier {
   // ---------------------------------------------------------------
   // USUARIOS MOCK PARA PRUEBAS
@@ -45,14 +45,14 @@ class AuthService extends ChangeNotifier {
       id: 'doc_001',
       username: 'docente',
       password: '1234',
-      nombre: 'Prof. Garc?a',
+      nombre: 'Prof. García',
       rol: 'docente',
     ),
     UserModel(
       id: 'doc_002',
       username: 'profesor',
       password: '1234',
-      nombre: 'Prof. Mart?nez',
+      nombre: 'Prof. Martínez',
       rol: 'docente',
     ),
     // Estudiantes
@@ -60,7 +60,7 @@ class AuthService extends ChangeNotifier {
       id: 'est_001',
       username: 'estudiante1',
       password: '1234',
-      nombre: 'Mar?a L?pez',
+      nombre: 'María López',
       rol: 'estudiante',
     ),
     UserModel(
@@ -74,10 +74,10 @@ class AuthService extends ChangeNotifier {
       id: 'est_003',
       username: 'estudiante3',
       password: '1234',
-      nombre: 'Ana Rodr?guez',
+      nombre: 'Ana Rodríguez',
       rol: 'estudiante',
     ),
-    // Usuario de prueba r?pida
+    // Usuario de prueba rápida
     UserModel(
       id: 'test_001',
       username: 'test',
@@ -112,10 +112,10 @@ class AuthService extends ChangeNotifier {
   bool get isEstudiante => _currentUser?.rol == 'estudiante';
 
   // ---------------------------------------------------------------
-  // INICIALIZACI?N
+  // INICIALIZACIÓN
   // ---------------------------------------------------------------
 
-  /// Inicializa el servicio y verifica si hay sesi?n guardada
+  /// Inicializa el servicio y verifica si hay sesión guardada
   Future<void> initialize() async {
     if (_isInitialized) return;
 
@@ -137,10 +137,10 @@ class AuthService extends ChangeNotifier {
           nombre: savedNombre ?? 'Usuario',
           rol: savedRol ?? 'estudiante',
         );
-        debugPrint('? Sesi?n restaurada: ${_currentUser!.nombre}');
+        debugPrint('? Sesión restaurada: ${_currentUser!.nombre}');
       }
     } catch (e) {
-      debugPrint('? Error al restaurar sesi?n: $e');
+      debugPrint('? Error al restaurar sesión: $e');
     }
 
     _isLoading = false;
@@ -149,10 +149,10 @@ class AuthService extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------
-  // AUTENTICACI?N
+  // AUTENTICACIÓN
   // ---------------------------------------------------------------
 
-  /// Intenta autenticar con usuario y contrase?a
+  /// Intenta autenticar con usuario y contraseña
   /// Retorna true si el login es exitoso
   Future<bool> login(String username, String password) async {
     _isLoading = true;
@@ -173,13 +173,13 @@ class AuthService extends ChangeNotifier {
       );
 
       if (user.id.isEmpty) {
-        _errorMessage = 'Usuario o contrase?a incorrectos';
+        _errorMessage = 'Usuario o contraseña incorrectos';
         _isLoading = false;
         notifyListeners();
         return false;
       }
 
-      // Guardar sesi?n
+      // Guardar sesión
       _currentUser = user;
       await _saveSession(user);
 
@@ -190,14 +190,14 @@ class AuthService extends ChangeNotifier {
       return true;
 
     } catch (e) {
-      _errorMessage = 'Error al iniciar sesi?n: $e';
+      _errorMessage = 'Error al iniciar sesión: $e';
       _isLoading = false;
       notifyListeners();
       return false;
     }
   }
 
-  /// Cierra la sesi?n actual
+  /// Cierra la sesión actual
   Future<void> logout() async {
     _isLoading = true;
     notifyListeners();
@@ -209,18 +209,18 @@ class AuthService extends ChangeNotifier {
       await prefs.remove('auth_nombre');
       await prefs.remove('auth_rol');
 
-      debugPrint('?? Sesi?n cerrada: ${_currentUser?.nombre}');
+      debugPrint('Sesi\u00f3n cerrada: ${_currentUser?.nombre}');
       _currentUser = null;
 
     } catch (e) {
-      debugPrint('? Error al cerrar sesi?n: $e');
+      debugPrint('? Error al cerrar sesión: $e');
     }
 
     _isLoading = false;
     notifyListeners();
   }
 
-  /// Guarda la sesi?n en SharedPreferences
+  /// Guarda la sesión en SharedPreferences
   Future<void> _saveSession(UserModel user) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -229,7 +229,7 @@ class AuthService extends ChangeNotifier {
       await prefs.setString('auth_nombre', user.nombre);
       await prefs.setString('auth_rol', user.rol);
     } catch (e) {
-      debugPrint('? Error al guardar sesi?n: $e');
+      debugPrint('? Error al guardar sesión: $e');
     }
   }
 

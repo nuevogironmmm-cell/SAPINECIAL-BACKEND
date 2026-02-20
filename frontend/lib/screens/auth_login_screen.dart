@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 
 /// Pantalla de Login para modo pruebas
-/// Sistema de autenticaci?n local sin backend
+/// Sistema de autenticación local sin backend
 class AuthLoginScreen extends StatefulWidget {
   const AuthLoginScreen({super.key});
 
@@ -23,6 +25,7 @@ class _AuthLoginScreenState extends State<AuthLoginScreen>
   
   bool _obscurePassword = true;
   bool _showTestCredentials = false;
+  bool _rememberPassword = false;
 
   @override
   void initState() {
@@ -42,6 +45,46 @@ class _AuthLoginScreenState extends State<AuthLoginScreen>
     ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
     
     _animController.forward();
+    _loadSavedCredentials();
+  }
+
+  /// Carga credenciales guardadas (ofuscadas en base64)
+  Future<void> _loadSavedCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final remember = prefs.getBool('remember_password') ?? false;
+      if (remember) {
+        final savedUser = prefs.getString('saved_username');
+        final savedPass = prefs.getString('saved_password_b64');
+        if (savedUser != null && savedPass != null && mounted) {
+          setState(() {
+            _rememberPassword = true;
+            _usernameController.text = savedUser;
+            _passwordController.text = utf8.decode(base64Decode(savedPass));
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error cargando credenciales: $e');
+    }
+  }
+
+  /// Guarda o elimina credenciales seg?n el checkbox
+  Future<void> _handleRememberPassword(String username, String password) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_rememberPassword) {
+        await prefs.setBool('remember_password', true);
+        await prefs.setString('saved_username', username);
+        await prefs.setString('saved_password_b64', base64Encode(utf8.encode(password)));
+      } else {
+        await prefs.remove('remember_password');
+        await prefs.remove('saved_username');
+        await prefs.remove('saved_password_b64');
+      }
+    } catch (e) {
+      debugPrint('Error guardando credenciales: $e');
+    }
   }
 
   @override
@@ -61,15 +104,18 @@ class _AuthLoginScreenState extends State<AuthLoginScreen>
       _passwordController.text,
     );
 
-    if (success && mounted) {
-      // El AuthWrapper detectar? el cambio y navegar? autom?ticamente
+    if (success && mounted) {      // Guardar o limpiar credenciales seg?n checkbox
+      await _handleRememberPassword(
+        _usernameController.text.trim(),
+        _passwordController.text,
+      );      // El AuthWrapper detectará el cambio y navegará automáticamente
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: [
               const Icon(Icons.check_circle, color: Colors.white),
               const SizedBox(width: 12),
-              Text('?Bienvenido, ${authService.currentUser?.nombre}!'),
+              Text('?Bienvenido, ${authService.currentUser?.nombre ?? ""}!'),
             ],
           ),
           backgroundColor: Colors.green.shade700,
@@ -84,6 +130,191 @@ class _AuthLoginScreenState extends State<AuthLoginScreen>
     _usernameController.text = username;
     _passwordController.text = password;
     setState(() => _showTestCredentials = false);
+  }
+
+  void _showPasswordReminder(BuildContext context) {
+    final theme = Theme.of(context);
+    final reminderUsernameController = TextEditingController();
+    bool found = false;
+    String resultMessage = '';
+    String resultPassword = '';
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1b263b),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+              ),
+              title: Row(
+                children: [
+                  Icon(Icons.lock_reset, color: theme.colorScheme.primary, size: 28),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Recordatorio de contrase\u00f1a',
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Ingresa tu nombre de usuario para recuperar tu contrase\u00f1a.',
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: reminderUsernameController,
+                    decoration: InputDecoration(
+                      labelText: 'Usuario',
+                      prefixIcon: Icon(Icons.person_outline, color: theme.colorScheme.primary),
+                      filled: true,
+                      fillColor: Colors.white.withValues(alpha: 0.05),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+                      ),
+                      labelStyle: const TextStyle(color: Colors.white70),
+                    ),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  if (found) ...[
+                    const SizedBox(height: 20),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                      ),
+                      child: Column(
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.check_circle, color: Colors.greenAccent, size: 20),
+                              SizedBox(width: 8),
+                              Text('Usuario encontrado',
+                                style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              const Icon(Icons.vpn_key, color: Colors.white54, size: 18),
+                              const SizedBox(width: 8),
+                              const Text('Contrase\u00f1a: ',
+                                style: TextStyle(color: Colors.white70, fontSize: 14)),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  resultPassword,
+                                  style: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    letterSpacing: 2,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  if (resultMessage.isNotEmpty && !found) ...[
+                    const SizedBox(height: 20),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: Colors.redAccent, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(resultMessage,
+                              style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cerrar', style: TextStyle(color: Colors.white54)),
+                ),
+                if (!found)
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      final authService = context.read<AuthService>();
+                      final credentials = authService.getTestCredentials();
+                      final input = reminderUsernameController.text.trim().toLowerCase();
+                      if (input.isEmpty) {
+                        setDialogState(() {
+                          resultMessage = 'Por favor ingresa un usuario.';
+                          found = false;
+                        });
+                        return;
+                      }
+                      final match = credentials.where(
+                        (c) => c['username']!.toLowerCase() == input && c['rol'] == 'docente',
+                      );
+                      if (match.isNotEmpty) {
+                        setDialogState(() {
+                          found = true;
+                          resultPassword = match.first['password']!;
+                          resultMessage = '';
+                        });
+                      } else {
+                        setDialogState(() {
+                          found = false;
+                          resultMessage = 'No se encontr\u00f3 un docente con ese usuario.';
+                        });
+                      }
+                    },
+                    icon: const Icon(Icons.search, size: 18),
+                    label: const Text('Buscar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: Colors.black87,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -122,7 +353,7 @@ class _AuthLoginScreenState extends State<AuthLoginScreen>
                         
                         const SizedBox(height: 40),
                         
-                        // T?tulo
+                        // Título
                         Text(
                           'Literatura Sapiencial',
                           style: theme.textTheme.headlineMedium?.copyWith(
@@ -135,7 +366,7 @@ class _AuthLoginScreenState extends State<AuthLoginScreen>
                         const SizedBox(height: 8),
                         
                         Text(
-                          'Iniciar Sesi?n',
+                          'Iniciar Sesión',
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: Colors.white70,
                           ),
@@ -245,14 +476,14 @@ class _AuthLoginScreenState extends State<AuthLoginScreen>
           
           const SizedBox(height: 16),
           
-          // Campo Contrase?a
+          // Campo Contraseña
           TextFormField(
             controller: _passwordController,
             enabled: !authService.isLoading,
             obscureText: _obscurePassword,
             decoration: InputDecoration(
-              labelText: 'Contrase?a',
-              hintText: 'Ingresa tu contrase?a',
+              labelText: 'Contraseña',
+              hintText: 'Ingresa tu contraseña',
               prefixIcon: Icon(Icons.lock_outline, color: theme.colorScheme.primary),
               suffixIcon: IconButton(
                 icon: Icon(
@@ -281,14 +512,58 @@ class _AuthLoginScreenState extends State<AuthLoginScreen>
             style: const TextStyle(color: Colors.white),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Por favor ingresa tu contrase?a';
+                return 'Por favor ingresa tu contraseña';
               }
               return null;
             },
             onFieldSubmitted: (_) => _handleLogin(),
           ),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
+
+          // Checkbox Recordar contrase?a
+          Row(
+            children: [
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: Checkbox(
+                  value: _rememberPassword,
+                  onChanged: (value) => setState(() => _rememberPassword = value ?? false),
+                  activeColor: theme.colorScheme.primary,
+                  checkColor: Colors.black87,
+                  side: const BorderSide(color: Colors.white38, width: 1.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: () => setState(() => _rememberPassword = !_rememberPassword),
+                child: const Text(
+                  'Recordar contrase\u00f1a',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ),
+              const Spacer(),
+              // Olvidaste contrase?a
+              TextButton(
+                onPressed: () => _showPasswordReminder(context),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                ),
+                child: Text(
+                  '\u00bfOlvidaste tu contrase\u00f1a?',
+                  style: TextStyle(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.7),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
           
           // Bot?n Login
           SizedBox(
@@ -320,7 +595,7 @@ class _AuthLoginScreenState extends State<AuthLoginScreen>
                         Icon(Icons.login_rounded),
                         SizedBox(width: 12),
                         Text(
-                          'Iniciar Sesi?n',
+                          'Iniciar Sesión',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -363,7 +638,7 @@ class _AuthLoginScreenState extends State<AuthLoginScreen>
     
     return Column(
       children: [
-        // Bot?n para mostrar/ocultar credenciales
+        // Botón para mostrar/ocultar credenciales
         TextButton.icon(
           onPressed: () => setState(() => _showTestCredentials = !_showTestCredentials),
           icon: Icon(
@@ -503,7 +778,7 @@ class _AuthLoginScreenState extends State<AuthLoginScreen>
           Icon(Icons.science_outlined, size: 16, color: Colors.orange.shade300),
           const SizedBox(width: 8),
           Text(
-            'Modo Pruebas - Sin conexi?n a servidor',
+            'Modo Pruebas - Sin conexión a servidor',
             style: TextStyle(
               color: Colors.orange.shade300,
               fontSize: 12,

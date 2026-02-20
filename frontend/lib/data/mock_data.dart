@@ -1975,4 +1975,234 @@ final unit2Session = ClassSession(
   ],
 );
 
-final List<ClassSession> availableUnits = [unit1Session, unit2Session];
+final unitSalmosSession = ClassSession(
+  id: 'session_salmos',
+  title: 'Unidad: Salmos',
+  blocks: [
+    ClassBlock(
+      title: 'Introducción',
+      slides: [
+        Slide(
+          id: 'salmos_1',
+          type: SlideType.title,
+          title: 'LIBRO DE LOS SALMOS',
+          content: 'Palabras clave: **Alabanza** – **Confianza**',
+          imageUrl: 'https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?w=800', 
+        ),
+        Slide(
+          id: 'salmos_2',
+          type: SlideType.content,
+          title: '1. Nombre y significado',
+          content: 'En griego: "**Psalmoi**" (Salmos) – del latín *psalmus* = **canción**.\n\nEn hebreo: "**Tehilim**" = **Alabanzas** o Cánticos de Alabanza.',
+          imageUrl: 'https://images.unsplash.com/photo-1535905557558-afc4877a26fc?w=800', // Ancient scroll/text
+        ),
+        Slide(
+          id: 'salmos_3',
+          type: SlideType.content,
+          title: 'Lugar en el Canon',
+          content: 'Es el **primer libro** de los **Hagiográficos** (vida de los santos), tercera parte del canon hebreo.',
+          imageUrl: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800', // Books/Canon
+        ),
+        Slide(
+          id: 'salmos_4',
+          type: SlideType.content,
+          title: 'Propósito',
+          content: 'Es el **himnario** y **libro de oraciones** de Israel.\n\nContiene **150 poemas** para ser cantados.',
+          imageUrl: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800', // Musical notes/instruments
+        ),
+        Slide(
+          id: 'salmos_5',
+          type: SlideType.content,
+          title: 'Importancia',
+          content: 'Es el libro **más amado** del Antiguo Testamento y sigue siendo usado en la **vida devocional** y en el **culto público**.',
+          imageUrl: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=800', // Worship/Devotion
+        ),
+      ],
+    ),
+    ClassBlock(
+      title: 'Características literarias',
+      slides: [
+        Slide(
+          id: 'salmos_6',
+          type: SlideType.title,
+          title: '2. Características literarias',
+          content: 'Poesía hebrea, **paralelismo** y expresión emocional.',
+          imageUrl: 'https://images.unsplash.com/photo-1519681393798-3828fb054bcc?w=800', 
+        ),
+        Slide(
+          id: 'salmos_7',
+          type: SlideType.content,
+          title: 'Poesía Hebrea',
+          content: 'Escrito en **poesía hebrea**.\n\nNo usa rima sonora, sino **paralelismo de pensamiento**.',
+          imageUrl: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800', // Writing/Thinking
+        ),
+        Slide(
+          id: 'salmos_8',
+          type: SlideType.content,
+          title: 'Tipos de Paralelismo',
+          content: '• **Paralelismo sinónimo**: misma idea repetida.\n\n• **Paralelismo sintético**: una idea se amplía.',
+          imageUrl: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800', // Reflection/Duality
+        ),
+        Slide(
+          id: 'salmos_9',
+          type: SlideType.content,
+          title: 'Contenido Variado',
+          content: 'Incluye:\n• **Alegrías** y **Lamentos**\n• Oraciones individuales y colectivas\n• **Peticiones** y **Confesiones**\n• Himnos históricos\n• **Alabanzas acrósticas**',
+          imageUrl: 'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=800', // Emotions
+        ),
+        Slide(
+          id: 'salmos_10',
+          type: SlideType.content,
+          title: 'Instrumentación',
+          content: 'Muchos fueron escritos para recitarse con **instrumentos de cuerda**.',
+          imageUrl: 'https://images.unsplash.com/photo-1465847899078-b413929f7120?w=800', // String instrument/Guitar/Harp vibe
+        ),
+      ],
+    ),
+    ClassBlock(
+      title: 'Período histórico',
+      slides: [
+        Slide(
+          id: 'salmos_11',
+          type: SlideType.title,
+          title: '3. Período histórico',
+          content: '1000 años de alabanza.',
+          imageUrl: 'https://images.unsplash.com/photo-1461360370896-922642d83732?w=800', 
+        ),
+        Slide(
+          id: 'salmos_12',
+          type: SlideType.content,
+          title: 'Duración',
+          content: 'Abarca aproximadamente **1000 años** (desde Moisés hasta Esdras).',
+          imageUrl: 'https://images.unsplash.com/photo-1518176258769-f227c798150e?w=800',
+        ),
+        Slide(
+          id: 'salmos_13',
+          type: SlideType.content,
+          title: 'Tres épocas famosas',
+          content: '1. Tiempo de **David**\n2. Reinado de **Ezequías**\n3. Días de **Esdras y Nehemías**',
+          imageUrl: 'https://images.unsplash.com/photo-1544377193-33dcf4d68fb5?w=800',
+        ),
+        Slide(
+          id: 'salmos_14',
+          type: SlideType.content,
+          title: 'Forma Final',
+          content: 'Tomó su forma final **después del exilio**.',
+          imageUrl: 'https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=800', // Ruins/Rebuilding
+        ),
+        // Slide especial para la línea de tiempo animada
+        Slide(
+          id: 'salmos_timeline',
+          type: SlideType.content, // Tipo 'content' pero el ID activa el widget especial en el dashboard
+          title: 'Cronología',
+          content: 'Línea de tiempo interactiva',
+        ),
+      ],
+    ),
+    ClassBlock(
+      title: 'Autores y Biografía',
+      slides: [
+         Slide(
+          id: 'salmos_authors_intro',
+          type: SlideType.title,
+          title: '4. Autores y Biografía',
+          content: 'Diversidad de voces, un solo Espíritu.',
+          imageUrl: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800', 
+        ),
+        Slide(
+          id: 'salmos_authors_cinematic',
+          type: SlideType.content, // Triggers cinematic widget
+          title: 'Galería de Autores',
+          content: 'Biografías e historias de los salmistas.',
+        ),
+      ],
+    ),
+
+    ClassBlock(
+      title: 'Salmos Imprecatorios',
+      slides: [
+        Slide(
+          id: 'imprecatory_psalms',
+          type: SlideType.content,
+          title: 'Salmos Imprecatorios',
+          content: 'Estudio interactivo de los salmos imprecatorios.',
+        ),
+      ],
+    ),
+
+    ClassBlock(
+      title: 'Actividades',
+      slides: [
+        Slide(
+          id: 'discover_psalm_type',
+          type: SlideType.activity,
+          title: 'Descubre el Tipo de Salmo',
+          content: 'Actividad interactiva: identifica si el salmo es Imprecatorio, Lamento o Alabanza.',
+          activity: ActivityData(
+            question: 'Identifica el tipo de salmo seg\u00fan el texto b\u00edblico presentado.',
+            options: ['Imprecatorio', 'Lamento', 'Alabanza'],
+            correctOptionIndex: 0,
+            type: ActivityType.discoverPsalmType,
+            percentageValue: 10.0,
+          ),
+        ),
+        Slide(
+          id: 'write_psalm',
+          type: SlideType.activity,
+          title: 'Escribe tu Salmo',
+          content: 'Actividad creativa: redacta un salmo corto inspirado en los Salmos b\u00edblicos.',
+          activity: ActivityData(
+            question: 'Escribe un salmo corto con t\u00edtulo y contenido.',
+            options: [],
+            correctOptionIndex: 0,
+            type: ActivityType.writePsalm,
+            percentageValue: 10.0,
+          ),
+        ),
+      ],
+    ),
+
+  ],
+);
+
+// ============================================================
+// UNIDAD 4: PROVERBIOS
+// ============================================================
+
+final unitProverbiosSession = ClassSession(
+  id: 'proverbios',
+  title: 'Proverbios',
+  blocks: [
+    ClassBlock(
+      title: 'Introducci\u00f3n a Proverbios',
+      slides: [
+        Slide(
+          id: 'proverbios_portada',
+          type: SlideType.content,
+          title: 'Libro de Proverbios',
+          content: 'Sabidur\u00eda pr\u00e1ctica para la vida diaria.',
+        ),
+      ],
+    ),
+    ClassBlock(
+      title: 'Din\u00e1micas Interactivas',
+      slides: [
+        Slide(
+          id: 'proverbios_actividades',
+          type: SlideType.activity,
+          title: 'Din\u00e1micas de Proverbios',
+          content: '4 actividades interactivas: Sabio o Necio, Temor de Jehov\u00e1, Comunicaci\u00f3n y Liderazgo.',
+          activity: ActivityData(
+            question: 'Din\u00e1micas interactivas basadas en Proverbios.',
+            options: [],
+            correctOptionIndex: 0,
+            type: ActivityType.proverbsActivities,
+            percentageValue: 10.0,
+          ),
+        ),
+      ],
+    ),
+  ],
+);
+
+final List<ClassSession> availableUnits = [unit1Session, unit2Session, unitSalmosSession, unitProverbiosSession];

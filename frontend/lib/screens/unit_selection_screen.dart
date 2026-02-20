@@ -243,7 +243,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
              Navigator.of(context).pushReplacementNamed('/');
           },
           icon: const Icon(Icons.logout, size: 18),
-          label: const Text('Cerrar Sesi?n'),
+          label: const Text('Cerrar Sesión'),
           style: TextButton.styleFrom(
             foregroundColor: Colors.white54,
           ),

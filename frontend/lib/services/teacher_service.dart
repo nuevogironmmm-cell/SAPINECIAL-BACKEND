@@ -279,12 +279,12 @@ class TeacherService extends ChangeNotifier {
           break;
           
         case 'STUDENT_JOINED':
-          // Un estudiante se uni?
+          // Un estudiante se unió
           requestDashboardUpdate();
           break;
           
         case 'STUDENT_LEFT':
-          // Un estudiante se desconect?
+          // Un estudiante se desconectó
           requestDashboardUpdate();
           break;
           

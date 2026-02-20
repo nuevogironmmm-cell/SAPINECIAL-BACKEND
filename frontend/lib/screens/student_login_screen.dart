@@ -7,10 +7,10 @@ import 'student_main_screen.dart';
 /// Pantalla de login para estudiantes
 /// 
 /// Permite al estudiante ingresar su nombre para identificarse.
-/// No requiere cuenta ni contrase?a.
+/// No requiere cuenta ni contraseña.
 /// Valida:
-/// - M?nimo 3 caracteres
-/// - M?ximo 50 caracteres
+/// - Mínimo 3 caracteres
+/// - Máximo 50 caracteres
 /// - Nombre no duplicado en la clase actual
 class StudentLoginScreen extends StatefulWidget {
   const StudentLoginScreen({super.key});
@@ -36,7 +36,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
   void initState() {
     super.initState();
     
-    // Animaci?n del logo
+    // Animación del logo
     _logoController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -46,7 +46,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
     );
     _logoController.forward();
     
-    // Intentar reconexi?n autom?tica
+    // Intentar reconexión automática
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tryAutoReconnect();
     });
@@ -71,7 +71,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
     if (!connected) {
       setState(() {
         _isConnecting = false;
-        _errorMessage = 'No se pudo conectar al servidor. Verifica tu conexi?n.';
+        _errorMessage = 'No se pudo conectar al servidor. Verifica tu conexión.';
       });
       return;
     }
@@ -100,7 +100,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
       _errorMessage = null;
     });
     
-    // Conectar si no est? conectado
+    // Conectar si no está conectado
     if (!studentService.isConnected) {
       final connected = await studentService.connect();
       if (!connected) {
@@ -190,7 +190,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                     
                     const SizedBox(height: 32),
                     
-                    // T?tulo
+                    // Título
                     FadeInSlide(
                       duration: const Duration(milliseconds: 600),
                       child: Text(
@@ -219,7 +219,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                     
                     const SizedBox(height: 48),
                     
-                    // Estado de conexi?n
+                    // Estado de conexión
                     if (_isConnecting)
                       FadeInSlide(
                         child: Column(
@@ -273,7 +273,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                     
                     const SizedBox(height: 48),
                     
-                    // Informaci?n adicional
+                    // Información adicional
                     FadeInSlide(
                       delay: const Duration(milliseconds: 600),
                       duration: const Duration(milliseconds: 600),
@@ -295,7 +295,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                             const SizedBox(height: 8),
                             Text(
                               'Ingresa tu nombre para unirte a la clase.\n'
-                              'Si te desconectas, podr?s volver a entrar\n'
+                              'Si te desconectas, podrás volver a entrar\n'
                               'con el mismo nombre.',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: Colors.white60,
@@ -333,7 +333,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
             ),
             decoration: InputDecoration(
               labelText: 'Tu nombre',
-              hintText: 'Ej: Juan P?rez',
+              hintText: 'Ej: Juan Pérez',
               prefixIcon: Icon(
                 Icons.person_outline,
                 color: theme.colorScheme.primary,
@@ -383,7 +383,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
           
           const SizedBox(height: 24),
           
-          // Bot?n de enviar
+          // Botón de enviar
           SizedBox(
             width: double.infinity,
             height: 56,
