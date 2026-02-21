@@ -60,6 +60,7 @@ class StudentActivityType(str, Enum):
     MULTIPLE_CHOICE = "multipleChoice"
     TRUE_FALSE = "trueFalse"
     SHORT_ANSWER = "shortAnswer"
+    WORD_PUZZLE = "wordPuzzle"
     WORD_SEARCH = "wordSearch"
     DISCOVER_PSALM_TYPE = "discoverPsalmType"
     WRITE_PSALM = "writePsalm"
@@ -826,22 +827,30 @@ async def handle_teacher_action(websocket: WebSocket, message: Dict):
     
     elif action == "REGISTER_ACTIVITY":
         # Registrar actividad antes de habilitarla
-        activity = state.register_activity(
-            activity_id=payload.get("activityId"),
-            question=payload.get("question", ""),
-            options=payload.get("options", []),
-            correct_index=payload.get("correctIndex", 0),
-            percentage_value=payload.get("percentageValue", 10.0),
-            activity_type=payload.get("activityType", "multipleChoice"),
-            time_limit=payload.get("timeLimitSeconds"),
-            title=payload.get("title"),
-            slide_content=payload.get("slideContent"),
-            biblical_reference=payload.get("biblicalReference")
-        )
-        await websocket.send_text(json.dumps({
-            "type": "ACTIVITY_REGISTERED",
-            "data": activity.to_dict()
-        }))
+        try:
+            activity = state.register_activity(
+                activity_id=payload.get("activityId"),
+                question=payload.get("question", ""),
+                options=payload.get("options", []),
+                correct_index=payload.get("correctIndex", 0),
+                percentage_value=payload.get("percentageValue", 10.0),
+                activity_type=payload.get("activityType", "multipleChoice"),
+                time_limit=payload.get("timeLimitSeconds"),
+                title=payload.get("title"),
+                slide_content=payload.get("slideContent"),
+                biblical_reference=payload.get("biblicalReference")
+            )
+            await websocket.send_text(json.dumps({
+                "type": "ACTIVITY_REGISTERED",
+                "data": activity.to_dict()
+            }))
+            print(f"[INFO] Actividad registrada: {activity.id} tipo={payload.get('activityType')}")
+        except Exception as e:
+            print(f"[ERROR] Error registrando actividad: {e}")
+            await websocket.send_text(json.dumps({
+                "type": "ERROR",
+                "data": {"message": f"Error registrando actividad: {str(e)}"}
+            }))
     
     elif action == "UNLOCK_ACTIVITY":
         activity_id = payload.get("activityId")
@@ -1190,7 +1199,7 @@ async def student_websocket(websocket: WebSocket):
                 if state.current_activity and state.current_activity.state == ActivityState.ACTIVE:
                     await websocket.send_text(json.dumps({
                         "type": "ACTIVITY_UNLOCKED",
-                        "data": state.current_activity.to_student_dict()
+                        "data": {"activity": state.current_activity.to_student_dict()}
                     }))
 
             elif action == "WORD_SEARCH_PROGRESS":

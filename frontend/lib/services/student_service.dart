@@ -552,6 +552,14 @@ class StudentService extends ChangeNotifier {
           break;
           
         case 'ACTIVITY_LOCKED':
+          // Cerrar la actividad específica usando el activityId del backend
+          final lockedId = data['activityId'] as String?;
+          if (lockedId != null) {
+            final idx = _activeActivities.indexWhere((a) => a.id == lockedId);
+            if (idx >= 0) {
+              _activeActivities[idx].state = ActivityState.closed;
+            }
+          }
           _currentActivity?.state = ActivityState.closed;
           _activityController.add(_currentActivity);
           notifyListeners();
@@ -633,6 +641,8 @@ class StudentService extends ChangeNotifier {
     if (data['activity'] != null) {
       final newActivity = StudentActivity.fromJson(data['activity']);
       
+      debugPrint('[StudentService] Actividad desbloqueada: ${newActivity.id} tipo=${newActivity.type}');
+      
       // IMPORTANTE: Actualizar la lista de actividades activas
       // Verificar si ya existe para no duplicar
       final existingIndex = _activeActivities.indexWhere((a) => a.id == newActivity.id);
@@ -640,15 +650,20 @@ class StudentService extends ChangeNotifier {
         _activeActivities[existingIndex] = newActivity;
       } else {
         _activeActivities.add(newActivity);
+        // Emitir notificación de nueva actividad
+        _newActivityController.add(newActivity);
       }
       
       _currentActivity = newActivity;
       _hasResponded = false; // Nueva actividad, no respondida
       
       _activityController.add(_currentActivity);
+      _activitiesController.add(_activeActivities);
       
       // Notificar a la UI inmediatamente
       notifyListeners();
+    } else {
+      debugPrint('[StudentService] ACTIVITY_UNLOCKED sin campo activity! data keys: ${data.keys}');
     }
   }
 

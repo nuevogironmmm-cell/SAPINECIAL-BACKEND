@@ -23,6 +23,7 @@ enum StudentActivityType {
   multipleChoice,   // Opción múltiple
   trueFalse,        // Verdadero / Falso
   shortAnswer,      // Respuesta corta
+  wordPuzzle,       // Crucigrama / Rompecabezas de palabras
   wordSearch,       // Sopa de letras
   discoverPsalmType, // Descubre el Tipo de Salmo
   writePsalm,       // Escribe tu Salmo
