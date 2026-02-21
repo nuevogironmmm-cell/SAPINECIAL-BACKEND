@@ -405,12 +405,12 @@ class StudentManager:
         # Verificar si existe un estudiante con este nombre
         existing = self._find_student_by_name(name)
         if existing:
-            # Si est? desconectado, permitir reconexi?n
-            if allow_reconnect and existing.status == StudentConnectionStatus.DISCONNECTED:
+            # SIEMPRE permitir reconexion si allow_reconnect es True
+            # No importa si esta conectado o desconectado - el nuevo WebSocket reemplaza al anterior
+            if allow_reconnect:
                 return True, "RECONNECT"
-            # Si est? conectado, rechazar
-            if existing.status != StudentConnectionStatus.DISCONNECTED:
-                return False, "Este nombre ya est? en uso en la clase"
+            # Solo rechazar si explicitamente no se permite reconexion
+            return False, "Este nombre ya esta en uso en la clase"
         
         # Verificar si hay datos guardados (estudiante anterior que se reconecta)
         if self._get_saved_data(name):
@@ -1026,8 +1026,11 @@ async def student_websocket(websocket: WebSocket):
                 name = payload.get("name", "").strip()
                 reconnect = payload.get("reconnect", False)
                 
-                if reconnect:
-                    # Intentar reconexi?n
+                # SIEMPRE intentar reconexion primero si el nombre ya existe
+                # Esto permite entrar con el mismo nombre sin importar el flag reconnect
+                existing = student_manager._find_student_by_name(name)
+                if existing:
+                    # Reconectar al estudiante existente
                     student, msg = student_manager.reconnect_student(name, websocket)
                     if student:
                         await websocket.send_text(json.dumps({
@@ -1038,21 +1041,13 @@ async def student_websocket(websocket: WebSocket):
                             }
                         }))
                     else:
-                        # No encontrado, registrar como nuevo
-                        student, msg = student_manager.register_student(name, websocket)
-                        if student:
-                            await websocket.send_text(json.dumps({
-                                "type": "REGISTRATION_SUCCESS",
-                                "data": student.to_dict()
-                            }))
-                        else:
-                            await websocket.send_text(json.dumps({
-                                "type": "REGISTRATION_ERROR",
-                                "data": {"message": msg}
-                            }))
-                            continue
+                        await websocket.send_text(json.dumps({
+                            "type": "REGISTRATION_ERROR",
+                            "data": {"message": msg}
+                        }))
+                        continue
                 else:
-                    # Nuevo registro
+                    # Nuevo registro (nombre no existe)
                     student, msg = student_manager.register_student(name, websocket)
                     if student:
                         await websocket.send_text(json.dumps({

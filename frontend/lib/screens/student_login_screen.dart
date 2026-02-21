@@ -112,11 +112,8 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
       }
     }
     
-    // Registrar estudiante (reconectar si el nombre coincide con el guardado)
-    final savedName = await studentService.getSavedName();
-    final shouldReconnect = savedName != null &&
-      savedName.trim().toLowerCase() == name.toLowerCase();
-    final success = await studentService.register(name, reconnect: shouldReconnect);
+    // SIEMPRE intentar reconexion - el backend decide si es nuevo o reconexion
+    final success = await studentService.register(name, reconnect: true);
     
     setState(() => _isLoading = false);
     
