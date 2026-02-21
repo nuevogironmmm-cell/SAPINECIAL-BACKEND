@@ -36,6 +36,7 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   final _reflectionController = TextEditingController();
   final _scrollController = ScrollController();
+  final _activitySectionKey = GlobalKey(); // Para auto-scroll a la actividad
   
   // Estado para múltiples actividades
   final Map<String, int?> _selectedAnswers = {}; // activityId -> selectedIndex
@@ -127,11 +128,30 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   }
 
   
+  /// Scrolls to the activity section after a short delay
+  void _scrollToActivitySection() {
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+      final keyContext = _activitySectionKey.currentContext;
+      if (keyContext != null) {
+        Scrollable.ensureVisible(
+          keyContext,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOutCubic,
+          alignment: 0.1, // Show near top with small margin
+        );
+      }
+    });
+  }
+
   /// Cuando llega una nueva actividad
   void _onNewActivity(StudentActivity activity) {
     if (!mounted) return;
     // Vibración para notificar
     HapticFeedback.mediumImpact();
+    
+    // Auto-scroll a la secci?n de actividad en mobile
+    _scrollToActivitySection();
     
     // Mostrar notificación
     ScaffoldMessenger.of(context).showSnackBar(
@@ -548,7 +568,10 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                           
                           // MOSTRAR SOLO LA ACTIVIDAD ACTUAL (una a la vez)
                           if (hasAnyActivity)
-                            _buildCurrentActivitySection(studentService, activities)
+                            KeyedSubtree(
+                              key: _activitySectionKey,
+                              child: _buildCurrentActivitySection(studentService, activities),
+                            )
                           else
                             _buildWaitingCard(),
                           
@@ -1025,54 +1048,23 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 ),
                 const SizedBox(height: 12),
                 // Barra de progreso visual con pasos
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(totalActivities, (index) {
-                    final isCompleted = index < completedActivities.length;
-                    final isCurrent = index == completedActivities.length;
-                    final isLocked = index > completedActivities.length;
+                // Usa LayoutBuilder para detectar ancho disponible y evitar overflow en m?vil
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Calcular ancho necesario: cada paso = 28px + 20px conector (excepto ?ltimo)
+                    final neededWidth = totalActivities * 28.0 + (totalActivities - 1) * 20.0;
+                    final availableWidth = constraints.maxWidth;
                     
-                    return Row(
-                      children: [
-                        // Círculo de paso
-                        Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: isCompleted 
-                                ? Colors.green
-                                : (isCurrent ? theme.colorScheme.primary : Colors.white12),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: isCurrent ? theme.colorScheme.primary : Colors.transparent,
-                              width: 2,
-                            ),
-                          ),
-                          child: Center(
-                            child: isCompleted
-                                ? const Icon(Icons.check, color: Colors.white, size: 16)
-                                : (isLocked 
-                                    ? const Icon(Icons.lock, color: Colors.white38, size: 14)
-                                    : Text(
-                                        '${index + 1}',
-                                        style: TextStyle(
-                                          color: isCurrent ? Colors.white : Colors.white54,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
-                                        ),
-                                      )),
-                          ),
-                        ),
-                        // Línea conectora (excepto último)
-                        if (index < totalActivities - 1)
-                          Container(
-                            width: 20,
-                            height: 2,
-                            color: isCompleted ? Colors.green : Colors.white12,
-                          ),
-                      ],
+                    // Si caben los pasos, mostrar c?rculos normales
+                    if (neededWidth <= availableWidth) {
+                      return _buildStepCircles(totalActivities, completedActivities.length, theme);
+                    }
+                    
+                    // Si hay muchos pasos, usar barra compacta con indicador num�rico
+                    return _buildCompactProgressBar(
+                      totalActivities, completedActivities.length, activityNumber, theme,
                     );
-                  }),
+                  },
                 ),
                 const SizedBox(height: 8),
                 // Mensaje de progreso
@@ -1101,6 +1093,136 @@ class _StudentMainScreenState extends State<StudentMainScreen>
     }
     
     return _buildWaitingCard();
+  }
+  
+  /// C?rculos de progreso individuales (para cuando caben en pantalla)
+  Widget _buildStepCircles(int totalActivities, int completedCount, ThemeData theme) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(totalActivities, (index) {
+        final isCompleted = index < completedCount;
+        final isCurrent = index == completedCount;
+        final isLocked = index > completedCount;
+        
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: isCompleted 
+                    ? Colors.green
+                    : (isCurrent ? theme.colorScheme.primary : Colors.white12),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isCurrent ? theme.colorScheme.primary : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+              child: Center(
+                child: isCompleted
+                    ? const Icon(Icons.check, color: Colors.white, size: 16)
+                    : (isLocked 
+                        ? const Icon(Icons.lock, color: Colors.white38, size: 14)
+                        : Text(
+                            '${index + 1}',
+                            style: TextStyle(
+                              color: isCurrent ? Colors.white : Colors.white54,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          )),
+              ),
+            ),
+            if (index < totalActivities - 1)
+              Container(
+                width: 20,
+                height: 2,
+                color: isCompleted ? Colors.green : Colors.white12,
+              ),
+          ],
+        );
+      }),
+    );
+  }
+  
+  /// Barra de progreso compacta para pantallas angostas (m?vil)
+  /// Reemplaza los c?rculos individuales cuando no caben en el ancho disponible
+  Widget _buildCompactProgressBar(int totalActivities, int completedCount, int currentNumber, ThemeData theme) {
+    final progress = totalActivities > 0 ? completedCount / totalActivities : 0.0;
+    
+    return Column(
+      children: [
+        // Barra de progreso con gradiente
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            height: 12,
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: Colors.white12,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Indicadores num�ricos compactos
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Completadas
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  '$completedCount',
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+            // Actividad actual
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '$currentNumber / $totalActivities',
+                style: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            // Pendientes
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock, color: Colors.white38, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  '${totalActivities - completedCount - 1}',
+                  style: const TextStyle(
+                    color: Colors.white38,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
   }
   
   /// Widget que muestra las lecciones completadas de forma colapsada
@@ -1424,11 +1546,15 @@ class _StudentMainScreenState extends State<StudentMainScreen>
   
   Widget _buildActivityCard(StudentActivity activity, bool hasResponded) {
     final theme = Theme.of(context);
+    // Responsive padding: menos en m?vil para maximizar espacio de contenido
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardPadding = screenWidth < 400 ? 16.0 : 24.0;
     
     return FadeInSlide(
+      key: ValueKey('activity_card_${activity.id}'), // Estabilizar animaci?n durante rebuilds
       delay: const Duration(milliseconds: 200),
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(cardPadding),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(24),
@@ -1671,8 +1797,10 @@ class _StudentMainScreenState extends State<StudentMainScreen>
                 final isSelected = _selectedAnswers[activity.id] == index;
                 
                 return Padding(
+                  key: ValueKey('opt_${activity.id}_$index'), // Estabilizar identidad del widget
                   padding: const EdgeInsets.only(bottom: 12),
                   child: ScaleIn(
+                    key: ValueKey('scale_${activity.id}_$index'), // Evitar reset de animaci?n en rebuild
                     delay: Duration(milliseconds: 100 * index),
                     child: _buildOptionButton(
                       index: index,
