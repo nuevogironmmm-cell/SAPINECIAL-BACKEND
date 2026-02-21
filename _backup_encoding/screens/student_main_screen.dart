@@ -1,0 +1,2583 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:async';
+import '../services/student_service.dart';
+import '../models/student_model.dart';
+import '../utils/animations.dart';
+import 'student_login_screen.dart';
+import 'word_search_full_screen.dart'; // Import nuevo
+
+/// Pantalla principal del estudiante
+/// 
+/// Muestra:
+/// - Nombre del estudiante
+/// - Actividad activa (si hay)
+/// - Porcentaje acumulado
+/// - Mensaje motivacional
+/// - Campo de reflexi?n
+/// 
+/// NO muestra:
+/// - Ranking de otros
+/// - Respuestas correctas (hasta revelaci?n)
+/// - Clasificaci?n negativa
+class StudentMainScreen extends StatefulWidget {
+  const StudentMainScreen({super.key});
+
+  @override
+  State<StudentMainScreen> createState() => _StudentMainScreenState();
+}
+
+class _StudentMainScreenState extends State<StudentMainScreen>
+    with TickerProviderStateMixin, WidgetsBindingObserver {
+  final _reflectionController = TextEditingController();
+  final _scrollController = ScrollController();
+  
+  // Estado para m?ltiples actividades
+  final Map<String, int?> _selectedAnswers = {}; // activityId -> selectedIndex
+  final Map<String, bool> _submittingActivities = {}; // activityId -> isSubmitting
+  final Map<String, DateTime> _activityStartTimes = {}; // activityId -> startTime
+  
+  bool _showReflectionForm = false;
+  bool _reflectionSent = false;
+  
+  // Legacy - mantener compatibilidad
+  int? _selectedAnswer;
+  bool _isSubmitting = false;
+  DateTime? _activityStartTime;
+  
+  late AnimationController _progressController;
+  late Animation<double> _progressAnimation;
+  
+  StreamSubscription? _activitySubscription;
+  StreamSubscription? _newActivitySubscription;
+  StreamSubscription? _answerResultSubscription;
+  StreamSubscription? _answerRevealSubscription;
+  
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    
+    _progressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _progressAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _progressController, curve: Curves.easeOutCubic),
+    );
+    
+    // Escuchar cambios de actividad
+    final studentService = context.read<StudentService>();
+    _activitySubscription = studentService.activityStream.listen((activity) {
+      if (activity != null && activity.isActive) {
+        setState(() {
+          _selectedAnswer = null;
+          // Limpiar selecci?³n previa para asegurar que aparezca vac?­a
+          if (activity.id != null) {
+            _selectedAnswers.remove(activity.id);
+          }
+          _activityStartTime = DateTime.now();
+        });
+      }
+    });
+    
+    // Escuchar nuevas actividades (para notificaciones)
+    _newActivitySubscription = studentService.newActivityStream.listen(_onNewActivity);
+    
+    // Escuchar resultados de respuestas (feedback inmediato)
+    _answerResultSubscription = studentService.answerResultStream.listen(_onAnswerResult);
+    
+    // Escuchar revelaci?n de respuestas
+    _answerRevealSubscription = studentService.answerRevealedStream.listen(_onAnswerRevealed);
+    
+    _progressController.forward();
+  }
+  
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _reflectionController.dispose();
+    _scrollController.dispose();
+    _progressController.dispose();
+    _activitySubscription?.cancel();
+    _newActivitySubscription?.cancel();
+    _answerResultSubscription?.cancel();
+    _answerRevealSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Cuando la app vuelve al primer plano, solicitar actualizaci?n de estado
+      debugPrint("App resumed - Requesting state update");
+      final studentService = context.read<StudentService>();
+      if (studentService.isConnected) {
+        studentService.requestStateUpdate();
+      } else {
+        // Si no est? conectado, intentar reconectar
+        studentService.connect();
+      }
+    }
+  }
+
+  
+  /// Cuando llega una nueva actividad
+  void _onNewActivity(StudentActivity activity) {
+    if (!mounted) return;
+    // Vibraci?n para notificar
+    HapticFeedback.mediumImpact();
+    
+    // Mostrar notificaci?n
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.assignment_turned_in, color: Colors.white, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '?Nueva actividad!',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(
+                    activity.title ?? activity.question,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.blue.shade700,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+  
+  /// Cuando se recibe resultado inmediato de la respuesta
+  void _onAnswerResult(AnswerResult result) {
+    if (!mounted) return;
+    // Vibraci?n de feedback
+    if (result.isCorrect) {
+      HapticFeedback.lightImpact();
+    } else {
+      HapticFeedback.heavyImpact();
+    }
+    setState(() {});
+  }
+  
+  /// Cuando el docente revela la respuesta correcta
+  void _onAnswerRevealed(AnswerRevealEvent event) {
+    if (!mounted) return;
+    // Vibraci?n de notificaci?n
+    HapticFeedback.mediumImpact();
+    
+    // Mostrar notificaci?n con resultado
+    final wasCorrect = event.wasCorrect;
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              wasCorrect == true
+                  ? Icons.check_circle
+                  : (wasCorrect == false ? Icons.cancel : Icons.info),
+              color: Colors.white,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    wasCorrect == true
+                        ? '?Respuesta correcta!'
+                        : (wasCorrect == false
+                            ? 'Respuesta incorrecta'
+                            : 'Respuesta revelada'),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(
+                    wasCorrect == true
+                        ? '?Excelente trabajo!'
+                        : (wasCorrect == false
+                            ? 'La respuesta correcta era la opci?n ${_getLetterForIndex(event.correctIndex)}'
+                            : 'No enviaste respuesta'),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: wasCorrect == true
+            ? Colors.green.shade700
+            : (wasCorrect == false ? Colors.red.shade700 : Colors.orange.shade700),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 5),
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+    
+    setState(() {});
+  }
+  
+  /// Obtiene la letra correspondiente a un ?ndice de opci?n
+  String _getLetterForIndex(int index) {
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+    return index < letters.length ? letters[index] : '${index + 1}';
+  }
+  
+  /// Selecciona una respuesta para una actividad espec?fica
+  void _selectAnswerForActivity(String activityId, int answerIndex) {
+    setState(() {
+      _selectedAnswers[activityId] = answerIndex;
+      // Registrar tiempo de inicio si no existe
+      _activityStartTimes.putIfAbsent(activityId, () => DateTime.now());
+    });
+  }
+  
+  /// Env?a la respuesta para una actividad espec?fica
+  Future<void> _submitAnswerForActivity(String activityId, {int? overrideAnswer}) async {
+    final selectedAnswer = overrideAnswer ?? _selectedAnswers[activityId];
+    if (selectedAnswer == null) return;
+    
+    final studentService = context.read<StudentService>();
+    
+    // Calcular tiempo de respuesta
+    int? responseTimeMs;
+    final startTime = _activityStartTimes[activityId];
+    if (startTime != null) {
+      responseTimeMs = DateTime.now().difference(startTime).inMilliseconds;
+    }
+    
+    setState(() => _submittingActivities[activityId] = true);
+    
+    final success = await studentService.submitAnswerForActivity(
+      activityId,
+      selectedAnswer,
+      responseTimeMs: responseTimeMs,
+    );
+    
+    if (!mounted) return;
+    setState(() => _submittingActivities[activityId] = false);
+    
+    if (success) {
+      // Animaci?n de éxito
+      _progressController.reset();
+      _progressController.forward();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white, size: 28),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '?Respuesta enviada!',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      'Tu respuesta ha sido registrada correctamente',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Error al enviar',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      studentService.errorMessage ?? 'Intenta de nuevo',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
+  }
+  
+  // Legacy method - mantener compatibilidad
+  Future<void> _submitAnswer() async {
+    if (_selectedAnswer == null) return;
+    
+    final studentService = context.read<StudentService>();
+    
+    // Calcular tiempo de respuesta
+    int? responseTimeMs;
+    if (_activityStartTime != null) {
+      responseTimeMs = DateTime.now()
+          .difference(_activityStartTime!)
+          .inMilliseconds;
+    }
+    
+    setState(() => _isSubmitting = true);
+    
+    final success = await studentService.submitAnswer(
+      _selectedAnswer!,
+      responseTimeMs: responseTimeMs,
+    );
+    
+    setState(() => _isSubmitting = false);
+    
+    if (success) {
+      // Animaci?n de éxito
+      _progressController.reset();
+      _progressController.forward();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white, size: 28),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '?Respuesta enviada!',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      'Tu respuesta ha sido registrada',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white, size: 28),
+              SizedBox(width: 12),
+              Text('Error al enviar respuesta'),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
+  }
+  
+  Future<void> _submitReflection() async {
+    final content = _reflectionController.text.trim();
+    if (content.length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('La reflexi?n debe tener al menos 10 caracteres'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    final studentService = context.read<StudentService>();
+    
+    setState(() => _isSubmitting = true);
+    
+    final success = await studentService.submitReflection(
+      'reflexi?n de clase',
+      content,
+    );
+    
+    setState(() => _isSubmitting = false);
+    
+    if (success) {
+      setState(() {
+        _reflectionSent = true;
+        _showReflectionForm = false;
+      });
+      _reflectionController.clear();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('?Reflexi?n enviada correctamente!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+  
+  void _logout() {
+    final studentService = context.read<StudentService>();
+    studentService.clearSavedName();
+    studentService.disconnect();
+    
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const StudentLoginScreen()),
+    );
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<StudentService>(
+      builder: (context, studentService, _) {
+        final student = studentService.currentStudent;
+        final activities = studentService.activeActivities;
+        final hasAnyActivity = activities.isNotEmpty;
+        final pendingCount = studentService.pendingActivitiesCount;
+        
+        return Scaffold(
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Theme.of(context).colorScheme.surface,
+                  const Color(0xFF1a1a2e),
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // Header con info del estudiante
+                  _buildHeader(studentService, student),
+                  
+                  // Contenido principal
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          // Tarjeta de progreso
+                          _buildProgressCard(student),
+                          
+                          const SizedBox(height: 24),
+                          
+                          // ?? RANKING EN TIEMPO REAL
+                          _buildRankingWidget(studentService),
+                          
+                          const SizedBox(height: 24),
+                          
+                          // Contador de actividades pendientes
+                          if (hasAnyActivity)
+                            _buildActivitiesHeader(activities.length, pendingCount),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // MOSTRAR SOLO LA ACTIVIDAD ACTUAL (una a la vez)
+                          if (hasAnyActivity)
+                            _buildCurrentActivitySection(studentService, activities)
+                          else
+                            _buildWaitingCard(),
+                          
+                          const SizedBox(height: 24),
+                          
+                          // Secci?n de reflexi?n
+                          _buildReflectionSection(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // Footer con conexi?n
+                  _buildConnectionStatus(studentService),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  Widget _buildHeader(StudentService service, Student? student) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.2),
+        border: Border(
+          bottom: BorderSide(
+            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary,
+                  theme.colorScheme.primary.withValues(alpha: 0.7),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                student?.name.isNotEmpty == true
+                    ? student!.name[0].toUpperCase()
+                    : '?',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(width: 12),
+          
+          // Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  student?.name ?? 'Estudiante',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  service.isConnected ? 'En l?nea' : 'Desconectado',
+                  style: TextStyle(
+                    color: service.isConnected ? Colors.greenAccent : Colors.redAccent,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Bot?n de actualizar manual
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white70),
+            onPressed: () {
+              // Feedback t?ctil
+              HapticFeedback.lightImpact();
+              // Solicitar actualizaci?n
+              if (service.isConnected) {
+                 service.requestStateUpdate();
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   const SnackBar(
+                     content: Text('Actualizando...'),
+                     duration: Duration(seconds: 1),
+                     behavior: SnackBarBehavior.floating,
+                   ),
+                 );
+              } else {
+                service.connect();
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   const SnackBar(
+                     content: Text('Reconectando...'),
+                     duration: Duration(seconds: 1),
+                     behavior: SnackBarBehavior.floating,
+                   ),
+                 );
+              }
+            },
+          ),
+          // Bot?n de salir
+          IconButton(
+            onPressed: _logout,
+            icon: const Icon(Icons.logout_rounded),
+            color: Colors.white54,
+            tooltip: 'Salir',
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildProgressCard(Student? student) {
+    final theme = Theme.of(context);
+    final percentage = student?.accumulatedPercentage ?? 0;
+    final message = student?.motivationalMessage ?? '';
+    final icon = student?.classificationIcon ?? '??';
+    final medals = student?.medals ?? [];
+    
+    return FadeInSlide(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              theme.colorScheme.primary.withValues(alpha: 0.2),
+              theme.colorScheme.primary.withValues(alpha: 0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Porcentaje grande
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  icon,
+                  style: const TextStyle(fontSize: 40),
+                ),
+                const SizedBox(width: 12),
+                AnimatedBuilder(
+                  animation: _progressAnimation,
+                  builder: (context, _) {
+                    return Text(
+                      '${(percentage * _progressAnimation.value).toStringAsFixed(0)}%',
+                      style: theme.textTheme.displayLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 8),
+            
+            // Barra de progreso
+            AnimatedProgressBar(
+              progress: percentage / 100,
+              height: 12,
+              backgroundColor: Colors.white.withValues(alpha: 0.1),
+              progressColor: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Mensaje motivacional
+            Text(
+              message,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: Colors.white70,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            
+            // SECCI?N DE MEDALLAS
+            if (medals.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              const Divider(color: Colors.white24),
+              const SizedBox(height: 12),
+              _buildMedalsDisplay(medals),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// Widget que muestra las medallas del estudiante
+  Widget _buildMedalsDisplay(List<Medal> medals) {
+    final theme = Theme.of(context);
+    
+    return Column(
+      children: [
+        // T?tulo
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.emoji_events_rounded, 
+              color: Colors.amber, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'Mis Logros',
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: Colors.amber.shade300,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${medals.length}',
+                style: TextStyle(
+                  color: Colors.amber.shade300,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        
+        // Grid de medallas
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
+          children: medals.map((medal) => _buildMedalBadge(medal)).toList(),
+        ),
+      ],
+    );
+  }
+  
+  /// Widget de insignia de medalla individual
+  Widget _buildMedalBadge(Medal medal) {
+    return Tooltip(
+      message: '${medal.name}\n${medal.description}',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: _getMedalColors(medal.type),
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: _getMedalColors(medal.type).first.withValues(alpha: 0.4),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              medal.emoji,
+              style: const TextStyle(fontSize: 20),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              medal.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// Obtiene los colores de gradiente seg?n el tipo de medalla
+  List<Color> _getMedalColors(MedalType type) {
+    switch (type) {
+      case MedalType.gold:
+      case MedalType.champion:
+      case MedalType.crown:
+        return [const Color(0xFFFFD700), const Color(0xFFFFA500)];
+      case MedalType.silver:
+        return [const Color(0xFFC0C0C0), const Color(0xFF808080)];
+      case MedalType.bronze:
+        return [const Color(0xFFCD7F32), const Color(0xFF8B4513)];
+      case MedalType.perfectScore:
+        return [Colors.purple.shade400, Colors.purple.shade700];
+      case MedalType.speedster:
+      case MedalType.earlyBird:
+        return [Colors.blue.shade400, Colors.blue.shade700];
+      case MedalType.consistent:
+      case MedalType.scholar:
+        return [Colors.green.shade400, Colors.green.shade700];
+      case MedalType.fire:
+        return [Colors.orange.shade400, Colors.red.shade600];
+      case MedalType.star:
+      case MedalType.improver:
+        return [Colors.amber.shade400, Colors.amber.shade700];
+    }
+  }
+  
+  /// Encabezado con contador de actividades
+  Widget _buildActivitiesHeader(int totalCount, int pendingCount) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.assignment_rounded,
+            color: theme.colorScheme.primary,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Actividades Disponibles',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  pendingCount > 0
+                      ? '$pendingCount de $totalCount pendientes'
+                      : '?Todas completadas!',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: pendingCount > 0 
+                        ? Colors.orange.shade300 
+                        : Colors.green.shade300,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Badge con contador
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: pendingCount > 0 
+                  ? Colors.orange.withValues(alpha: 0.2)
+                  : Colors.green.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '$totalCount',
+              style: TextStyle(
+                color: pendingCount > 0 ? Colors.orange : Colors.green,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// Muestra la actividad actual o el resumen de resultados
+  /// 
+  /// REGLAS DE VISUALIZACI?N SECUENCIAL:
+  /// - Solo se muestra UNA lecci?n activa a la vez
+  /// - La siguiente lecci?n se habilita solo al completar la actual correctamente
+  /// - Las lecciones completadas se muestran como cerradas
+  Widget _buildCurrentActivitySection(StudentService studentService, List<StudentActivity> activities) {
+    final theme = Theme.of(context);
+    
+    // Separar actividades pendientes y completadas
+    final pendingActivities = activities.where((a) => !studentService.hasRespondedActivity(a.id)).toList();
+    final completedActivities = activities.where((a) => studentService.hasRespondedActivity(a.id)).toList();
+    
+    // Calcular cu?ntas correctas hubo para desbloqueo secuencial
+    int correctCount = 0;
+    for (final activity in completedActivities) {
+      final result = studentService.getAnswerResult(activity.id);
+      if (result != null && result.isCorrect) {
+        correctCount++;
+      }
+    }
+    
+    // Si todas las actividades est?n completadas, mostrar mensaje de logro final
+    if (pendingActivities.isEmpty && completedActivities.isNotEmpty) {
+      return _buildFinalAchievement(studentService, completedActivities);
+    }
+    
+    // FLUJO SECUENCIAL: Solo mostrar la primera actividad pendiente
+    // El estudiante debe completarla antes de ver la siguiente
+    if (pendingActivities.isNotEmpty) {
+      final currentActivity = pendingActivities.first;
+      final activityNumber = activities.indexOf(currentActivity) + 1;
+      final totalActivities = activities.length;
+      
+      return Column(
+        children: [
+          // Indicador de progreso de lecciones (flujo secuencial)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary.withValues(alpha: 0.15),
+                  theme.colorScheme.primary.withValues(alpha: 0.05),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.school_rounded, color: theme.colorScheme.primary, size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Lecci?n $activityNumber de $totalActivities',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // Barra de progreso visual con pasos
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(totalActivities, (index) {
+                    final isCompleted = index < completedActivities.length;
+                    final isCurrent = index == completedActivities.length;
+                    final isLocked = index > completedActivities.length;
+                    
+                    return Row(
+                      children: [
+                        // C?rculo de paso
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: isCompleted 
+                                ? Colors.green
+                                : (isCurrent ? theme.colorScheme.primary : Colors.white12),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isCurrent ? theme.colorScheme.primary : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                          child: Center(
+                            child: isCompleted
+                                ? const Icon(Icons.check, color: Colors.white, size: 16)
+                                : (isLocked 
+                                    ? const Icon(Icons.lock, color: Colors.white38, size: 14)
+                                    : Text(
+                                        '${index + 1}',
+                                        style: TextStyle(
+                                          color: isCurrent ? Colors.white : Colors.white54,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      )),
+                          ),
+                        ),
+                        // L?nea conectora (excepto ?ltimo)
+                        if (index < totalActivities - 1)
+                          Container(
+                            width: 20,
+                            height: 2,
+                            color: isCompleted ? Colors.green : Colors.white12,
+                          ),
+                      ],
+                    );
+                  }),
+                ),
+                const SizedBox(height: 8),
+                // Mensaje de progreso
+                Text(
+                  completedActivities.isEmpty
+                      ? '?Comienza tu primera lecci?n!'
+                      : '${completedActivities.length} completadas • ${pendingActivities.length} pendientes',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.white54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Tarjeta de la actividad actual (SOLO UNA)
+          _buildActivityCard(currentActivity, false),
+          
+          // Mostrar resumen de lecciones completadas (colapsadas)
+          if (completedActivities.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildCompletedLessonsPreview(studentService, completedActivities),
+          ],
+        ],
+      );
+    }
+    
+    return _buildWaitingCard();
+  }
+  
+  /// Widget que muestra las lecciones completadas de forma colapsada
+  Widget _buildCompletedLessonsPreview(StudentService studentService, List<StudentActivity> completedActivities) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.green.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Lecciones completadas (${completedActivities.length})',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Lista compacta de lecciones completadas
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: completedActivities.asMap().entries.map((entry) {
+              final index = entry.key;
+              final activity = entry.value;
+              final result = studentService.getAnswerResult(activity.id);
+              final isCorrect = result?.isCorrect ?? false;
+              
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: (isCorrect ? Colors.green : Colors.orange).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isCorrect ? Icons.check : Icons.close,
+                      color: isCorrect ? Colors.green : Colors.orange,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Lecci?n ${index + 1}',
+                      style: TextStyle(
+                        color: isCorrect ? Colors.green.shade300 : Colors.orange.shade300,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// Widget de logro final cuando el estudiante completa TODAS las lecciones
+  Widget _buildFinalAchievement(StudentService studentService, List<StudentActivity> completedActivities) {
+    final theme = Theme.of(context);
+    
+    // Calcular estad?sticas finales
+    int correctCount = 0;
+    double totalPoints = 0;
+    
+    for (final activity in completedActivities) {
+      final result = studentService.getAnswerResult(activity.id);
+      if (result != null) {
+        if (result.isCorrect) {
+          correctCount++;
+          totalPoints += result.pointsEarned;
+        }
+      }
+    }
+    
+    final percentage = completedActivities.isNotEmpty 
+        ? (correctCount / completedActivities.length * 100) 
+        : 0.0;
+    
+    // Determinar nivel de logro
+    String achievementEmoji;
+    String achievementTitle;
+    String achievementMessage;
+    Color accentColor;
+    
+    if (percentage >= 100) {
+      achievementEmoji = '??';
+      achievementTitle = '?PERFECCI?N ABSOLUTA!';
+      achievementMessage = 'Has completado todas las lecciones sin errores. ?Eres un maestro!';
+      accentColor = Colors.amber;
+    } else if (percentage >= 80) {
+      achievementEmoji = '??';
+      achievementTitle = '?LOGRO EXCELENTE!';
+      achievementMessage = 'Has demostrado un dominio excepcional del tema.';
+      accentColor = Colors.green;
+    } else if (percentage >= 60) {
+      achievementEmoji = '??';
+      achievementTitle = '?FELICITACIONES!';
+      achievementMessage = 'Has completado todas las lecciones con buen desempe?o.';
+      accentColor = Colors.blue;
+    } else {
+      achievementEmoji = '??';
+      achievementTitle = '?LECCIONES COMPLETADAS!';
+      achievementMessage = 'Sigue practicando para mejorar tu puntaje.';
+      accentColor = Colors.purple;
+    }
+    
+    return Stack(
+      children: [
+        // ?? CONFETI DE CELEBRACI?N (si logro alto)
+        FullScreenConfetti(
+          trigger: percentage >= 60, // Solo si aprob?
+          particleCount: percentage >= 100 ? 150 : (percentage >= 80 ? 100 : 50),
+          duration: const Duration(seconds: 4),
+        ),
+        
+        FadeInSlide(
+          child: Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  accentColor.withValues(alpha: 0.3),
+                  accentColor.withValues(alpha: 0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: accentColor, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: accentColor.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Emoji animado de logro
+                SuccessCelebration(
+                  celebrate: true,
+                  child: Text(
+                    achievementEmoji,
+                    style: const TextStyle(fontSize: 80),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                
+                // T?tulo del logro
+                Text(
+                  achievementTitle,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: accentColor,
+                    letterSpacing: 2,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                
+                // Mensaje personalizado
+                Text(
+                  achievementMessage,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+            
+            // Estad?sticas finales
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                children: [
+                  // Porcentaje grande
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${percentage.toStringAsFixed(0)}',
+                        style: theme.textTheme.displayLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: accentColor,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          '%',
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            color: accentColor.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Precisi?n final',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Detalles
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildAchievementStat(
+                        icon: Icons.check_circle,
+                        color: Colors.green,
+                        value: correctCount.toString(),
+                        label: 'Correctas',
+                      ),
+                      Container(width: 1, height: 50, color: Colors.white24),
+                      _buildAchievementStat(
+                        icon: Icons.school,
+                        color: Colors.blue,
+                        value: completedActivities.length.toString(),
+                        label: 'Lecciones',
+                      ),
+                      Container(width: 1, height: 50, color: Colors.white24),
+                      _buildAchievementStat(
+                        icon: Icons.star,
+                        color: Colors.amber,
+                        value: '+${totalPoints.toStringAsFixed(0)}%',
+                        label: 'Puntos',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // Mensaje de cierre
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.emoji_events, color: accentColor, size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    '?Logro registrado en tu perfil!',
+                    style: TextStyle(
+                      color: accentColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+        ), // Cierra FadeInSlide
+      ], // Cierra Stack children
+    ); // Cierra Stack
+  }
+  
+  /// Widget para estad?sticas del logro final
+  Widget _buildAchievementStat({
+    required IconData icon,
+    required Color color,
+    required String value,
+    required String label,
+  }) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 28),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white54,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildActivityCard(StudentActivity activity, bool hasResponded) {
+    final theme = Theme.of(context);
+    
+    return FadeInSlide(
+      delay: const Duration(milliseconds: 200),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: hasResponded
+                ? Colors.green.withValues(alpha: 0.5)
+                : theme.colorScheme.primary.withValues(alpha: 0.3),
+            width: 2,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ?? TEMPORIZADOR DE BONUS (solo si no ha respondido)
+            if (!hasResponded)
+              _buildBonusTimer(activity),
+            
+            // Header de actividad
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: hasResponded
+                        ? Colors.green.withValues(alpha: 0.2)
+                        : Colors.orange.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        hasResponded
+                            ? Icons.check_circle
+                            : Icons.pending,
+                        size: 16,
+                        color: hasResponded ? Colors.green : Colors.orange,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        hasResponded ? 'Respondida' : 'Activa',
+                        style: TextStyle(
+                          color: hasResponded ? Colors.green : Colors.orange,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '+${activity.percentageValue.toStringAsFixed(0)}%',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // T?tulo de la actividad (si existe)
+            if (activity.title != null && activity.title!.isNotEmpty) ...[
+              Text(
+                activity.title!,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            
+            // Cita b?blica / Contenido del slide (si existe)
+            if (activity.slideContent != null && activity.slideContent!.isNotEmpty) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.amber.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      '"${activity.slideContent!}"',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
+                      ),
+                    ),
+                    // Referencia b?blica (si existe)
+                    if (activity.biblicalReference != null && activity.biblicalReference!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        activity.biblicalReference!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.amber,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            
+            // Pregunta
+            Text(
+              activity.question,
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+
+            // CONTENIDO DE LA ACTIVIDAD SEG?N TIPO
+            if (activity.type == StudentActivityType.wordSearch)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.grid_4x4, size: 48, color: Colors.amber),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Sopa de Letras',
+                      style: GoogleFonts.oswald(fontSize: 24, color: Colors.white),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Encuentra todas las palabras ocultas para ganar.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      ),
+                      onPressed: () {
+                         final studentService = context.read<StudentService>();
+                         final studentName = studentService.studentName ?? 'Estudiante';
+                         
+                         Navigator.push(
+                           context,
+                           MaterialPageRoute(
+                             builder: (context) => WordSearchFullScreen(
+                               words: activity.options,
+                               activityId: activity.id,
+                               studentName: studentName,
+                               isReadOnly: hasResponded,
+                               onWordFound: (foundWords) {
+                                 // Feedback h?ptico opcional
+                               },
+                               onProgress: (wordsFound, totalWords, elapsedSeconds) {
+                                  studentService.sendWordSearchProgress(
+                                    activityId: activity.id,
+                                    wordsFound: wordsFound,
+                                    totalWords: totalWords,
+                                    elapsedSeconds: elapsedSeconds,
+                                  );
+                               },
+                               onCompleted: (completed) {
+                                 if (completed && !hasResponded) {
+                                   _submitAnswerForActivity(activity.id, overrideAnswer: 0);
+                                 }
+                               },
+                               onSubmitResult: (name, timeSeconds, wordsFound) {
+                                  studentService.sendWordSearchResult(
+                                    activityId: activity.id,
+                                    timeSeconds: timeSeconds,
+                                    wordsFound: wordsFound,
+                                    totalWords: activity.options.length,
+                                  );
+                               },
+                             ),
+                           ),
+                         );
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(hasResponded ? Icons.visibility : Icons.play_arrow),
+                          const SizedBox(width: 8),
+                          Text(
+                            hasResponded ? 'Ver Resultado' : 'Comenzar Juego',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else if (!hasResponded)
+              ...activity.options.asMap().entries.map((entry) {
+                final index = entry.key;
+                final option = entry.value;
+                final isSelected = _selectedAnswers[activity.id] == index;
+                
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: ScaleIn(
+                    delay: Duration(milliseconds: 100 * index),
+                    child: _buildOptionButton(
+                      index: index,
+                      text: option,
+                      isSelected: isSelected,
+                      onTap: () {
+                        _selectAnswerForActivity(activity.id, index);
+                      },
+                    ),
+                  ),
+                );
+              })
+            else
+              // NUEVO: Feedback detallado de la respuesta
+              _buildAnswerFeedback(context, activity),
+            
+            // Bot?n de enviar
+            if (!hasResponded && _selectedAnswers[activity.id] != null) ...[
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: AnimatedButton(
+                  onPressed: (_submittingActivities[activity.id] == true) 
+                      ? null 
+                      : () => _submitAnswerForActivity(activity.id),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.green.shade600,
+                          Colors.green.shade700,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Center(
+                      child: (_submittingActivities[activity.id] == true)
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.send_rounded, color: Colors.white),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Enviar respuesta',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildOptionButton({
+    required int index,
+    required String text,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+    
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected
+                  ? theme.colorScheme.primary
+                  : Colors.white.withValues(alpha: 0.1),
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              // Letra de opci?n
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    letters[index],
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.white70,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ),
+              
+              const SizedBox(width: 16),
+              
+              // Texto de opci?n
+              Expanded(
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.white70,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              
+              // Indicador de selecci?n
+              if (isSelected)
+                Icon(
+                  Icons.check_circle,
+                  color: theme.colorScheme.primary,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  /// Construye el feedback visual de la respuesta enviada
+  Widget _buildAnswerFeedback(BuildContext context, StudentActivity activity) {
+    final theme = Theme.of(context);
+    final studentService = context.read<StudentService>();
+    final answerResult = studentService.getAnswerResult(activity.id);
+    
+    // Si a?n no hay resultado (esperando confirmaci?n del servidor)
+    if (answerResult == null) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.blue.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                'Procesando respuesta...',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    // Si la respuesta ya fue revelada por el docente
+    if (answerResult.isRevealed) {
+      final isCorrect = answerResult.isCorrect;
+      final correctIndex = answerResult.correctIndex ?? 0;
+      final selectedIndex = answerResult.selectedIndex;
+      
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isCorrect
+                ? [Colors.green.withValues(alpha: 0.2), Colors.green.withValues(alpha: 0.1)]
+                : [Colors.red.withValues(alpha: 0.2), Colors.red.withValues(alpha: 0.1)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isCorrect ? Colors.green : Colors.red,
+            width: 2,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Encabezado con resultado
+            Row(
+              children: [
+                Icon(
+                  isCorrect ? Icons.check_circle : Icons.cancel,
+                  color: isCorrect ? Colors.green : Colors.red,
+                  size: 36,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isCorrect ? '?Correcto!' : 'Incorrecto',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: isCorrect ? Colors.green : Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        isCorrect 
+                            ? '?Excelente trabajo! +${answerResult.pointsEarned.toStringAsFixed(0)}%'
+                            : 'La respuesta correcta era la opci?n ${_getLetterForIndex(correctIndex)}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 16),
+            const Divider(color: Colors.white24),
+            const SizedBox(height: 12),
+            
+            // Mostrar opciones con indicadores
+            ...activity.options.asMap().entries.map((entry) {
+              final index = entry.key;
+              final option = entry.value;
+              final isCorrectOption = index == correctIndex;
+              final wasSelected = index == selectedIndex;
+              
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    // Indicador de correcto/incorrecto
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: isCorrectOption
+                            ? Colors.green.withValues(alpha: 0.3)
+                            : (wasSelected ? Colors.red.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.1)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          isCorrectOption
+                              ? Icons.check
+                              : (wasSelected ? Icons.close : null),
+                          color: isCorrectOption ? Colors.green : Colors.red,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Texto de la opci?n
+                    Expanded(
+                      child: Text(
+                        '${_getLetterForIndex(index)}. $option',
+                        style: TextStyle(
+                          color: isCorrectOption
+                              ? Colors.green
+                              : (wasSelected ? Colors.red.shade300 : Colors.white54),
+                          fontWeight: isCorrectOption ? FontWeight.bold : FontWeight.normal,
+                          decoration: wasSelected && !isCorrectOption
+                              ? TextDecoration.lineThrough
+                              : null,
+                        ),
+                      ),
+                    ),
+                    // Badge de selecci?n
+                    if (wasSelected)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: (wasSelected && isCorrectOption)
+                              ? Colors.green.withValues(alpha: 0.3)
+                              : Colors.red.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Tu respuesta',
+                          style: TextStyle(fontSize: 10, color: Colors.white),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      );
+    }
+    
+    // Si envi? respuesta pero a?n no se revel? (estado intermedio)
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.amber.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.hourglass_top_rounded, color: Colors.amber, size: 32),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '?Respuesta enviada!',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: Colors.amber,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Seleccionaste opci?n ${_getLetterForIndex(answerResult.selectedIndex)}. '
+                  'Espera a que el docente revele la respuesta correcta.',
+                  style: theme.textTheme.bodySmall?.copyWith(color: Colors.white54),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildWaitingCard() {
+    final theme = Theme.of(context);
+    
+    return FadeInSlide(
+      delay: const Duration(milliseconds: 200),
+      child: Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Column(
+          children: [
+            PulseAnimation(
+              child: Icon(
+                Icons.hourglass_empty_rounded,
+                size: 64,
+                color: theme.colorScheme.primary.withValues(alpha: 0.7),
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
+            Text(
+              'Esperando actividad...',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: Colors.white70,
+              ),
+            ),
+            
+            const SizedBox(height: 8),
+            
+            Text(
+              'El docente a?n no ha habilitado\nuna actividad para responder.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.white54,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildWaitingForResultsCard() {
+    final theme = Theme.of(context);
+    
+    return FadeInSlide(
+      delay: const Duration(milliseconds: 200),
+      child: Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.green.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Column(
+          children: [
+            SuccessCelebration(
+              celebrate: true,
+              child: const Icon(
+                Icons.check_circle_rounded,
+                size: 64,
+                color: Colors.green,
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
+            Text(
+              '?Respuesta enviada!',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            
+            const SizedBox(height: 8),
+            
+            Text(
+              'Esperando a que el docente\nrevele los resultados.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.white54,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildReflectionSection() {
+    final theme = Theme.of(context);
+    
+    return FadeInSlide(
+      delay: const Duration(milliseconds: 400),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Icon(
+                  Icons.edit_note_rounded,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Mi reflexi?n',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                if (!_showReflectionForm && !_reflectionSent)
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() => _showReflectionForm = true);
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Escribir'),
+                  ),
+              ],
+            ),
+            
+            if (_reflectionSent) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.green),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Reflexi?n enviada al docente',
+                        style: TextStyle(color: Colors.green.shade300),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _reflectionSent = false;
+                          _showReflectionForm = true;
+                        });
+                      },
+                      child: const Text('Escribir otra'),
+                    ),
+                  ],
+                ),
+              ),
+            ] else if (_showReflectionForm) ...[
+              const SizedBox(height: 16),
+              
+              // Campo de texto
+              TextField(
+                controller: _reflectionController,
+                maxLines: 4,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: '?Qué aprendiste hoy? ?Qué te llam? la atenci?n?',
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.05),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Botones
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() => _showReflectionForm = false);
+                      _reflectionController.clear();
+                    },
+                    child: const Text('Cancelar'),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: _isSubmitting ? null : _submitReflection,
+                    icon: _isSubmitting
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.send),
+                    label: const Text('Enviar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ] else ...[
+              const SizedBox(height: 12),
+              Text(
+                'Comparte tus pensamientos sobre la clase.\nEl docente podr? leer tu reflexi?n.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.white54,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildConnectionStatus(StudentService service) {
+    final isConnected = service.isConnected;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.3),
+        border: Border(
+          top: BorderSide(
+            color: Colors.white.withValues(alpha: 0.1),
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: isConnected ? Colors.green : Colors.red,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            isConnected ? 'Conectado' : 'Desconectado',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// ?? Temporizador de bonus para respuestas r?pidas
+  Widget _buildBonusTimer(StudentActivity activity) {
+    final theme = Theme.of(context);
+    final startTime = _activityStartTimes[activity.id];
+    
+    // Si a?n no hay tiempo de inicio, iniciarlo
+    if (startTime == null) {
+      _activityStartTimes[activity.id] = DateTime.now();
+    }
+    
+    // Tiempo l?mite para bonus: 30 segundos
+    const bonusTimeLimit = 30;
+    
+    // Calcular tiempo restante basado en startTime
+    final elapsedSeconds = startTime != null 
+        ? DateTime.now().difference(startTime).inSeconds 
+        : 0;
+    final remainingSeconds = (bonusTimeLimit - elapsedSeconds).clamp(0, bonusTimeLimit);
+    final hasBonus = remainingSeconds > 0;
+    
+    // Calcular multiplicador de bonus
+    String bonusText = '';
+    Color bonusColor = Colors.grey;
+    
+    if (remainingSeconds > 20) {
+      bonusText = '?BONUS x2!';
+      bonusColor = Colors.orange;
+    } else if (remainingSeconds > 10) {
+      bonusText = 'Bonus x1.5';
+      bonusColor = Colors.amber;
+    } else if (remainingSeconds > 0) {
+      bonusText = 'Bonus x1.2';
+      bonusColor = Colors.yellow;
+    } else {
+      bonusText = 'Sin bonus';
+      bonusColor = Colors.grey;
+    }
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: hasBonus
+              ? [bonusColor.withValues(alpha: 0.3), bonusColor.withValues(alpha: 0.1)]
+              : [Colors.grey.withValues(alpha: 0.2), Colors.grey.withValues(alpha: 0.1)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: bonusColor.withValues(alpha: 0.5),
+          width: hasBonus ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          // Icono animado
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: Icon(
+              hasBonus ? Icons.timer : Icons.timer_off,
+              key: ValueKey(hasBonus),
+              color: bonusColor,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 12),
+          
+          // Texto de bonus
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  bonusText,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: bonusColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (hasBonus)
+                  Text(
+                    '?Responde r?pido para puntos extra!',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.white54,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          
+          // Contador de tiempo
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: hasBonus ? bonusColor.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              hasBonus ? '${remainingSeconds}s' : '--',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: bonusColor,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// Widget de ranking en tiempo real ??
+  Widget _buildRankingWidget(StudentService studentService) {
+    final theme = Theme.of(context);
+    final ranking = studentService.ranking;
+    
+    // Si no hay ranking, no mostrar nada
+    if (ranking.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
+    return FadeInSlide(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.amber.withValues(alpha: 0.15),
+              Colors.orange.withValues(alpha: 0.1),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.amber.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Header del ranking
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('??', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 8),
+                Text(
+                  'TOP 5 EN TIEMPO REAL',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: Colors.amber,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            
+            // Lista del ranking
+            ...ranking.asMap().entries.map((entry) {
+              final position = entry.key + 1;
+              final data = entry.value;
+              final isCurrentUser = data['name'] == studentService.studentName;
+              
+              final rawPercentage = data['percentage'];
+              final percentage = (rawPercentage is num)
+                  ? rawPercentage.toDouble()
+                  : double.tryParse(rawPercentage?.toString() ?? '') ?? 0.0;
+
+              return _buildRankingItem(
+                position: position,
+                name: data['name'] ?? 'An?nimo',
+                percentage: percentage,
+                icon: data['icon'] ?? '??',
+                isCurrentUser: isCurrentUser,
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// Item individual del ranking
+  Widget _buildRankingItem({
+    required int position,
+    required String name,
+    required double percentage,
+    required String icon,
+    required bool isCurrentUser,
+  }) {
+    final theme = Theme.of(context);
+    
+    // Colores seg?n posici?n
+    Color positionColor;
+    String medal;
+    switch (position) {
+      case 1:
+        positionColor = const Color(0xFFFFD700); // Oro
+        medal = '??';
+        break;
+      case 2:
+        positionColor = const Color(0xFFC0C0C0); // Plata
+        medal = '??';
+        break;
+      case 3:
+        positionColor = const Color(0xFFCD7F32); // Bronce
+        medal = '??';
+        break;
+      default:
+        positionColor = Colors.white54;
+        medal = '??';
+    }
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isCurrentUser 
+            ? theme.colorScheme.primary.withValues(alpha: 0.3)
+            : Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: isCurrentUser 
+            ? Border.all(color: theme.colorScheme.primary, width: 2)
+            : null,
+      ),
+      child: Row(
+        children: [
+          // Posici?n con medalla
+          SizedBox(
+            width: 40,
+            child: Text(
+              medal,
+              style: const TextStyle(fontSize: 22),
+            ),
+          ),
+          
+          // Icono del estudiante
+          Text(
+            icon,
+            style: const TextStyle(fontSize: 20),
+          ),
+          const SizedBox(width: 10),
+          
+          // Nombre
+          Expanded(
+            child: Text(
+              isCurrentUser ? '?T?!' : name,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isCurrentUser ? theme.colorScheme.primary : Colors.white,
+                fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          
+          // Porcentaje
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: positionColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '${percentage.toStringAsFixed(0)}%',
+              style: TextStyle(
+                color: positionColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

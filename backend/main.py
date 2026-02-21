@@ -3,11 +3,13 @@
 Backend para Literatura Sapiencial
 Servidor WebSocket con sistema completo de estudiantes
 Versi?n 2.1 - Con persistencia de progreso y soporte para 50+ usuarios
+Phase 1 Security Improvements Implemented
 """
 import os
 import asyncio
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Dict, Optional, Any
 from datetime import datetime
 from enum import Enum
@@ -15,18 +17,19 @@ import json
 import hashlib
 import uuid
 
+# Import new security modules
+from config import config
+from auth import teacher_auth, student_auth, AuthenticationError
+
 # Archivo para persistencia de progreso
-PROGRESS_FILE = "student_progress.json"
+PROGRESS_FILE = config.PROGRESS_FILE
 
 app = FastAPI(title="Sapiencial App Backend")
 
-# Configuraci?n de CORS (permite conexiones desde Netlify)
+# Configuraci?n de CORS mejorada - usa variables de entorno
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producci?n, especificar el dominio de Netlify
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    **config.get_cors_config(),
 )
 
 # Endpoint de health check para Render
@@ -115,19 +118,19 @@ def get_motivational_message(percentage: float) -> str:
     return "?nimo, cada clase es una nueva oportunidad"
 
 # ============================================================
-# Configuraci?n de seguridad
+# Configuraci?n de seguridad mejorada
 # ============================================================
 
-TEACHER_ACCESS_TOKEN = "profesor2026"
+# Usar credenciales desde la configuraci?n
+TEACHER_ACCESS_TOKEN = config.TEACHER_ACCESS_TOKEN
 TEACHER_TOKEN_HASH = hashlib.sha256(TEACHER_ACCESS_TOKEN.encode()).hexdigest()
 
 def validate_token(token: str, role: str) -> bool:
     """Valida el token de acceso seg?n el rol"""
     if role == "teacher":
-        token_hash = hashlib.sha256(token.encode()).hexdigest()
-        return token_hash == TEACHER_TOKEN_HASH
+        return teacher_auth.validate_token(token, role)
     elif role == "student":
-        return True  # Estudiantes no requieren token
+        return True  # Estudiantes no requieren token por ahora
     return False
 
 def generate_session_id() -> str:
@@ -1073,7 +1076,7 @@ async def student_websocket(websocket: WebSocket):
                 if state.current_activity and state.current_activity.state == ActivityState.ACTIVE:
                     await websocket.send_text(json.dumps({
                         "type": "ACTIVITY_UNLOCKED",
-                        "data": state.current_activity.to_student_dict()
+                        "data": {"activity": state.current_activity.to_student_dict()}
                     }))
                     print(f"[INFO] Actividad activa enviada a {student.name}: {state.current_activity.id}")
                 

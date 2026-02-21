@@ -14,9 +14,7 @@ import '../config/app_config.dart';
 /// - Envío de respuestas y reflexiones
 /// - sincronización de estado con el servidor
 class StudentService extends ChangeNotifier {
-  StudentService() {
-    tryReconnect();
-  }
+  StudentService();
   // ============================================================
   // ESTADO DEL SERVICIO
   // ============================================================
@@ -152,6 +150,8 @@ class StudentService extends ChangeNotifier {
   // ============================================================
   
   /// Conecta al servidor WebSocket
+  /// Espera a que el servidor responda antes de marcar como conectado.
+  /// Timeout de 60s para manejar cold-starts de Render.
   Future<bool> connect() async {
     if (_isConnected) return true;
     
@@ -162,29 +162,61 @@ class StudentService extends ChangeNotifier {
       // Forzar cierre si existe una conexión previa "zombie"
       if (_channel != null) {
         try { await _channel!.sink.close(); } catch (_) {}
+        _channel = null;
       }
       
       final uri = Uri.parse(_baseUrl);
+      debugPrint('[StudentService] Conectando a: $uri');
       _channel = WebSocketChannel.connect(uri);
+      
+      // Completer para verificar que la conexión realmente se establece
+      // El servidor envía REGISTRATION_REQUIRED como primer mensaje
+      final connectionVerified = Completer<bool>();
       
       // Escuchar mensajes
       _channel!.stream.listen(
-        _handleMessage,
+        (message) {
+          // El primer mensaje del servidor confirma la conexión real
+          if (!connectionVerified.isCompleted) {
+            connectionVerified.complete(true);
+          }
+          _handleMessage(message);
+        },
         onError: (error) {
           debugPrint('[StudentService] Error: $error');
+          if (!connectionVerified.isCompleted) {
+            connectionVerified.complete(false);
+          }
           _handleDisconnect();
           _attemptReconnect();
         },
         onDone: () {
           debugPrint('[StudentService] Conexión cerrada');
+          if (!connectionVerified.isCompleted) {
+            connectionVerified.complete(false);
+          }
           _handleDisconnect();
           _attemptReconnect();
         },
       );
       
+      // Esperar verificación real (Render free tier puede tardar ~50s en despertar)
+      final verified = await connectionVerified.future
+          .timeout(const Duration(seconds: 60), onTimeout: () => false);
+      
+      if (!verified) {
+        debugPrint('[StudentService] Conexión no verificada (timeout o error)');
+        _errorMessage = 'El servidor no responde. Puede estar iniciando, intenta de nuevo en unos segundos.';
+        _isConnected = false;
+        try { await _channel!.sink.close(); } catch (_) {}
+        _channel = null;
+        notifyListeners();
+        return false;
+      }
+      
       _isConnected = true;
       _reconnectAttempts = 0;
-      debugPrint('[StudentService] Conectado al servidor');
+      debugPrint('[StudentService] Conectado al servidor (verificado)');
       notifyListeners();
       return true;
       
@@ -234,7 +266,7 @@ class StudentService extends ChangeNotifier {
           .where((msg) => msg['type'] == 'REGISTRATION_SUCCESS' || 
                          msg['type'] == 'REGISTRATION_ERROR')
           .first
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 45));
       
       if (response['type'] == 'REGISTRATION_SUCCESS') {
         final data = response['data'];

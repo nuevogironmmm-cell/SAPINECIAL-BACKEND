@@ -219,7 +219,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                     
                     const SizedBox(height: 48),
                     
-                    // Estado de conexión
+                    // Estado de conexi?n
                     if (_isConnecting)
                       FadeInSlide(
                         child: Column(
@@ -232,6 +232,14 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                                 color: Colors.white70,
                               ),
                             ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Si es la primera conexi\u00f3n del d\u00eda,\nel servidor puede tardar hasta 1 minuto en despertar.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.white38,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ],
                         ),
                       )
@@ -243,7 +251,7 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                         child: _buildNameForm(theme),
                       ),
                     
-                    // Mensaje de error
+                    // Mensaje de error con bot?n de reintentar
                     if (_errorMessage != null) ...[
                       const SizedBox(height: 16),
                       ShakeAnimation(
@@ -255,14 +263,39 @@ class _StudentLoginScreenState extends State<StudentLoginScreen>
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                           ),
-                          child: Row(
+                          child: Column(
                             children: [
-                              const Icon(Icons.error_outline, color: Colors.red),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  _errorMessage!,
-                                  style: const TextStyle(color: Colors.red),
+                              Row(
+                                children: [
+                                  const Icon(Icons.error_outline, color: Colors.red),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      _errorMessage!,
+                                      style: const TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: _isConnecting ? null : () {
+                                    setState(() {
+                                      _errorMessage = null;
+                                    });
+                                    _tryAutoReconnect();
+                                  },
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Reintentar conexi\u00f3n'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.orange,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
